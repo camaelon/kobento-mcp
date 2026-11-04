@@ -1,0 +1,18 @@
+{
+  "name": "kobento-mcp",
+  "version": "1.0.0",
+  "description": "Kobento MCP services for RemoteCompose",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node mcp/lib/web-player.mjs --build",
+    "build:player": "node mcp/lib/web-player.mjs --build",
+    "build:inspector": "node ../kobento-tools/inspector/build.mjs",
+    "build:inspector:ui": "node ../kobento-tools/inspector/build.mjs --no-player",
+    "dev:inspector": "node ../kobento-tools/inspector/build.mjs --watch",
+    "test": "node --test --test-concurrency=4 mcp/lib/*.test.mjs mcp/lib/generators/*.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

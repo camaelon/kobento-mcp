@@ -1,0 +1,404 @@
+{
+ "id": "LAY-15",
+ "name": "state-layout",
+ "version": 1,
+ "title": "Three-state status card (StateLayout)",
+ "summary": "A photo-backup card with three layouts (up to date, backing up, paused) held by a stateLayout and picked by an exported integer: each state's root taps to the next state, and components paired by animationSpec animationId (the card, its header row, the badge, the title) morph between them while the rest enter and exit.",
+ "prompt": "A photo backup status card with three states chosen by an integer the host can set: a compact \"Up to date\" row, an expanded \"Backing up\" card with a progress bar and Pause/Details buttons, and a red \"Paused, no Wi-Fi\" card with Retry. Tapping the card goes to the next state, and the card animates its size and the header between them.",
+ "level": 3,
+ "family": "LAY",
+ "capabilities": {
+  "primary": [
+   "layout.state"
+  ],
+  "secondary": [
+   "anim.state",
+   "anim.layout",
+   "input.tap",
+   "data.integer",
+   "host.variables",
+   "a11y.labels",
+   "layout.weight",
+   "layout.stack",
+   "layout.decoration",
+   "text.basic"
+  ]
+ },
+ "use_cases": [
+  "card",
+  "loading-state",
+  "notification"
+ ],
+ "form_factor": "phone",
+ "components": [
+  "Icon"
+ ],
+ "keywords": [
+  "state layout",
+  "status card",
+  "error state",
+  "empty state",
+  "loading state",
+  "compact and expanded",
+  "multiple layouts",
+  "switch layout by index",
+  "state machine",
+  "tap to cycle",
+  "view switcher",
+  "crossfade layouts"
+ ],
+ "teaches": [
+  "Hold one layout per state as the children of a stateLayout and pick one with indexId, a variable (here an exported integer the host can set to 0, 1 or 2; use a float when an expression or a TextChoice reads it too, as both read an integer as 0)",
+  "Advance the state from each state's root: an onClick with valueIntegerChange to the next index (1, 2, then back to 0), with semantics describing what the tap does",
+  "Pair the parts that exist in every state with the same animationSpec animationId (card 200, header row 203, badge 201, title 202) so they morph in size and position; unpaired parts enter and exit",
+  "Size each state for its own content (72, 148 and 128 dp): only the current state is measured, so the stateLayout resizes with it"
+ ],
+ "pitfalls": [
+  "An onClick on the stateLayout itself is not dispatched by Java: put one on every state root",
+  "Pair components with animationSpec animationId: the `id` modifier (component id) does not pair them across states. The state roots need no component ids at all; give them distinct ones if you set any",
+  "Keep paired components at the same depth in every state (here each state's header is one row with animationId 203): during the transition the previous state's direct children that the new state lacks are painted as exiting, so a badge that is a direct child in one state and nested in another was painted twice (a stray green corner in the C++ player)",
+  "Keep a paired text the same size in every state: its bounds morph, and a text that grows is cut short mid-transition (\"Photo\" instead of \"Photo backup\")",
+  "The index is read at paint time and the new state is laid out on the next frame, so capture a change at least a frame later. An index with no matching child is ignored: with state 3 the card stays on the state it had (state 0 at start) in Java and C++, so keep the exported range 0..2"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/1/box/children/0/stateLayout",
+   "shows": "layout.state",
+   "note": "stateLayout with indexId @state and three state roots"
+  },
+  {
+   "pointer": "/root/0/resources/integers/state",
+   "shows": "data.integer",
+   "note": "the exported integer that selects the state (0 up to date, 1 backing up, 2 paused)"
+  },
+  {
+   "pointer": "/root/1/box/children/0/stateLayout/children/0/column/modifiers/7",
+   "shows": "input.tap",
+   "note": "state 0's tap: valueIntegerChange state = 1"
+  },
+  {
+   "pointer": "/root/1/box/children/0/stateLayout/children/1/column/children/0/row/children/0/box/modifiers/0",
+   "shows": "anim.state",
+   "note": "the badge's animationSpec animationId 201, shared with the badges of the other states"
+  },
+  {
+   "pointer": "/root/1/box/children/0/stateLayout/modifiers/1",
+   "shows": "anim.layout",
+   "note": "the stateLayout's own animationSpec: 350 ms STANDARD resize"
+  }
+ ],
+ "inputs": {
+  "variables": {
+   "state": {
+    "type": "int",
+    "meaning": "which layout is shown: 0 up to date, 1 backing up, 2 paused (no Wi-Fi)",
+    "default": 0,
+    "min": 0,
+    "max": 2,
+    "step": 1
+   }
+  },
+  "clock": null,
+  "touch": true
+ },
+ "check": {
+  "describe": "A tap on the compact card at 0.1 s, captured settled at 0.9 s: the expanded \"Backing up\" card with progress bar and Pause/Details. Mid-transition (0.2 s) the card is half grown with the badge already blue. variables {\"state\": 2} shows the red Paused card with Retry; a second tap from state 1 goes there and a third back to the compact row. Verified against Java (java-layout.sh 360 220 --click 180 52 --settle, then --click 180 100): the stateLayout is 72, 148, 128 then 72 dp high, and C++ and TS match. Resized (240×220, 540×300) the card fills the width; at 240 the status line wraps to two lines and the progress bar follows the card's width.",
+  "render": {
+   "touch_events": [
+    {
+     "t": 0.1,
+     "type": "tap",
+     "x": 180,
+     "y": 52
+    }
+   ],
+   "duration": 0.9
+  },
+  "renders": [
+   {
+    "name": "narrow",
+    "width": 240,
+    "height": 220
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 300
+   }
+  ]
+ },
+ "prerequisites": [
+  "LAY-12",
+  "INT-01"
+ ],
+ "related": [
+  "ANM-08",
+  "EXP-15",
+  "LAY-09"
+ ],
+ "derived": {
+  "components": [
+   "Icon"
+  ],
+  "component_instances": 3,
+  "component_modes": {
+   "Icon": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 6931,
+  "header": {
+   "width": 360,
+   "height": 220
+  },
+  "op_count": 307,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 3,
+   "ANIMATED_FLOAT": 6,
+   "ANIMATION_SPEC": 13,
+   "COLOR_CONSTANT": 20,
+   "COLOR_EXPRESSIONS": 20,
+   "COMPONENT_VALUE": 6,
+   "CanvasContent": 3,
+   "CoreText": 9,
+   "DATA_INT": 1,
+   "DATA_TEXT": 10,
+   "DRAW_PATH": 3,
+   "HEADER": 1,
+   "LAYOUT_BOX": 12,
+   "LAYOUT_CANVAS": 3,
+   "LAYOUT_COLUMN": 6,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 5,
+   "LayoutComponentContent": 35,
+   "LoopOperation": 20,
+   "MATRIX_RESTORE": 3,
+   "MATRIX_SAVE": 3,
+   "MATRIX_SCALE": 3,
+   "MODIFIER_BACKGROUND": 12,
+   "MODIFIER_CLICK": 3,
+   "MODIFIER_HEIGHT": 15,
+   "MODIFIER_PADDING": 7,
+   "MODIFIER_WIDTH": 23,
+   "NAMED_VARIABLE": 11,
+   "PAINT_VALUES": 3,
+   "PATH_DATA": 3,
+   "RoundedClipRectModifierOperation": 10,
+   "StateLayout": 1,
+   "THEME": 30,
+   "VALUE_INTEGER_CHANGE_ACTION": 3
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "error",
+    "type": "color",
+    "value": "#FFEF5350"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onPrimary",
+    "type": "color",
+    "value": "#FF0B1A2E"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "state",
+    "type": "int",
+    "value": 0
+   },
+   {
+    "name": "success",
+    "type": "color",
+    "value": "#FF66BB6A"
+   },
+   {
+    "name": "surface",
+    "type": "color",
+    "value": "#FF1C2433"
+   },
+   {
+    "name": "surfaceHigh",
+    "type": "color",
+    "value": "#FF263042"
+   },
+   {
+    "name": "track",
+    "type": "color",
+    "value": "#FF2A3342"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 0
+  },
+  "audit_findings": [],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 1,
+   "click": 1,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     240,
+     220
+    ],
+    "audit_findings": []
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     300
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "Icon",
+   "animationId",
+   "animationSpec",
+   "apiLevel",
+   "background",
+   "box",
+   "canvas",
+   "children",
+   "clickable",
+   "clip",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "dark",
+   "drawPath",
+   "error",
+   "export",
+   "fontSize",
+   "fontWeight",
+   "header",
+   "height",
+   "horizontalAlignment",
+   "icon_check_outlined",
+   "icon_cloud_upload_outlined",
+   "icon_wifi_off_outlined",
+   "indexId",
+   "integers",
+   "light",
+   "modifiers",
+   "motionDuration",
+   "motionEasing",
+   "muted",
+   "name",
+   "onClick",
+   "onPrimary",
+   "onSurface",
+   "padding",
+   "paint",
+   "path",
+   "paths",
+   "primary",
+   "profiles",
+   "resources",
+   "root",
+   "row",
+   "save",
+   "scale",
+   "semantics",
+   "size",
+   "spacedBy",
+   "spacer",
+   "state",
+   "stateLayout",
+   "style",
+   "success",
+   "surface",
+   "surfaceHigh",
+   "sx",
+   "sy",
+   "target",
+   "text",
+   "track",
+   "type",
+   "value",
+   "verticalAlignment",
+   "visibilityDuration",
+   "weight",
+   "width",
+   "x",
+   "x1",
+   "x2",
+   "y",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "layout.state": [
+    "stateLayout"
+   ],
+   "anim.state": [
+    "stateLayout"
+   ],
+   "anim.layout": [
+    "animationSpec"
+   ],
+   "input.tap": [
+    "onClick",
+    "valueIntegerChange"
+   ],
+   "data.integer": [
+    "integers",
+    "valueIntegerChange"
+   ],
+   "host.variables": [
+    "export",
+    "colors"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ],
+   "layout.weight": [
+    "weight"
+   ],
+   "layout.stack": [
+    "column",
+    "row",
+    "box"
+   ],
+   "layout.decoration": [
+    "background",
+    "clip"
+   ],
+   "text.basic": [
+    "text"
+   ]
+  },
+  "built_at": "2026-11-01T22:49:20.456Z"
+ }
+}

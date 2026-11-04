@@ -1,0 +1,506 @@
+{
+ "id": "ANM-08",
+ "name": "state-expand",
+ "version": 2,
+ "title": "Mini player expands (StateLayout)",
+ "summary": "A now-playing mini player that expands to a full card: a stateLayout switches between a row state and a column state, and the components that carry the same animationSpec animationId in both states (the card, the album art, the title, the artist) morph from one state's bounds to the other's.",
+ "prompt": "A music mini player (album art, title, artist, play icon in one row); tapping it expands into a full card with big album art, the title and a progress bar, the art growing into place; tapping again collapses it.",
+ "level": 4,
+ "family": "ANM",
+ "capabilities": {
+  "primary": [
+   "anim.state"
+  ],
+  "secondary": [
+   "layout.state",
+   "anim.layout",
+   "input.tap",
+   "layout.decoration",
+   "layout.weight",
+   "draw.shapes",
+   "a11y.labels"
+  ]
+ },
+ "use_cases": [
+  "media-player",
+  "card"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "shared element",
+  "hero transition",
+  "container transform",
+  "mini player",
+  "now playing",
+  "expand collapse",
+  "album art grows",
+  "two layouts"
+ ],
+ "teaches": [
+  "Hold alternative layouts as children of a stateLayout and pick one with indexId (an integer variable): state 0 the row, state 1 the column",
+  "Pair the components that exist in both states with the same animationSpec animationId ({\"animationSpec\": {\"animationId\": 101, \"motionDuration\": 450}}) so they morph (position and size) instead of fading out and in",
+  "Put an onClick on each state's root that sets the other state (valueIntegerChange sel = 1 or 0), and an animationSpec on the stateLayout for the container's own resize"
+ ],
+ "pitfalls": [
+  "indexId must be an integer variable (vtype integer) changed with valueIntegerChange",
+  "The `id` modifier (component id) does not pair components across states: only animationSpec animationId does. Sharing an `id` between the two state roots even breaks the taps (the hidden state's action runs too), so leave the roots' component ids distinct",
+  "An onClick on the stateLayout itself is not dispatched by Java: put it on the state roots",
+  "Player status (2026-10-29): C++ matches Java's layout and morph; the TS player does not dispatch a tap on a state root, so it stays collapsed",
+  "Use ProgressBar for the progress line (it fills the width it gets), not a canvas with literal 280/112: the card is as wide as the host"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/1/box/children/0/stateLayout/modifiers/1",
+   "shows": "anim.state",
+   "note": "animationSpec on the stateLayout: 450 ms STANDARD morph"
+  },
+  {
+   "pointer": "/root/1/box/children/0/stateLayout/indexId",
+   "shows": "layout.state",
+   "note": "indexId @sel: which child state is shown"
+  },
+  {
+   "pointer": "/root/1/box/children/0/stateLayout/children/1/column/children/0/box/modifiers/0",
+   "shows": "anim.state",
+   "note": "animationId 101 on the 150 dp art; the 48 dp art in state 0 has animationId 101 too, so it grows into place"
+  },
+  {
+   "pointer": "/root/1/box/children/0/stateLayout/children/0/row/modifiers/7",
+   "shows": "input.tap",
+   "note": "collapsed state's root: sel = 1"
+  }
+ ],
+ "inputs": {
+  "variables": {},
+  "clock": null,
+  "touch": true
+ },
+ "check": {
+  "describe": "A tap on the mini player at 0.1 s, captured 0.2 s later. Mid-morph: the card about two thirds of its expanded height and the art about 110 dp, moving to the centre, the title following below it. Settles to the full card with 150 dp art, title, artist and a progress bar. Resized (narrow 240, wide 540, captured settled at 1 s) the expanded card fills the width with the art centred, and the ProgressBar fills 40 % of whatever width it gets; the 288 dp card needs a host at least 320 dp tall. Mono looks have no motion: the card is already expanded.",
+  "render": {
+   "touch_events": [
+    {
+     "t": 0.1,
+     "type": "tap",
+     "x": 180,
+     "y": 52
+    }
+   ],
+   "duration": 0.3
+  },
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "narrow",
+    "width": 240,
+    "height": 340,
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "tap",
+      "x": 120,
+      "y": 52
+     }
+    ],
+    "duration": 1
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 340,
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "tap",
+      "x": 270,
+      "y": 52
+     }
+    ],
+    "duration": 1
+   }
+  ]
+ },
+ "related": [
+  "LAY-12",
+  "ANM-05",
+  "CMP-06"
+ ],
+ "prerequisites": [
+  "ANM-05"
+ ],
+ "derived": {
+  "components": [
+   "Icon",
+   "ProgressBar"
+  ],
+  "component_instances": 2,
+  "component_modes": {
+   "Icon": "expand",
+   "ProgressBar": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 2637,
+  "header": {
+   "width": 360,
+   "height": 320
+  },
+  "op_count": 165,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 2,
+   "ANIMATED_FLOAT": 3,
+   "ANIMATION_SPEC": 9,
+   "COLOR_CONSTANT": 14,
+   "COLOR_EXPRESSIONS": 14,
+   "COMPONENT_VALUE": 3,
+   "CanvasContent": 2,
+   "CoreText": 4,
+   "DATA_INT": 1,
+   "DATA_TEXT": 4,
+   "DRAW_PATH": 1,
+   "DRAW_ROUND_RECT": 2,
+   "HEADER": 1,
+   "LAYOUT_BOX": 4,
+   "LAYOUT_CANVAS": 2,
+   "LAYOUT_COLUMN": 2,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 1,
+   "LayoutComponentContent": 12,
+   "LoopOperation": 14,
+   "MATRIX_RESTORE": 1,
+   "MATRIX_SAVE": 1,
+   "MATRIX_SCALE": 1,
+   "MODIFIER_BACKGROUND": 5,
+   "MODIFIER_CLICK": 2,
+   "MODIFIER_HEIGHT": 7,
+   "MODIFIER_PADDING": 3,
+   "MODIFIER_WIDTH": 10,
+   "NAMED_VARIABLE": 7,
+   "PAINT_VALUES": 3,
+   "PATH_DATA": 1,
+   "RoundedClipRectModifierOperation": 4,
+   "StateLayout": 1,
+   "THEME": 21,
+   "VALUE_INTEGER_CHANGE_ACTION": 2
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "secondary",
+    "type": "color",
+    "value": "#FF7C4DFF"
+   },
+   {
+    "name": "surface",
+    "type": "color",
+    "value": "#FF1C2433"
+   },
+   {
+    "name": "track",
+    "type": "color",
+    "value": "#FF2A3342"
+   }
+  ],
+  "render_findings": [
+   "warning: component_overflow",
+   "warning: text_overflow"
+  ],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 0
+  },
+  "audit_findings": [],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 1,
+   "click": 1,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": [
+     "warning: component_overflow",
+     "warning: text_overflow"
+    ]
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": [
+     "warning: component_overflow",
+     "warning: text_overflow"
+    ]
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 1700,
+    "component_modes": {
+     "ProgressBar": "expand",
+     "Icon": "expand"
+    },
+    "motion_removed": 9,
+    "op_count": 102,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "secondary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "surface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "track",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 1700,
+    "component_modes": {
+     "ProgressBar": "expand",
+     "Icon": "expand"
+    },
+    "motion_removed": 9,
+    "op_count": 102,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "secondary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "surface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "track",
+      "type": "color",
+      "value": "#FF616161"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     240,
+     340
+    ],
+    "audit_findings": []
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     340
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "Icon",
+   "ProgressBar",
+   "animationId",
+   "animationSpec",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "clickable",
+   "clip",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "dark",
+   "drawPath",
+   "drawRoundRect",
+   "filled",
+   "fontSize",
+   "header",
+   "height",
+   "horizontalAlignment",
+   "icon_play_arrow_outlined_filled",
+   "indexId",
+   "left",
+   "light",
+   "modifiers",
+   "motionDuration",
+   "motionEasing",
+   "muted",
+   "name",
+   "onClick",
+   "onSurface",
+   "ops",
+   "padding",
+   "paint",
+   "path",
+   "paths",
+   "primary",
+   "profiles",
+   "progress",
+   "resources",
+   "right",
+   "root",
+   "row",
+   "rx",
+   "ry",
+   "save",
+   "scale",
+   "secondary",
+   "semantics",
+   "size",
+   "spacedBy",
+   "spacer",
+   "stateLayout",
+   "style",
+   "surface",
+   "sx",
+   "sy",
+   "target",
+   "text",
+   "top",
+   "track",
+   "type",
+   "value",
+   "variable",
+   "verticalAlignment",
+   "visibilityDuration",
+   "vtype",
+   "weight",
+   "width",
+   "x",
+   "y"
+  ],
+  "evidence": {
+   "anim.state": [
+    "stateLayout"
+   ],
+   "layout.state": [
+    "stateLayout"
+   ],
+   "anim.layout": [
+    "animationSpec"
+   ],
+   "input.tap": [
+    "onClick",
+    "valueIntegerChange"
+   ],
+   "layout.decoration": [
+    "background",
+    "clip"
+   ],
+   "layout.weight": [
+    "weight"
+   ],
+   "draw.shapes": [
+    "drawRoundRect"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ]
+  },
+  "built_at": "2026-11-03T01:11:22.966Z"
+ },
+ "components": [
+  "Icon",
+  "ProgressBar"
+ ]
+}

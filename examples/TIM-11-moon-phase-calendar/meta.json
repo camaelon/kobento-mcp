@@ -1,0 +1,659 @@
+{
+ "id": "TIM-11",
+ "name": "moon-phase-calendar",
+ "version": 1,
+ "title": "Moon phase calendar",
+ "summary": "Tonight's moon drawn large beside its phase name, the percentage lit, its age and the days to the next full and new moon (text components), over the month's title, a weekday row and a calendar grid with each day's moon and the day of each principal phase labelled. Everything comes from the clock through a small lunar ephemeris (mean elongation plus five periodic terms), so the document stays right every month.",
+ "prompt": "create an app with the phases of the moon for this month",
+ "level": 4,
+ "family": "TIM",
+ "capabilities": {
+  "primary": [
+   "time.date",
+   "struct.loop",
+   "expr.trig"
+  ],
+  "secondary": [
+   "time.countdown",
+   "time.clock",
+   "expr.math",
+   "expr.select",
+   "expr.string",
+   "text.dynamic",
+   "text.basic",
+   "text.anchor",
+   "layout.stack",
+   "layout.state",
+   "struct.global",
+   "draw.shapes",
+   "draw.arc",
+   "data.tokens",
+   "layout.weight"
+  ]
+ },
+ "use_cases": [
+  "calendar",
+  "widget"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "moon",
+  "moon phase",
+  "moon phases",
+  "lunar",
+  "lunar calendar",
+  "lunar phase",
+  "full moon",
+  "new moon",
+  "first quarter",
+  "last quarter",
+  "crescent",
+  "gibbous",
+  "moon calendar",
+  "this month",
+  "tonight's moon",
+  "illumination",
+  "next full moon",
+  "ephemeris"
+ ],
+ "teaches": [
+  "The moon is the MoonPhase library component, called with a phase computed in the document ({\"MoonPhase\": {\"phase\": \"@f\", \"size\": 112}}); the 42 day moons are the same geometry drawn once inside the calendar's week x weekday loop, not 42 canvases",
+  "Days since 2000-01-01 00:00 UTC at the start of today: 365 * (year() - 2000) + floor((year() - 1997) / 4) + dayOfYear() - 1 - offsetToUtc() / 86400. offsetToUtc() makes the days local, so a phase lands on the user's calendar day",
+  "The lunation count L(t) = 0.8104301 + 0.033863192 t (the mean elongation over 2π) plus five sines (equation of centre, evection, variation, the Sun's anomaly, the second centre term): every principal phase from 2015 to 2045 within about 40 minutes of Meeus' full algorithm, on the right day for 99.5% of them",
+  "A day holds a principal phase when floor(4 L) changes across it: ev = floor(4 L(k + 1)) - floor(4 L(k)), and floor(4 L(k + 1)) % 4 says which (0 new, 1 first quarter, 2 full, 3 last quarter). The phase name and the grid labels use the same rule, so they never disagree",
+  "Days to the next full (or new) moon: the target lunation N = floor(L - 0.5) + 1.5, a first guess at the mean rate, then two Newton steps t -= (L(t) - N) * 29.53; counted from the start of today, so on the day itself it reads \"today\" until midnight",
+  "Words are layout, the drawing is a canvas: the phase name, % illuminated, age and the full / new moon lines are text components in a column beside MoonPhase; the month title is a text and the weekday header a row of seven weight-1 texts, so they measure, wrap (the phase name takes two lines at 300 dp wide) and reach screen readers. Only the day numbers and the small phase labels stay in the grid's loop: they are part of the calendar drawing (42 cells), which uses componentWidth() / 7, the same columns as the weighted header texts",
+  "Names from a table for a layout text: a zero-size canvas holds a global block where textSubtext takes a 15-character slot of a padded table (start @ni * 15) and textTransform 3 trims it into phaseName (monthName likewise from calendarMonth()); the layout texts read \"@phaseName\" and textMerge(\"@monthName\", \" \", year). The global section is written before the root and listens to its variables, so the name changes at midnight (checked across Oct 31 / Nov 1). Cleaner than 8 phase texts or 12 month texts switched by visibility",
+  "The \"Full moon in N days / tomorrow / today\" line is a box holding three whole text components, each with visibility bound to a 0/1 variable: fullIn = step(@toFull, 1.5), fullTomorrow = step(@toFull, 0.5) * step(1.5, @toFull), fullToday = step(0.5, @toFull) (same for new). Exactly one is 1; the others are gone, and the box takes the visible one's size",
+  "Smaller heights: the hero has a fixed size and the grid canvas takes what is left (verticalWeight 1), so the grid gives way first. Its cells adapt to their shape: the phase labels are dropped when a row is under 44 dp (alpha @ev * step(@rh, 44)), and when a cell is much wider than tall (side = step(@cw, 1.6 * @rh), 360 x 360) the number and the moon sit side by side instead of stacked"
+ ],
+ "snippets": [
+  {
+   "pointer": "/resources/variables/d0",
+   "shows": "time.date",
+   "note": "days since 2000-01-01 UTC at the start of today, from year() and dayOfYear()"
+  },
+  {
+   "pointer": "/resources/variables/d0",
+   "shows": "time.countdown",
+   "note": "offsetToUtc() turns the local midnight into UTC days"
+  },
+  {
+   "pointer": "/resources/variables/la0",
+   "shows": "expr.trig",
+   "note": "the ephemeris: the lunation count at the start of today, first half (mean elongation and the two largest terms; la adds the other three, since a Java expression holds at most 32 entries)"
+  },
+  {
+   "pointer": "/resources/variables/tF3",
+   "shows": "expr.math",
+   "note": "second Newton step towards the next full moon"
+  },
+  {
+   "pointer": "/resources/variables/ni",
+   "shows": "expr.select",
+   "note": "phase-name index: a principal phase today, else the in-between name"
+  },
+  {
+   "pointer": "/resources/variables/fullTomorrow",
+   "shows": "layout.state",
+   "note": "a 0/1 variable for visibility: 1 only when the full moon is tomorrow"
+  },
+  {
+   "pointer": "/root/column/children/0",
+   "shows": "struct.global",
+   "note": "a zero-size canvas whose global block names phaseName and monthName for the layout texts"
+  },
+  {
+   "pointer": "/root/column/children/0/canvas/commands/0/global/commands/0",
+   "shows": "expr.string",
+   "note": "phase name from a padded table, trimmed by the textTransform after it"
+  },
+  {
+   "pointer": "/root/column/children/1/row/children/0",
+   "shows": "draw.arc",
+   "note": "tonight's moon: the MoonPhase component at phase @f, 112 dp"
+  },
+  {
+   "pointer": "/root/column/children/1/row/children/1",
+   "shows": "text.dynamic",
+   "note": "the hero's text column: \"@phaseName\", % illuminated and age as textFromFloat merges, and the full / new moon lines switched by visibility"
+  },
+  {
+   "pointer": "/root/column/children/1/row/children/1/column/children/4",
+   "shows": "layout.state",
+   "note": "one line, three wordings: a box holding \"Full moon in N days\", \"tomorrow\" and \"today\", each shown only while its 0/1 variable is 1"
+  },
+  {
+   "pointer": "/root/column/children/3",
+   "shows": "layout.weight",
+   "note": "the weekday header: seven weight-1 texts, the grid's columns"
+  },
+  {
+   "pointer": "/root/column/children/4/canvas/commands/9",
+   "shows": "struct.loop",
+   "note": "the 6 x 7 month grid: one cell body in a week loop and a weekday loop"
+  },
+  {
+   "pointer": "/root/column/children/4/canvas/commands/9/loop/commands/0/loop/commands/10",
+   "shows": "expr.select",
+   "note": "ev: 1 on the day a principal phase happens"
+  },
+  {
+   "pointer": "/root/column/children/4/canvas/commands/9/loop/commands/0/loop/commands/27",
+   "shows": "draw.arc",
+   "note": "the day's moon: lit half, then the terminator ellipses, as MoonPhase draws it"
+  }
+ ],
+ "inputs": {
+  "variables": {},
+  "clock": "2026-10-30",
+  "touch": false
+ },
+ "check": {
+  "describe": "Renders pin offsetToUtc() to 0 (system variable 10), so days are UTC days and the result doesn't depend on the build machine's time zone. Canonical 2026-10-30 12:00: a waning gibbous moon lit on the left, \"Waning Gibbous\", 76% illuminated, age 19.6 days, full moon in 25 days (Nov 24), new moon in 10 days (Nov 9); October 2026 starts on Thursday, Last Q under the 3rd, New under the 10th, 1st Q under the 18th, Full under the 26th, 30 outlined. nov-full (2026-11-24): \"Full Moon\", full moon today, new moon in 15 days; November starts on Sunday (six rows): Last Q 1, New 9, 1st Q 17, Full 24. nov-new-eve (2026-11-08): \"Waning Crescent\", new moon tomorrow, full moon in 16 days. pacific (2026-11-08, offset -8 h): the 07:02 UTC new moon is 23:02 on the 8th locally, so \"New Moon\", new moon today, New under the 8th and Last Q under the 30th (Dec 1 06:09 UTC). light and mono re-colour the same layout (mono: white lit parts, black shade, grey rims). small (300 x 520): the phase name wraps to two lines; small and wide (480 x 640): the cells are componentWidth() / 7 by componentHeight() / 6 under the weekday row and the moons and day numbers scale with the smaller of the two. short (360 x 360): the hero keeps its size, the grid rows are about 25 dp, so the phase labels are off and each day's number sits left of its moon.",
+  "render": {
+   "clock": "2026-10-30T12:00",
+   "system_variables": {
+    "10": 0
+   }
+  },
+  "renders": [
+   {
+    "name": "nov-full",
+    "clock": "2026-11-24T12:00"
+   },
+   {
+    "name": "nov-new-eve",
+    "clock": "2026-11-08T12:00"
+   },
+   {
+    "name": "pacific",
+    "clock": "2026-11-08T12:00",
+    "system_variables": {
+     "10": -28800
+    }
+   },
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "small",
+    "width": 300,
+    "height": 520
+   },
+   {
+    "name": "wide",
+    "width": 480,
+    "height": 640
+   },
+   {
+    "name": "short",
+    "width": 360,
+    "height": 360
+   }
+  ]
+ },
+ "pitfalls": [
+  "Don't draw the moons as text glyphs (🌑 🌓 🌕 ◐): they depend on the device's fonts, can't follow the theme, and show 8 phases at best. Draw them (MoonPhase, or its geometry inside a loop)",
+  "Don't paste a canvas per day with the phase typed in: 31 or 42 copies are large, one wrong copy goes unnoticed, and the document is wrong next month. One loop body with the day computed from the loop indices draws every month",
+  "Don't hard-code the month, its first weekday, its length or the phase dates (\"Full moon Oct 26\"): derive the month from calendarMonth(), weekDay(), dayOfMonth() and year() (TIM-10), and the phases from an ephemeris of the clock",
+  "Local time vs UTC: the date functions are local, the ephemeris is in UTC days. Subtract offsetToUtc() / 86400, or an evening full moon west of Greenwich (Oct 26 04:11 UTC is Oct 25 in California) lands a day late. For renders, pin system variable 10 (offsetToUtc) so they don't depend on the machine's time zone",
+  "The mean lunation alone (t / 29.53 days) puts phases up to 19 hours off. The LLM version's two-term correction (the new/full-moon coefficients) still missed the quarters by up to 6 hours, because evection adds about 0.22 days there: 7.5% of principal phases from 2015 to 2045 landed on the wrong day (Nov 1 2026's last quarter on Nov 2). The five-term series here puts 0.5% of them on the wrong day, each within an hour of midnight",
+  "Days to the next full moon from the mean rate alone can be a day off (the true rate varies by about 15%): refine with two Newton steps, and count from the start of today, not from now, so the day of the full moon reads \"today\" and not \"in 29 days\" after the moment has passed",
+  "A float expression holds at most 32 entries in Java (Limits.MAX_EXPRESSION_SIZE; the parser and the player both throw \"to long\"), and json2rc, C++ and TS don't check it: the five-term series written as one expression converts and renders, then fails on Android. Split it (la0 = mean + two terms, la = la0 + three terms) and pass each time as a single variable, not \"(@d0 + 1)\" repeated six times",
+  "In a column, the child that takes the remaining height needs verticalWeight; [\"fillMaxWidth\", {\"weight\": 1}] there gives a canvas 0 wide and the grid vanishes",
+  "Date functions alone never schedule a repaint: the illumination reads timeInMin(), which repaints once a minute and turns the page at midnight",
+  "Don't draw the hero's words, the month title or the weekday initials on a canvas next to the drawing (the first version did: 10 texts at fixed offsets): they don't measure or wrap (\"Waning Gibbous\" ran past a 300 dp screen), don't follow the font scale, and screen readers can't reach them. Keep text components for words and the canvas for shapes; here only the grid's day numbers and phase labels are drawn, because they are cells of the calendar drawing (moving them out would take 42 layout cells)",
+  "A layout text can't take textSubtext or textTransform (EXAMPLES_FINDINGS U32: Java only allows them among canvas commands). Compute the name in a canvas (here a zero-size one with a global block) and show it as \"@name\" in the text, or switch whole texts with visibility",
+  "visibility reads a variable's integer value: bind it to expressions that are exactly 0 or 1 (step(), 1 - x, products of those); a fractional value truncates to 0 and hides the text",
+  "A weighted child of a collapsibleColumn is never dropped (EXAMPLES_FINDINGS U36): Java hands out the weights before checking what fits, so the weighted grid always gets the leftover and fits, and heightIn on it only makes the column overflow. A grid that must fill the height is a verticalWeight child of a plain column that adapts its own drawing (labels off under 44 dp rows, number beside the moon in short cells); a collapsibleColumn only drops fixed-height children"
+ ],
+ "related": [
+  "TIM-10",
+  "TIM-08",
+  "MoonPhase"
+ ],
+ "components": [
+  "MoonPhase"
+ ],
+ "derived": {
+  "components": [
+   "MoonPhase"
+  ],
+  "component_instances": 1,
+  "component_modes": {
+   "MoonPhase": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 8986,
+  "header": {
+   "width": 360,
+   "height": 640
+  },
+  "op_count": 366,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 1,
+   "ANIMATED_FLOAT": 104,
+   "COLOR_CONSTANT": 18,
+   "COLOR_EXPRESSIONS": 18,
+   "COMPONENT_VALUE": 4,
+   "CanvasContent": 3,
+   "CoreText": 18,
+   "DATA_TEXT": 22,
+   "DRAW_CIRCLE": 4,
+   "DRAW_OVAL": 4,
+   "DRAW_ROUND_RECT": 1,
+   "DRAW_SECTOR": 2,
+   "DRAW_TEXT_ANCHOR": 3,
+   "HEADER": 1,
+   "LAYOUT_BOX": 2,
+   "LAYOUT_CANVAS": 3,
+   "LAYOUT_COLUMN": 2,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 2,
+   "LayoutComponentContent": 27,
+   "LoopOperation": 20,
+   "MATRIX_SCALE": 1,
+   "MATRIX_TRANSLATE": 1,
+   "MODIFIER_BACKGROUND": 1,
+   "MODIFIER_HEIGHT": 4,
+   "MODIFIER_PADDING": 9,
+   "MODIFIER_VISIBILITY": 6,
+   "MODIFIER_WIDTH": 14,
+   "NAMED_VARIABLE": 9,
+   "PAINT_VALUES": 13,
+   "THEME": 27,
+   "TextFromFloat": 6,
+   "TextMerge": 9,
+   "TextSubtext": 3,
+   "TextTransform": 3
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "highlight",
+    "type": "color",
+    "value": "#FFFFD180"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "outline",
+    "type": "color",
+    "value": "#FF3A4556"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "shadow",
+    "type": "color",
+    "value": "#FF263042"
+   },
+   {
+    "name": "surfaceHigh",
+    "type": "color",
+    "value": "#FF263042"
+   },
+   {
+    "name": "warning",
+    "type": "color",
+    "value": "#FFFFB74D"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 2
+  },
+  "audit_findings": [
+   "info: deep_expressions",
+   "info: expression_entries"
+  ],
+  "repaint": "scheduled",
+  "interaction_targets": {
+   "total": 0,
+   "click": 0,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "nov-full": {
+    "render": "render-nov-full.png",
+    "render_findings": []
+   },
+   "nov-new-eve": {
+    "render": "render-nov-new-eve.png",
+    "render_findings": []
+   },
+   "pacific": {
+    "render": "render-pacific.png",
+    "render_findings": []
+   },
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 8009,
+    "component_modes": {
+     "MoonPhase": "expand"
+    },
+    "op_count": 290,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "surfaceHigh",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "warning",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "scheduled",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "small": {
+    "render": "render-small.png",
+    "render_findings": [],
+    "size": [
+     300,
+     520
+    ],
+    "audit_findings": [
+     "info: deep_expressions",
+     "info: expression_entries"
+    ]
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     480,
+     640
+    ],
+    "audit_findings": [
+     "info: deep_expressions",
+     "info: expression_entries"
+    ]
+   },
+   "short": {
+    "render": "render-short.png",
+    "render_findings": [],
+    "size": [
+     360,
+     360
+    ],
+    "audit_findings": [
+     "info: deep_expressions",
+     "info: expression_entries"
+    ]
+   }
+  },
+  "json_keys": [
+   "MoonPhase",
+   "NF",
+   "NN",
+   "alpha",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "componentTheme",
+   "contentDescription",
+   "cx",
+   "cy",
+   "d0",
+   "d1",
+   "dark",
+   "decimal",
+   "drawCircle",
+   "drawOval",
+   "drawRoundRect",
+   "drawSector",
+   "drawTextAnchored",
+   "dx",
+   "dy",
+   "f",
+   "flags",
+   "fontSize",
+   "from",
+   "fullIn",
+   "fullToday",
+   "fullTomorrow",
+   "global",
+   "header",
+   "height",
+   "highlight",
+   "id1",
+   "id2",
+   "index",
+   "lF1",
+   "lF1a",
+   "lF2",
+   "lF2a",
+   "lN1",
+   "lN1a",
+   "lN2",
+   "lN2a",
+   "la",
+   "la0",
+   "label",
+   "lb",
+   "lb0",
+   "left",
+   "len",
+   "light",
+   "ln",
+   "loop",
+   "maxLines",
+   "modifiers",
+   "moonphase1_c",
+   "moonphase1_p",
+   "muted",
+   "name",
+   "newIn",
+   "newToday",
+   "newTomorrow",
+   "ni",
+   "onSurface",
+   "operation",
+   "ops",
+   "outline",
+   "padding",
+   "paint",
+   "panX",
+   "panY",
+   "phase",
+   "primary",
+   "profiles",
+   "qa",
+   "qb",
+   "radius",
+   "resources",
+   "right",
+   "root",
+   "row",
+   "rx",
+   "ry",
+   "scale",
+   "semantics",
+   "shadow",
+   "size",
+   "start",
+   "startAngle",
+   "strokeWidth",
+   "style",
+   "surfaceHigh",
+   "sweepAngle",
+   "sx",
+   "sy",
+   "tF1",
+   "tF2",
+   "tF3",
+   "tN1",
+   "tN2",
+   "tN3",
+   "text",
+   "textAlign",
+   "textSize",
+   "textSubtext",
+   "textTransform",
+   "toFull",
+   "toNew",
+   "top",
+   "translate",
+   "type",
+   "until",
+   "value",
+   "varName",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "verticalWeight",
+   "visibility",
+   "warning",
+   "weight",
+   "whole",
+   "width",
+   "x",
+   "y"
+  ],
+  "evidence": {
+   "time.date": [
+    "weekDay",
+    "dayOfMonth",
+    "calendarMonth",
+    "year",
+    "dayOfYear"
+   ],
+   "struct.loop": [
+    "loop"
+   ],
+   "expr.trig": [
+    "sin(",
+    "cos("
+   ],
+   "time.countdown": [
+    "offsetToUtc",
+    "dayOfYear"
+   ],
+   "time.clock": [
+    "timeInMin"
+   ],
+   "expr.math": [
+    "floor(",
+    "abs(",
+    "min(",
+    "max("
+   ],
+   "expr.select": [
+    "step("
+   ],
+   "expr.string": [
+    "textMerge",
+    "textTransform",
+    "textSubtext"
+   ],
+   "text.dynamic": [
+    "textFromFloat",
+    "textMerge"
+   ],
+   "text.basic": [
+    "text",
+    "drawTextAnchored"
+   ],
+   "text.anchor": [
+    "drawTextAnchored"
+   ],
+   "layout.stack": [
+    "column",
+    "row",
+    "box"
+   ],
+   "layout.state": [
+    "visibility"
+   ],
+   "struct.global": [
+    "global"
+   ],
+   "draw.shapes": [
+    "drawRoundRect",
+    "drawCircle",
+    "drawOval"
+   ],
+   "draw.arc": [
+    "drawSector"
+   ],
+   "data.tokens": [
+    "resources",
+    "variables",
+    "colors"
+   ],
+   "layout.weight": [
+    "weight",
+    "verticalWeight"
+   ]
+  },
+  "built_at": "2026-11-01T22:49:52.184Z"
+ }
+}

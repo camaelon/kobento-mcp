@@ -1,0 +1,2151 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 640,
+  "profiles": 513,
+  "contentDescription": "Deployment approval for release 2.14: built, tested and staged; security review in progress; then release manager approval and production. A rejection at either review goes to Fix findings and back to CI"
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    }
+   ],
+   "children": [
+    {
+     "column": {
+      "modifiers": [
+       "fillMaxWidth",
+       {
+        "padding": [
+         16,
+         12,
+         16,
+         4
+        ]
+       }
+      ],
+      "children": [
+       {
+        "text": {
+         "value": "Release 2.14 to production",
+         "fontSize": 18,
+         "fontWeight": 700,
+         "color": "@colors.onSurface",
+         "maxLines": 1,
+         "overflow": "ellipsis"
+        }
+       },
+       {
+        "text": {
+         "value": "Waiting on security review",
+         "fontSize": 13,
+         "color": "@colors.muted",
+         "maxLines": 1,
+         "overflow": "ellipsis"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "width": "windowWidth()"
+       },
+       {
+        "animationSpec": {
+         "animationId": 0
+        }
+       },
+       {
+        "height": "windowHeight() - 60"
+       },
+       {
+        "background": "@colors.background"
+       }
+      ],
+      "children": [
+       {
+        "variable": {
+         "name": "g1b4k_W",
+         "value": "windowWidth()"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_H",
+         "value": "windowHeight() - 60"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_nwT",
+         "value": "min(240, (@g1b4k_W - 16) / 2.375 - 14)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_pitT",
+         "value": "min(124, (@g1b4k_H - 16) / 6)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_nwL",
+         "value": "min(240, (@g1b4k_W - 16) / 6 - 69)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_pitL",
+         "value": "min(78, (@g1b4k_H - 16) / 2.375)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_nhT",
+         "value": "ifElse(48, 29, step(@g1b4k_nwT, 206))"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_sT",
+         "value": "min(@g1b4k_nwT / 120, (@g1b4k_pitT - 0.8 * @g1b4k_nhT) / 32)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_sL",
+         "value": "min(@g1b4k_nwL / 120, (@g1b4k_pitL - 38.4) / 8)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_lr",
+         "value": "step(@g1b4k_sL, @g1b4k_sT + 0.02)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_s",
+         "value": "max(@g1b4k_sT, @g1b4k_sL)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_k",
+         "value": "clamp(0.77, 1.2, @g1b4k_s)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_show",
+         "value": "step(@g1b4k_s, 0.4)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_nh",
+         "value": "ifElse(@g1b4k_nhT, 48, @g1b4k_lr) * @g1b4k_k"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_fs",
+         "value": "13 * @g1b4k_k"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_nw",
+         "value": "ifElse(@g1b4k_nwT, @g1b4k_nwL, @g1b4k_lr)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_ua",
+         "value": "ifElse(@g1b4k_nwT + 14, @g1b4k_pitL, @g1b4k_lr)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_ub",
+         "value": "ifElse(@g1b4k_pitT, @g1b4k_nwL + 69, @g1b4k_lr)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_hA",
+         "value": "ifElse(@g1b4k_nw / 2, @g1b4k_nh / 2, @g1b4k_lr)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_hB",
+         "value": "ifElse(@g1b4k_nh / 2, @g1b4k_nw / 2, @g1b4k_lr)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_oa",
+         "value": "(ifElse(@g1b4k_W, @g1b4k_H, @g1b4k_lr) - 2.375 * @g1b4k_ua) / 2"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_ob",
+         "value": "(ifElse(@g1b4k_H, @g1b4k_W, @g1b4k_lr) - 6 * @g1b4k_ub) / 2"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_b0",
+         "value": "@g1b4k_ob + 0.5 * @g1b4k_ub"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_b1",
+         "value": "@g1b4k_ob + 1.5 * @g1b4k_ub"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_b2",
+         "value": "@g1b4k_ob + 2.5 * @g1b4k_ub"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_b3",
+         "value": "@g1b4k_ob + 3.5 * @g1b4k_ub"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_b4",
+         "value": "@g1b4k_ob + 4.5 * @g1b4k_ub"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_b5",
+         "value": "@g1b4k_ob + 5.5 * @g1b4k_ub"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_a0",
+         "value": "@g1b4k_oa + 1.688 * @g1b4k_ua"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_a1",
+         "value": "@g1b4k_oa + 1.25 * @g1b4k_ua"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_a2",
+         "value": "@g1b4k_oa + 0.875 * @g1b4k_ua"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_a3",
+         "value": "@g1b4k_oa + 1.563 * @g1b4k_ua"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_a4",
+         "value": "@g1b4k_oa + 1.625 * @g1b4k_ua"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_a5",
+         "value": "@g1b4k_oa + 0.5 * @g1b4k_ua"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_a6",
+         "value": "@g1b4k_oa + 1.875 * @g1b4k_ua"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_t0",
+         "value": "@g1b4k_b0 - @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_d0",
+         "value": "@g1b4k_b0 + @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_t1",
+         "value": "@g1b4k_b1 - @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_d1",
+         "value": "@g1b4k_b1 + @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_t2",
+         "value": "@g1b4k_b2 - @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_d2",
+         "value": "@g1b4k_b2 + @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_t3",
+         "value": "@g1b4k_b3 - @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_d3",
+         "value": "@g1b4k_b3 + @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_t4",
+         "value": "@g1b4k_b4 - @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_d4",
+         "value": "@g1b4k_b4 + @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_t5",
+         "value": "@g1b4k_b5 - @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_d5",
+         "value": "@g1b4k_b5 + @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_G",
+         "value": "@g1b4k_ub - 2 * @g1b4k_hB"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_gO",
+         "value": "min(0.6 * @g1b4k_G, ifElse(17, 63, @g1b4k_lr))"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_m1_0",
+         "value": "@g1b4k_b1 + @g1b4k_hB + @g1b4k_gO + 0.5 * (@g1b4k_G - @g1b4k_gO)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_m3_0",
+         "value": "@g1b4k_b3 + @g1b4k_hB + @g1b4k_gO + 0.5 * (@g1b4k_G - @g1b4k_gO)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_m4_0",
+         "value": "@g1b4k_b4 + @g1b4k_hB + @g1b4k_gO + 0.5 * (@g1b4k_G - @g1b4k_gO)"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_hx",
+         "value": "@g1b4k_nw / 2"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_hy",
+         "value": "@g1b4k_nh / 2"
+        }
+       },
+       {
+        "variable": {
+         "name": "g1b4k_hide",
+         "value": "1 - @g1b4k_show"
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "visibility": "@g1b4k_show"
+          },
+          {
+           "animationSpec": {
+            "animationId": 0
+           }
+          },
+          {
+           "width": "@g1b4k_W"
+          },
+          {
+           "height": "@g1b4k_H"
+          }
+         ],
+         "children": [
+          {
+           "canvas": {
+            "modifiers": [
+             {
+              "width": "@g1b4k_W"
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "height": "@g1b4k_H"
+             }
+            ],
+            "commands": [
+             {
+              "save": [
+               {
+                "rotate": {
+                 "angle": "90 * @g1b4k_lr"
+                }
+               },
+               {
+                "scale": {
+                 "sx": 1,
+                 "sy": "1 - 2 * @g1b4k_lr"
+                }
+               },
+               {
+                "paint": {
+                 "ops": [
+                  {
+                   "color": "@colors.muted"
+                  },
+                  {
+                   "alpha": 1
+                  },
+                  {
+                   "style": "stroke"
+                  },
+                  {
+                   "strokeWidth": 1.5
+                  },
+                  {
+                   "strokeCap": "round"
+                  }
+                 ]
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a0",
+                 "y1": "@g1b4k_d0",
+                 "x2": "@g1b4k_a0",
+                 "y2": "@g1b4k_t1"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a0 - 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_d1",
+                 "x2": "@g1b4k_a0 - 0.25 * @g1b4k_hA",
+                 "y2": "@g1b4k_m1_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a0 - 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_m1_0",
+                 "x2": "@g1b4k_a1",
+                 "y2": "@g1b4k_m1_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a1",
+                 "y1": "@g1b4k_m1_0",
+                 "x2": "@g1b4k_a1",
+                 "y2": "@g1b4k_t2"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a1",
+                 "y1": "@g1b4k_d2",
+                 "x2": "@g1b4k_a1",
+                 "y2": "@g1b4k_t3"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a1 - 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_d3",
+                 "x2": "@g1b4k_a1 - 0.25 * @g1b4k_hA",
+                 "y2": "@g1b4k_m3_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a1 - 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_m3_0",
+                 "x2": "@g1b4k_a2",
+                 "y2": "@g1b4k_m3_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a2",
+                 "y1": "@g1b4k_m3_0",
+                 "x2": "@g1b4k_a2",
+                 "y2": "@g1b4k_t4"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a2 - 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_d4",
+                 "x2": "@g1b4k_a2 - 0.25 * @g1b4k_hA",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a2 - 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a5",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a5",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a5",
+                 "y2": "@g1b4k_t5"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a0 + 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_d1",
+                 "x2": "@g1b4k_a0 + 0.25 * @g1b4k_hA",
+                 "y2": "@g1b4k_m1_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a0 + 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_m1_0",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_m1_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_m1_0",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_t2"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_t2",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_d2"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_d2",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_t3"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_t3",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_d3"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_d3",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_t4"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_t4",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_d4"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_d4",
+                 "x2": "@g1b4k_a6",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a6",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a4 + 0.433 * @g1b4k_hA",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a4 + 0.433 * @g1b4k_hA",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a4 + 0.433 * @g1b4k_hA",
+                 "y2": "@g1b4k_t5"
+                }
+               },
+               {
+                "paint": {
+                 "ops": [
+                  {
+                   "style": "fill"
+                  }
+                 ]
+                }
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a0",
+                   "dy": "@g1b4k_t1"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_down_1"
+                  }
+                 }
+                ]
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a1",
+                   "dy": "@g1b4k_t2"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_down_1"
+                  }
+                 }
+                ]
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a1",
+                   "dy": "@g1b4k_t3"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_down_1"
+                  }
+                 }
+                ]
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a2",
+                   "dy": "@g1b4k_t4"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_down_1"
+                  }
+                 }
+                ]
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a5",
+                   "dy": "@g1b4k_t5"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_down_1"
+                  }
+                 }
+                ]
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a0 + 0.25 * @g1b4k_hA",
+                   "dy": "@g1b4k_d1"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_up_1"
+                  }
+                 }
+                ]
+               },
+               {
+                "paint": {
+                 "ops": [
+                  {
+                   "color": "@colors.error"
+                  },
+                  {
+                   "alpha": 1
+                  },
+                  {
+                   "style": "stroke"
+                  },
+                  {
+                   "strokeWidth": 1.5
+                  },
+                  {
+                   "strokeCap": "round"
+                  }
+                 ]
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a1 + 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_d3",
+                 "x2": "@g1b4k_a1 + 0.25 * @g1b4k_hA",
+                 "y2": "@g1b4k_m3_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a1 + 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_m3_0",
+                 "x2": "@g1b4k_a3",
+                 "y2": "@g1b4k_m3_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a3",
+                 "y1": "@g1b4k_m3_0",
+                 "x2": "@g1b4k_a3",
+                 "y2": "@g1b4k_t4"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a3",
+                 "y1": "@g1b4k_t4",
+                 "x2": "@g1b4k_a3",
+                 "y2": "@g1b4k_d4"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a3",
+                 "y1": "@g1b4k_d4",
+                 "x2": "@g1b4k_a3",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a3",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a4",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a4",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a4",
+                 "y2": "@g1b4k_t5"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a2 + 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_d4",
+                 "x2": "@g1b4k_a2 + 0.25 * @g1b4k_hA",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a2 + 0.25 * @g1b4k_hA",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a4 - 0.433 * @g1b4k_hA",
+                 "y2": "@g1b4k_m4_0"
+                }
+               },
+               {
+                "drawLine": {
+                 "x1": "@g1b4k_a4 - 0.433 * @g1b4k_hA",
+                 "y1": "@g1b4k_m4_0",
+                 "x2": "@g1b4k_a4 - 0.433 * @g1b4k_hA",
+                 "y2": "@g1b4k_t5"
+                }
+               },
+               {
+                "paint": {
+                 "ops": [
+                  {
+                   "style": "fill"
+                  }
+                 ]
+                }
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a4",
+                   "dy": "@g1b4k_t5"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_down_1"
+                  }
+                 }
+                ]
+               },
+               {
+                "save": [
+                 {
+                  "translate": {
+                   "dx": "@g1b4k_a4 - 0.433 * @g1b4k_hA",
+                   "dy": "@g1b4k_t5"
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": "$paths.gen_arrow_down_1"
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lx0",
+               "value": "ifElse(@g1b4k_a1 - 0.25 * @g1b4k_hA - 5, @g1b4k_d3 + 4, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ly0",
+               "value": "ifElse(@g1b4k_d3 + 3, @g1b4k_a1 - 0.25 * @g1b4k_hA - 3, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lw0",
+               "value": "4.64 * (@g1b4k_fs - 2) + 4"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ll0",
+               "value": "@g1b4k_lx0 - (ifElse(1, -1, @g1b4k_lr) + 1) / 2 * @g1b4k_lw0"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lt0",
+               "value": "@g1b4k_ly0 - (ifElse(1, -1, @g1b4k_lr) + 1) / 2 * (@g1b4k_fs + 1)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@g1b4k_ll0",
+               "top": "@g1b4k_lt0",
+               "right": "@g1b4k_ll0 + @g1b4k_lw0",
+               "bottom": "@g1b4k_lt0 + @g1b4k_fs + 1"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "textSize": "@g1b4k_fs - 2"
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "approved",
+               "x": "@g1b4k_lx0",
+               "y": "@g1b4k_ly0",
+               "panX": "ifElse(1, -1, @g1b4k_lr)",
+               "panY": "ifElse(1, -1, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lx1",
+               "value": "ifElse(@g1b4k_a1 + 0.25 * @g1b4k_hA + 5, @g1b4k_d3 + 4, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ly1",
+               "value": "ifElse(@g1b4k_d3 + 3, @g1b4k_a1 + 0.25 * @g1b4k_hA + 3, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lw1",
+               "value": "4.64 * (@g1b4k_fs - 2) + 4"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ll1",
+               "value": "@g1b4k_lx1 - (-1 + 1) / 2 * @g1b4k_lw1"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lt1",
+               "value": "@g1b4k_ly1 - (1 + 1) / 2 * (@g1b4k_fs + 1)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@g1b4k_ll1",
+               "top": "@g1b4k_lt1",
+               "right": "@g1b4k_ll1 + @g1b4k_lw1",
+               "bottom": "@g1b4k_lt1 + @g1b4k_fs + 1"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.error"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "textSize": "@g1b4k_fs - 2"
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "rejected",
+               "x": "@g1b4k_lx1",
+               "y": "@g1b4k_ly1",
+               "panX": -1,
+               "panY": 1
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lx2",
+               "value": "ifElse(@g1b4k_a2 - 0.25 * @g1b4k_hA - 5, @g1b4k_d4 + 4, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ly2",
+               "value": "ifElse(@g1b4k_d4 + 3, @g1b4k_a2 - 0.25 * @g1b4k_hA - 3, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lw2",
+               "value": "4.64 * (@g1b4k_fs - 2) + 4"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ll2",
+               "value": "@g1b4k_lx2 - (ifElse(1, -1, @g1b4k_lr) + 1) / 2 * @g1b4k_lw2"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lt2",
+               "value": "@g1b4k_ly2 - (ifElse(1, -1, @g1b4k_lr) + 1) / 2 * (@g1b4k_fs + 1)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@g1b4k_ll2",
+               "top": "@g1b4k_lt2",
+               "right": "@g1b4k_ll2 + @g1b4k_lw2",
+               "bottom": "@g1b4k_lt2 + @g1b4k_fs + 1"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "textSize": "@g1b4k_fs - 2"
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "approved",
+               "x": "@g1b4k_lx2",
+               "y": "@g1b4k_ly2",
+               "panX": "ifElse(1, -1, @g1b4k_lr)",
+               "panY": "ifElse(1, -1, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lx3",
+               "value": "ifElse(@g1b4k_a2 + 0.25 * @g1b4k_hA + 5, @g1b4k_d4 + 4, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ly3",
+               "value": "ifElse(@g1b4k_d4 + 3, @g1b4k_a2 + 0.25 * @g1b4k_hA + 3, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lw3",
+               "value": "4.64 * (@g1b4k_fs - 2) + 4"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ll3",
+               "value": "@g1b4k_lx3 - (-1 + 1) / 2 * @g1b4k_lw3"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lt3",
+               "value": "@g1b4k_ly3 - (1 + 1) / 2 * (@g1b4k_fs + 1)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@g1b4k_ll3",
+               "top": "@g1b4k_lt3",
+               "right": "@g1b4k_ll3 + @g1b4k_lw3",
+               "bottom": "@g1b4k_lt3 + @g1b4k_fs + 1"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.error"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "textSize": "@g1b4k_fs - 2"
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "rejected",
+               "x": "@g1b4k_lx3",
+               "y": "@g1b4k_ly3",
+               "panX": -1,
+               "panY": 1
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lx4",
+               "value": "ifElse(@g1b4k_a4 + 0.433 * @g1b4k_hA + 5, @g1b4k_t5 - 4, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ly4",
+               "value": "ifElse(@g1b4k_t5 - 3, @g1b4k_a4 + 0.433 * @g1b4k_hA + 3, @g1b4k_lr)"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lw4",
+               "value": "4.64 * (@g1b4k_fs - 2) + 4"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_ll4",
+               "value": "@g1b4k_lx4 - (ifElse(-1, 1, @g1b4k_lr) + 1) / 2 * @g1b4k_lw4"
+              }
+             },
+             {
+              "variable": {
+               "name": "g1b4k_lt4",
+               "value": "@g1b4k_ly4 - (ifElse(-1, 1, @g1b4k_lr) + 1) / 2 * (@g1b4k_fs + 1)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@g1b4k_ll4",
+               "top": "@g1b4k_lt4",
+               "right": "@g1b4k_ll4 + @g1b4k_lw4",
+               "bottom": "@g1b4k_lt4 + @g1b4k_fs + 1"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "textSize": "@g1b4k_fs - 2"
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "resubmit",
+               "x": "@g1b4k_lx4",
+               "y": "@g1b4k_ly4",
+               "panX": "ifElse(-1, 1, @g1b4k_lr)",
+               "panY": "ifElse(-1, 1, @g1b4k_lr)"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "horizontalAlignment": "center",
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "offset": [
+               "ifElse(@g1b4k_a0, @g1b4k_b0, @g1b4k_lr) - @g1b4k_hx",
+               "ifElse(@g1b4k_b0, @g1b4k_a0, @g1b4k_lr) - @g1b4k_hy"
+              ]
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "width": "@g1b4k_nw"
+             },
+             {
+              "height": "@g1b4k_nh"
+             },
+             {
+              "clip": {
+               "roundedRect": 10
+              }
+             },
+             {
+              "background": "@colors.success"
+             },
+             {
+              "padding": 2
+             },
+             {
+              "clip": {
+               "roundedRect": 8
+              }
+             },
+             {
+              "background": "@colors.surface"
+             },
+             {
+              "padding": [
+               6,
+               2
+              ]
+             },
+             {
+              "semantics": {
+               "contentDescription": "Merge request, done"
+              }
+             }
+            ],
+            "children": [
+             {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                "fillMaxWidth"
+               ],
+               "children": [
+                {
+                 "canvas": {
+                  "modifiers": [
+                   {
+                    "size": 16
+                   }
+                  ],
+                  "commands": [
+                   {
+                    "save": [
+                     {
+                      "scale": {
+                       "sx": "componentWidth() / 960",
+                       "sy": "componentHeight() / 960"
+                      }
+                     },
+                     {
+                      "paint": {
+                       "color": "@colors.success",
+                       "style": "fill"
+                      }
+                     },
+                     {
+                      "drawPath": {
+                       "path": "$paths.icon_check_outlined"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                },
+                {
+                 "text": {
+                  "value": "Merge request",
+                  "fontSize": "@g1b4k_fs",
+                  "color": "@colors.onSurface",
+                  "maxLines": 2,
+                  "overflow": "ellipsis",
+                  "textAlign": "center",
+                  "modifiers": [
+                   {
+                    "weight": 1
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "horizontalAlignment": "center",
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "offset": [
+               "ifElse(@g1b4k_a0, @g1b4k_b1, @g1b4k_lr) - @g1b4k_hx",
+               "ifElse(@g1b4k_b1, @g1b4k_a0, @g1b4k_lr) - @g1b4k_hy"
+              ]
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "width": "@g1b4k_nw"
+             },
+             {
+              "height": "@g1b4k_nh"
+             },
+             {
+              "clip": {
+               "roundedRect": 10
+              }
+             },
+             {
+              "background": "@colors.success"
+             },
+             {
+              "padding": 2
+             },
+             {
+              "clip": {
+               "roundedRect": 8
+              }
+             },
+             {
+              "background": "@colors.surface"
+             },
+             {
+              "padding": [
+               6,
+               2
+              ]
+             },
+             {
+              "semantics": {
+               "contentDescription": "CI build and tests, done"
+              }
+             }
+            ],
+            "children": [
+             {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                "fillMaxWidth"
+               ],
+               "children": [
+                {
+                 "canvas": {
+                  "modifiers": [
+                   {
+                    "size": 16
+                   }
+                  ],
+                  "commands": [
+                   {
+                    "save": [
+                     {
+                      "scale": {
+                       "sx": "componentWidth() / 960",
+                       "sy": "componentHeight() / 960"
+                      }
+                     },
+                     {
+                      "paint": {
+                       "color": "@colors.success",
+                       "style": "fill"
+                      }
+                     },
+                     {
+                      "drawPath": {
+                       "path": "$paths.icon_check_outlined"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                },
+                {
+                 "text": {
+                  "value": "CI build and tests",
+                  "fontSize": "@g1b4k_fs",
+                  "color": "@colors.onSurface",
+                  "maxLines": 2,
+                  "overflow": "ellipsis",
+                  "textAlign": "center",
+                  "modifiers": [
+                   {
+                    "weight": 1
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "horizontalAlignment": "center",
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "offset": [
+               "ifElse(@g1b4k_a1, @g1b4k_b2, @g1b4k_lr) - @g1b4k_hx",
+               "ifElse(@g1b4k_b2, @g1b4k_a1, @g1b4k_lr) - @g1b4k_hy"
+              ]
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "width": "@g1b4k_nw"
+             },
+             {
+              "height": "@g1b4k_nh"
+             },
+             {
+              "clip": {
+               "roundedRect": 10
+              }
+             },
+             {
+              "background": "@colors.success"
+             },
+             {
+              "padding": 2
+             },
+             {
+              "clip": {
+               "roundedRect": 8
+              }
+             },
+             {
+              "background": "@colors.surface"
+             },
+             {
+              "padding": [
+               6,
+               2
+              ]
+             },
+             {
+              "semantics": {
+               "contentDescription": "Deploy to staging, done"
+              }
+             }
+            ],
+            "children": [
+             {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                "fillMaxWidth"
+               ],
+               "children": [
+                {
+                 "canvas": {
+                  "modifiers": [
+                   {
+                    "size": 16
+                   }
+                  ],
+                  "commands": [
+                   {
+                    "save": [
+                     {
+                      "scale": {
+                       "sx": "componentWidth() / 960",
+                       "sy": "componentHeight() / 960"
+                      }
+                     },
+                     {
+                      "paint": {
+                       "color": "@colors.success",
+                       "style": "fill"
+                      }
+                     },
+                     {
+                      "drawPath": {
+                       "path": "$paths.icon_check_outlined"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                },
+                {
+                 "text": {
+                  "value": "Deploy to staging",
+                  "fontSize": "@g1b4k_fs",
+                  "color": "@colors.onSurface",
+                  "maxLines": 2,
+                  "overflow": "ellipsis",
+                  "textAlign": "center",
+                  "modifiers": [
+                   {
+                    "weight": 1
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "horizontalAlignment": "center",
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "offset": [
+               "ifElse(@g1b4k_a1, @g1b4k_b3, @g1b4k_lr) - @g1b4k_hx",
+               "ifElse(@g1b4k_b3, @g1b4k_a1, @g1b4k_lr) - @g1b4k_hy"
+              ]
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "width": "@g1b4k_nw"
+             },
+             {
+              "height": "@g1b4k_nh"
+             },
+             {
+              "clip": {
+               "roundedRect": 10
+              }
+             },
+             {
+              "background": "@colors.primary"
+             },
+             {
+              "padding": [
+               6,
+               2
+              ]
+             },
+             {
+              "semantics": {
+               "contentDescription": "Security review, active"
+              }
+             }
+            ],
+            "children": [
+             {
+              "text": {
+               "value": "Security review",
+               "fontSize": "@g1b4k_fs",
+               "color": "@colors.onPrimary",
+               "maxLines": 2,
+               "overflow": "ellipsis",
+               "textAlign": "center",
+               "fontWeight": 700
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "horizontalAlignment": "center",
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "offset": [
+               "ifElse(@g1b4k_a2, @g1b4k_b4, @g1b4k_lr) - @g1b4k_hx",
+               "ifElse(@g1b4k_b4, @g1b4k_a2, @g1b4k_lr) - @g1b4k_hy"
+              ]
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "width": "@g1b4k_nw"
+             },
+             {
+              "height": "@g1b4k_nh"
+             },
+             {
+              "clip": {
+               "roundedRect": 10
+              }
+             },
+             {
+              "background": "@colors.outline"
+             },
+             {
+              "padding": 1
+             },
+             {
+              "clip": {
+               "roundedRect": 9
+              }
+             },
+             {
+              "background": "@colors.surface"
+             },
+             {
+              "padding": [
+               6,
+               2
+              ]
+             },
+             {
+              "semantics": {
+               "contentDescription": "Release manager approval, pending"
+              }
+             }
+            ],
+            "children": [
+             {
+              "text": {
+               "value": "Release manager approval",
+               "fontSize": "@g1b4k_fs",
+               "color": "@colors.muted",
+               "maxLines": 2,
+               "overflow": "ellipsis",
+               "textAlign": "center"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "horizontalAlignment": "center",
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "offset": [
+               "ifElse(@g1b4k_a5, @g1b4k_b5, @g1b4k_lr) - @g1b4k_hx",
+               "ifElse(@g1b4k_b5, @g1b4k_a5, @g1b4k_lr) - @g1b4k_hy"
+              ]
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "width": "@g1b4k_nw"
+             },
+             {
+              "height": "@g1b4k_nh"
+             },
+             {
+              "clip": {
+               "roundedRect": 10
+              }
+             },
+             {
+              "background": "@colors.outline"
+             },
+             {
+              "padding": 1
+             },
+             {
+              "clip": {
+               "roundedRect": 9
+              }
+             },
+             {
+              "background": "@colors.surface"
+             },
+             {
+              "padding": [
+               6,
+               2
+              ]
+             },
+             {
+              "semantics": {
+               "contentDescription": "Deploy to production, pending"
+              }
+             }
+            ],
+            "children": [
+             {
+              "text": {
+               "value": "Deploy to production",
+               "fontSize": "@g1b4k_fs",
+               "color": "@colors.muted",
+               "maxLines": 2,
+               "overflow": "ellipsis",
+               "textAlign": "center"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "horizontalAlignment": "center",
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "offset": [
+               "ifElse(@g1b4k_a4, @g1b4k_b5, @g1b4k_lr) - @g1b4k_hx",
+               "ifElse(@g1b4k_b5, @g1b4k_a4, @g1b4k_lr) - @g1b4k_hy"
+              ]
+             },
+             {
+              "animationSpec": {
+               "animationId": 0
+              }
+             },
+             {
+              "width": "@g1b4k_nw"
+             },
+             {
+              "height": "@g1b4k_nh"
+             },
+             {
+              "clip": {
+               "roundedRect": 10
+              }
+             },
+             {
+              "background": "@colors.outline"
+             },
+             {
+              "padding": 1
+             },
+             {
+              "clip": {
+               "roundedRect": 9
+              }
+             },
+             {
+              "background": "@colors.surface"
+             },
+             {
+              "padding": [
+               6,
+               2
+              ]
+             },
+             {
+              "semantics": {
+               "contentDescription": "Fix findings, pending"
+              }
+             }
+            ],
+            "children": [
+             {
+              "text": {
+               "value": "Fix findings",
+               "fontSize": "@g1b4k_fs",
+               "color": "@colors.muted",
+               "maxLines": 2,
+               "overflow": "ellipsis",
+               "textAlign": "center"
+              }
+             }
+            ]
+           }
+          }
+         ]
+        }
+       },
+       {
+        "column": {
+         "horizontalAlignment": "center",
+         "verticalAlignment": "center",
+         "modifiers": [
+          {
+           "visibility": "@g1b4k_hide"
+          },
+          "fillMaxSize",
+          {
+           "padding": 8
+          }
+         ],
+         "children": [
+          {
+           "text": {
+            "value": "Step 4 of 7",
+            "fontSize": 12,
+            "color": "@colors.muted",
+            "maxLines": 1
+           }
+          },
+          {
+           "text": {
+            "value": "Security review",
+            "fontSize": 15,
+            "fontWeight": 700,
+            "color": "@colors.onSurface",
+            "maxLines": 2,
+            "overflow": "ellipsis",
+            "textAlign": "center"
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "height": 8
+             }
+            ]
+           }
+          },
+          {
+           "canvas": {
+            "modifiers": [
+             "fillMaxWidth",
+             {
+              "height": 12
+             }
+            ],
+            "commands": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.success"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "strokeWidth": 1.5
+                }
+               ]
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "(componentWidth() - 84) / 2 + 0",
+               "cy": 6,
+               "radius": 4
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "(componentWidth() - 84) / 2 + 14",
+               "cy": 6,
+               "radius": 4
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "(componentWidth() - 84) / 2 + 28",
+               "cy": 6,
+               "radius": 4
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.primary"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "strokeWidth": 1.5
+                }
+               ]
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "(componentWidth() - 84) / 2 + 42",
+               "cy": 6,
+               "radius": 5.5
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.outline"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeWidth": 1.5
+                }
+               ]
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "(componentWidth() - 84) / 2 + 56",
+               "cy": 6,
+               "radius": 3.5
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "(componentWidth() - 84) / 2 + 70",
+               "cy": 6,
+               "radius": 3.5
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "(componentWidth() - 84) / 2 + 84",
+               "cy": 6,
+               "radius": 3.5
+              }
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "resources": {
+  "paths": {
+   "gen_arrow_down_1": [
+    {
+     "type": "moveTo",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "type": "lineTo",
+     "x": -4.5,
+     "y": -8
+    },
+    {
+     "type": "lineTo",
+     "x": 4.5,
+     "y": -8
+    },
+    {
+     "type": "close"
+    }
+   ],
+   "gen_arrow_up_1": [
+    {
+     "type": "moveTo",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "type": "lineTo",
+     "x": -4.5,
+     "y": 8
+    },
+    {
+     "type": "lineTo",
+     "x": 4.5,
+     "y": 8
+    },
+    {
+     "type": "close"
+    }
+   ],
+   "icon_check_outlined": [
+    {
+     "type": "moveTo",
+     "x": 382,
+     "y": 720
+    },
+    {
+     "type": "lineTo",
+     "x": 154,
+     "y": 492
+    },
+    {
+     "type": "lineTo",
+     "x": 211,
+     "y": 435
+    },
+    {
+     "type": "lineTo",
+     "x": 382,
+     "y": 606
+    },
+    {
+     "type": "lineTo",
+     "x": 749,
+     "y": 239
+    },
+    {
+     "type": "lineTo",
+     "x": 806,
+     "y": 296
+    },
+    {
+     "type": "close"
+    }
+   ]
+  },
+  "colors": {
+   "background": "#FFFFFFFF",
+   "error": "#FF000000",
+   "muted": "#FF616161",
+   "onPrimary": "#FFFFFFFF",
+   "onSurface": "#FF000000",
+   "outline": "#FF616161",
+   "primary": "#FF000000",
+   "success": "#FF000000",
+   "surface": "#FFFFFFFF"
+  }
+ }
+}

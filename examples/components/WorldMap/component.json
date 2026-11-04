@@ -1,0 +1,5011 @@
+{
+ "component": "WorldMap",
+ "version": 2,
+ "summary": "A map of the world, a continent, a country or a frame fitted to a list of places (Natural Earth, public domain): land or countries with borders, highlighted countries, countries coloured through a ramp with a legend, city markers with labels, a route or several labelled legs, a marker from host lon/lat, and an optional day/night shade from the clock. It scales to fit the box it gets, and opt-in for a world clock: a soft twilight edge on the night shade, the sun over the subsolar point and city markers that light up where the sun is up.",
+ "params": {
+  "region": {
+   "type": "string",
+   "default": "world",
+   "static": true,
+   "doc": "\"world\" (no Antarctica), \"world-full\", a continent (Europe, Africa, Asia, North America, South America, Oceania), a subregion (\"Western Europe\"), a country (ISO \"FRA\"/\"FR\" or its name: its main landmass) or [lonMin, latMin, lonMax, latMax], or a list of places to frame tightly: countries, cities, [lon, lat] and [from, to] pairs (their great circle), e.g. [\"Dubai\", \"London\", \"Singapore\"]: padded for markers and labels and shaped like a card (1.25:1 to 2.4:1)"
+  },
+  "detail": {
+   "type": "enum",
+   "values": [
+    "low",
+    "medium",
+    "high"
+   ],
+   "default": "low",
+   "static": true,
+   "doc": "Outline detail: low for a widget (a world of land is ~6 KB), medium for a screen, high for a large country map. Each level roughly doubles the bytes"
+  },
+  "borders": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "Draw countries with borders instead of plain land"
+  },
+  "highlight": {
+   "type": "list",
+   "static": true,
+   "doc": "Countries to fill in highlightColor (ISO A3/A2 or names), e.g. [\"FRA\", \"DE\"]"
+  },
+  "cities": {
+   "type": "list",
+   "static": true,
+   "doc": "City markers by name (Natural Earth's 1,250 places, every capital and state capital: \"Tokyo\", \"New York\"...)"
+  },
+  "labels": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "Write each city's name beside its marker"
+  },
+  "markLon": {
+   "type": "float",
+   "doc": "One marker the app moves: longitude (a \"@variable\"); give markLat too"
+  },
+  "markLat": {
+   "type": "float",
+   "doc": "Latitude of the moving marker"
+  },
+  "night": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "Shade the night side from the clock (world regions only): solar declination from the day of the year, the sun's longitude from UTC time. Repaints once a minute"
+  },
+  "values": {
+   "type": "float",
+   "doc": "Countries coloured at run time: a float array \"@name\" (resources.floatArrays, export it for the app), one value per country of valueCountries in the same order: 0 leaves it as land, 1 fills it in valueColor, between blends (a choropleth: visited 0/1, a share 0..1)"
+  },
+  "valueCountries": {
+   "type": "list",
+   "static": true,
+   "doc": "The countries of values, in the array's order (ISO A3/A2 or names), e.g. [\"FRA\", \"DEU\", \"ESP\"]. map_info lists a region's countries. A country too small to outline at the detail (Monaco, Malta) is a dot"
+  },
+  "valueColor": {
+   "type": "color",
+   "default": "@colors.primary",
+   "doc": "The fill of a country whose value is 1 (mono: onSurface)"
+  },
+  "ramp": {
+   "type": "list",
+   "static": true,
+   "doc": "Colour values through a ramp instead of a fade into valueColor: 2 or more colours, low to high, e.g. [\"#FFE3F2FD\", \"#FF1565C0\"] or [\"@colors.success\", \"@colors.warning\", \"@colors.error\"]. valueMin is the first, valueMax the last, evenly spaced between; a value below valueMin leaves its country as land (no data). In mono: four classes, hatched, cross-hatched, grey and solid"
+  },
+  "valueMin": {
+   "type": "float",
+   "default": 0,
+   "static": true,
+   "doc": "The value at the ramp's first colour (with ramp)"
+  },
+  "valueMax": {
+   "type": "float",
+   "default": 1,
+   "static": true,
+   "doc": "The value at the ramp's last colour (with ramp)"
+  },
+  "legend": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "A scale bar for the ramp under the map, valueMin at its left end and valueMax with units at its right (mono: the four class swatches). The map shrinks to leave it room"
+  },
+  "legendDecimals": {
+   "type": "float",
+   "default": 0,
+   "static": true,
+   "doc": "Decimals of the legend's numbers (they are grouped: 1,500)"
+  },
+  "units": {
+   "type": "string",
+   "default": "",
+   "static": true,
+   "doc": "Written after valueMax on the legend (\"%\", \"\u20ac/MWh\")"
+  },
+  "pointsLon": {
+   "type": "float",
+   "doc": "Points from the app: a float array \"@name\" of longitudes (any count, the app can change it); give pointsLat too. Each is a dot of markerSize"
+  },
+  "pointsLat": {
+   "type": "float",
+   "doc": "The latitudes of pointsLon, same order"
+  },
+  "routeFrom": {
+   "type": "string",
+   "static": true,
+   "doc": "A great-circle route from this place (a city name, or \"lon,lat\" like \"2.55,49.01\") to routeTo, drawn in routeColor with a dot at each end"
+  },
+  "routeTo": {
+   "type": "string",
+   "static": true,
+   "doc": "Where the route ends (a city name or \"lon,lat\")"
+  },
+  "progress": {
+   "type": "float",
+   "doc": "How far along the route, 0..1 (a \"@variable\" the app or the clock drives): the flown part is drawn in flownColor and a plane icon sits at it, turned to its heading. Omit for a route only"
+  },
+  "plane": {
+   "type": "bool",
+   "default": true,
+   "static": true,
+   "doc": "Draw the plane icon at progress (false: a dot)"
+  },
+  "routeColor": {
+   "type": "color",
+   "default": "@colors.muted",
+   "doc": "The route still ahead"
+  },
+  "flownColor": {
+   "type": "color",
+   "default": "@colors.primary",
+   "doc": "The part flown, the plane and the end dots"
+  },
+  "legs": {
+   "type": "list",
+   "static": true,
+   "doc": "Several routes, each its own great-circle arc in legColor with a dot at each end: [{\"from\": \"Dubai\", \"to\": \"London\", \"label\": \"EK 1\"}, ...] or [from, to, label] (cities or \"lon,lat\"). Each label sits on its arc with a halo, placed so the labels miss each other, the leg ends and their city names"
+  },
+  "legDistance": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "Label each leg that has no label with its great-circle distance (\"5,473 km\")"
+  },
+  "legColor": {
+   "type": "color",
+   "default": "@colors.primary",
+   "doc": "The legs' arcs and end dots"
+  },
+  "states": {
+   "type": "list",
+   "static": true,
+   "doc": "Draw state/province borders of these countries (ISO A3): AUS, USA, CAN, IND, BRA, CHN, RUS, ZAF, ARG, IDN, DEU, JPN, MEX, ESP, ITA, GBR, FRA ..."
+  },
+  "fit": {
+   "type": "list",
+   "static": true,
+   "doc": "Places to frame, instead of region: countries, cities, [lon, lat] and [from, to] pairs, e.g. [\"Dubai\", \"London\", \"Singapore\"]. They fit the box both ways at the largest scale, centred, with the geography around them filling the rest (a box from 0.9:1 to 2.6:1 is filled). Text then scales with the map (0.8x to 1.8x labelSize); city names (cities with labels) and leg labels are placed together, and a label that would touch a more important one at a small size is hidden: cities in their order first, then legs"
+  },
+  "fill": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "Take the height left in the parent column (a vertical weight) instead of height: the map grows and shrinks with the window. The region is drawn at the largest scale that fits, centred, with the geography around it filling the rest of the box (not for a world, or with night); text, dots and lines scale with the map (0.8x to 1.8x), and labels that would collide on a small screen are hidden"
+  },
+  "height": {
+   "type": "float",
+   "default": 160,
+   "static": true,
+   "doc": "Height in dp (the map keeps its aspect inside: a world is 2.5:1)"
+  },
+  "land": {
+   "type": "color",
+   "default": "@colors.track",
+   "doc": "Land fill"
+  },
+  "sea": {
+   "type": "color",
+   "doc": "Sea fill behind the land (none by default: the surface shows)"
+  },
+  "borderColor": {
+   "type": "color",
+   "default": "@colors.surface",
+   "doc": "Border lines (borders: true)"
+  },
+  "highlightColor": {
+   "type": "color",
+   "default": "@colors.primary",
+   "doc": "Highlighted countries"
+  },
+  "markerColor": {
+   "type": "color",
+   "default": "@colors.error",
+   "doc": "Markers and labels"
+  },
+  "markerSize": {
+   "type": "float",
+   "default": 3,
+   "static": true,
+   "doc": "Marker radius in dp"
+  },
+  "labelSize": {
+   "type": "float",
+   "default": 11,
+   "static": true,
+   "doc": "Label size in dp"
+  },
+  "nightColor": {
+   "type": "color",
+   "default": "#FF000000",
+   "doc": "Night shade colour (light and dark looks; black darkens both). In mono the shade is always the theme's onSurface at nightAlpha, whatever this is"
+  },
+  "nightAlpha": {
+   "type": "float",
+   "default": 0.32,
+   "doc": "Night shade opacity"
+  },
+  "twilight": {
+   "type": "bool",
+   "default": false,
+   "doc": "With night: a soft terminator, the shade drawn three times 5 degrees of longitude apart (deep night gets all three, the edges one or two; together they make nightAlpha). In mono the night edge is also drawn as a line"
+  },
+  "sun": {
+   "type": "bool",
+   "default": false,
+   "doc": "Draw the sun over the subsolar point (where it is overhead now), from the clock: a disc in sunColor with a soft glow (mono: a disc in a ring). World regions only"
+  },
+  "sunColor": {
+   "type": "color",
+   "default": "@colors.highlight",
+   "doc": "The sun's disc and glow (mono: onSurface)"
+  },
+  "daylight": {
+   "type": "bool",
+   "default": false,
+   "doc": "The city markers (cities) light up where the sun is up: dayColor with a halo by day, markerColor by night (mono: filled by day, hollow by night). The sun's elevation at each city is computed at run time from the clock. World regions only"
+  },
+  "dayColor": {
+   "type": "color",
+   "default": "@colors.warning",
+   "doc": "A city's marker and halo while the sun is up there (daylight)"
+  },
+  "label": {
+   "type": "text",
+   "default": "Map",
+   "doc": "Accessibility label (say what it shows: \"World map, night over Asia\"); a text object follows the data (a textMerge with a textFromFloat of the progress: \"Flight 42 percent flown\")"
+  }
+ },
+ "locals": {
+  "mh": {
+   "$if": "fit || fill",
+   "then": {
+    "$mapHeight": {
+     "$if": "fit",
+     "then": [
+      {
+       "fit": "@fit"
+      }
+     ],
+     "else": [
+      {
+       "fit": [
+        "@region"
+       ],
+       "frame": true,
+       "night": "@night"
+      }
+     ]
+    }
+   },
+   "else": {
+    "$mapHeight": "@region"
+   }
+  },
+  "fx0": {
+   "$if": "fit || fill",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit",
+      "then": [
+       {
+        "fit": "@fit"
+       }
+      ],
+      "else": [
+       {
+        "fit": [
+         "@region"
+        ],
+        "frame": true,
+        "night": "@night"
+       }
+      ]
+     },
+     "at": {
+      "core": 0
+     }
+    }
+   },
+   "else": 0
+  },
+  "fy0": {
+   "$if": "fit || fill",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit",
+      "then": [
+       {
+        "fit": "@fit"
+       }
+      ],
+      "else": [
+       {
+        "fit": [
+         "@region"
+        ],
+        "frame": true,
+        "night": "@night"
+       }
+      ]
+     },
+     "at": {
+      "core": 0
+     },
+     "axis": "y"
+    }
+   },
+   "else": 0
+  },
+  "fx1": {
+   "$if": "fit || fill",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit",
+      "then": [
+       {
+        "fit": "@fit"
+       }
+      ],
+      "else": [
+       {
+        "fit": [
+         "@region"
+        ],
+        "frame": true,
+        "night": "@night"
+       }
+      ]
+     },
+     "at": {
+      "core": 1
+     }
+    }
+   },
+   "else": 0
+  },
+  "fy1": {
+   "$if": "fit || fill",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit",
+      "then": [
+       {
+        "fit": "@fit"
+       }
+      ],
+      "else": [
+       {
+        "fit": [
+         "@region"
+        ],
+        "frame": true,
+        "night": "@night"
+       }
+      ]
+     },
+     "at": {
+      "core": 1
+     },
+     "axis": "y"
+    }
+   },
+   "else": 0
+  },
+  "sref": {
+   "$if": "fit || fill",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit",
+      "then": [
+       {
+        "fit": "@fit"
+       }
+      ],
+      "else": [
+       {
+        "fit": [
+         "@region"
+        ],
+        "frame": true,
+        "night": "@night"
+       }
+      ]
+     },
+     "at": {
+      "core": "ref"
+     }
+    }
+   },
+   "else": 0
+  },
+  "flh": {
+   "$if": "fit || fill",
+   "then": {
+    "$if": "legend",
+    "then": "@labelSize * 1.95 + 22",
+    "else": 0
+   },
+   "else": 0
+  },
+  "s": {
+   "$if": "fit || fill",
+   "then": "min(componentWidth() / (@fx1 - @fx0), (componentHeight() - @flh) / (@fy1 - @fy0))",
+   "else": {
+    "$if": "legend",
+    "then": "min(componentWidth() / 1000, (componentHeight() - @labelSize - 20) / @mh)",
+    "else": "min(componentWidth() / 1000, componentHeight() / @mh)"
+   }
+  },
+  "decl": {
+   "$if": "night || sun || daylight",
+   "then": "23.44 * sin(6.283185 * (284 + dayOfYear()) / 365) * 0.0174533",
+   "else": 0
+  },
+  "sunLon": {
+   "$if": "night || sun || daylight",
+   "then": "0 - 15 * ((timeInMin() - offsetToUtc() / 60) / 60 - 12)",
+   "else": 0
+  },
+  "mx": {
+   "$if": "markLat",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit || fill",
+      "then": {
+       "$if": "fit",
+       "then": [
+        {
+         "fit": "@fit"
+        }
+       ],
+       "else": [
+        {
+         "fit": [
+          "@region"
+         ],
+         "frame": true,
+         "night": "@night"
+        }
+       ]
+      },
+      "else": "@region"
+     },
+     "lon": "@markLon",
+     "lat": "@markLat"
+    }
+   },
+   "else": 0
+  },
+  "my": {
+   "$if": "markLat",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit || fill",
+      "then": {
+       "$if": "fit",
+       "then": [
+        {
+         "fit": "@fit"
+        }
+       ],
+       "else": [
+        {
+         "fit": [
+          "@region"
+         ],
+         "frame": true,
+         "night": "@night"
+        }
+       ]
+      },
+      "else": "@region"
+     },
+     "lon": "@markLon",
+     "lat": "@markLat",
+     "axis": "y"
+    }
+   },
+   "else": 0
+  },
+  "off": {
+   "$if": "night",
+   "then": "0 - 180 - @sunLon",
+   "else": 0
+  },
+  "nEdge": {
+   "$if": "night",
+   "then": "ifElse(0, @mh, @decl)",
+   "else": 0
+  },
+  "ts": {
+   "$if": "fit || fill",
+   "then": "clamp(@labelSize * 0.8, @labelSize * 1.8, @labelSize * @s / @sref) / @s",
+   "else": 0
+  },
+  "tk": {
+   "$if": "fit || fill",
+   "then": "@ts * @sref / @labelSize",
+   "else": 0
+  },
+  "dk": {
+   "$if": "fit || fill",
+   "then": "@ts * @s / @labelSize",
+   "else": 0
+  },
+  "su": {
+   "$if": "sun || daylight",
+   "then": {
+    "$if": "fit || fill",
+    "then": "@dk / @s",
+    "else": "1 / @s"
+   },
+   "else": 0
+  },
+  "mr": {
+   "$if": "daylight",
+   "then": "@markerSize * @su",
+   "else": 0
+  },
+  "na": {
+   "$if": "twilight",
+   "then": "1 - pow(1 - @nightAlpha, 0.33333)",
+   "else": 0
+  },
+  "sx": {
+   "$if": "sun",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit || fill",
+      "then": {
+       "$if": "fit",
+       "then": [
+        {
+         "fit": "@fit"
+        }
+       ],
+       "else": [
+        {
+         "fit": [
+          "@region"
+         ],
+         "frame": true,
+         "night": "@night"
+        }
+       ]
+      },
+      "else": "@region"
+     },
+     "lon": "(@sunLon + 540) % 360 - 180",
+     "lat": "@decl * 57.2958"
+    }
+   },
+   "else": 0
+  },
+  "sy": {
+   "$if": "sun",
+   "then": {
+    "$mapPoint": {
+     "region": {
+      "$if": "fit || fill",
+      "then": {
+       "$if": "fit",
+       "then": [
+        {
+         "fit": "@fit"
+        }
+       ],
+       "else": [
+        {
+         "fit": [
+          "@region"
+         ],
+         "frame": true,
+         "night": "@night"
+        }
+       ]
+      },
+      "else": "@region"
+     },
+     "lon": "(@sunLon + 540) % 360 - 180",
+     "lat": "@decl * 57.2958",
+     "axis": "y"
+    }
+   },
+   "else": 0
+  },
+  "nr": {
+   "$if": "ramp",
+   "then": {
+    "$count": "ramp"
+   },
+   "else": 0
+  },
+  "rk": {
+   "$if": "ramp",
+   "then": "(@nr - 1) / (@valueMax - @valueMin)",
+   "else": 0
+  },
+  "vlo": {
+   "$if": "ramp",
+   "then": "@valueMin - (@valueMax - @valueMin) * 0.0001",
+   "else": 0
+  },
+  "q1": {
+   "$if": "ramp",
+   "then": "@valueMin + (@valueMax - @valueMin) * 0.2499",
+   "else": 0
+  },
+  "q2": {
+   "$if": "ramp",
+   "then": "@valueMin + (@valueMax - @valueMin) * 0.4999",
+   "else": 0
+  },
+  "q3": {
+   "$if": "ramp",
+   "then": "@valueMin + (@valueMax - @valueMin) * 0.7499",
+   "else": 0
+  },
+  "lw": {
+   "$if": "legend",
+   "then": {
+    "$if": "fit || fill",
+    "then": "min(150, componentWidth() - 24) / @s",
+    "else": "min(150, (componentWidth() + 1000 * @s) / 2 - 2) / @s"
+   },
+   "else": 0
+  },
+  "lx": {
+   "$if": "legend",
+   "then": {
+    "$if": "fit || fill",
+    "then": "(12 - componentWidth() / 2) / @s + (@fx0 + @fx1) / 2",
+    "else": 0
+   },
+   "else": 0
+  },
+  "ly": {
+   "$if": "legend",
+   "then": {
+    "$if": "fit || fill",
+    "then": "((componentHeight() - @flh) / 2 + 12) / @s + (@fy0 + @fy1) / 2",
+    "else": "@mh + 6 / @s"
+   },
+   "else": 0
+  },
+  "lts": {
+   "$if": "legend",
+   "then": {
+    "$if": "fit || fill",
+    "then": "@ts",
+    "else": "@labelSize / @s"
+   },
+   "else": 0
+  }
+ },
+ "call": {
+  "WorldMap": {
+   "region": "Europe",
+   "routeFrom": "Paris",
+   "routeTo": "Moscow",
+   "progress": 0.4,
+   "height": 170
+  }
+ },
+ "body": {
+  "canvas": {
+   "modifiers": [
+    "fillMaxWidth",
+    {
+     "$if": "fill",
+     "then": {
+      "verticalWeight": 1
+     },
+     "else": {
+      "height": "@height"
+     }
+    },
+    {
+     "semantics": {
+      "contentDescription": "@label"
+     }
+    }
+   ],
+   "commands": [
+    {
+     "save": [
+      {
+       "$if": "fit || fill",
+       "then": {
+        "clipRect": {
+         "left": 0,
+         "top": 0,
+         "right": "componentWidth()",
+         "bottom": "componentHeight()"
+        }
+       }
+      },
+      {
+       "translate": {
+        "dx": {
+         "$if": "fit || fill",
+         "then": "componentWidth() / 2 - (@fx0 + @fx1) / 2 * @s",
+         "else": "(componentWidth() - 1000 * @s) / 2"
+        },
+        "dy": {
+         "$if": "fit || fill",
+         "then": "(componentHeight() - @flh) / 2 - (@fy0 + @fy1) / 2 * @s",
+         "else": {
+          "$if": "legend",
+          "then": "(componentHeight() - @labelSize - 20 - @mh * @s) / 2",
+          "else": "(componentHeight() - @mh * @s) / 2"
+         }
+        }
+       }
+      },
+      {
+       "scale": {
+        "sx": "@s",
+        "sy": "@s"
+       }
+      },
+      {
+       "save": [
+        {
+         "clipRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1000,
+          "bottom": "@mh"
+         }
+        },
+        {
+         "$if": "sea",
+         "then": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@sea"
+             },
+             {
+              "style": "fill"
+             }
+            ]
+           }
+          },
+          {
+           "drawRect": {
+            "left": 0,
+            "top": 0,
+            "right": 1000,
+            "bottom": "@mh"
+           }
+          }
+         ]
+        },
+        {
+         "$if": "theme.mono",
+         "then": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@colors.onSurface"
+             },
+             {
+              "style": "stroke"
+             },
+             {
+              "strokeWidth": {
+               "$if": "fit || fill",
+               "then": "1.2 * @dk / @s",
+               "else": "1.2 / @s"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "$if": "borders",
+           "then": {
+            "drawPath": {
+             "path": {
+              "$map": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "layer": "countries",
+               "detail": "@detail"
+              }
+             }
+            }
+           },
+           "else": {
+            "drawPath": {
+             "path": {
+              "$map": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "layer": "land",
+               "detail": "@detail"
+              }
+             }
+            }
+           }
+          }
+         ],
+         "else": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@land"
+             },
+             {
+              "style": "fill"
+             }
+            ]
+           }
+          },
+          {
+           "$if": "borders",
+           "then": {
+            "drawPath": {
+             "path": {
+              "$map": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "layer": "countries",
+               "detail": "@detail"
+              }
+             }
+            }
+           },
+           "else": {
+            "drawPath": {
+             "path": {
+              "$map": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "layer": "land",
+               "detail": "@detail"
+              }
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "$if": "highlight",
+         "then": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@highlightColor"
+             },
+             {
+              "style": "fill"
+             }
+            ]
+           }
+          },
+          {
+           "drawPath": {
+            "path": {
+             "$map": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "layer": "countries",
+              "detail": "@detail",
+              "countries": "@highlight"
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "$if": "ramp",
+         "then": {
+          "$if": "values",
+          "then": [
+           {
+            "$if": "theme.mono",
+            "then": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeWidth": {
+                  "$if": "fit || fill",
+                  "then": "1 * @dk / @s",
+                  "else": "1 / @s"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "$each": "valueCountries",
+              "as": "vc",
+              "index": "vi",
+              "do": [
+               {
+                "save": [
+                 {
+                  "clipPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "countries",
+                     "detail": "@detail",
+                     "countries": [
+                      "@vc"
+                     ],
+                     "dot": 5
+                    }
+                   }
+                  }
+                 },
+                 {
+                  "paint": {
+                   "ops": [
+                    {
+                     "color": "@colors.onSurface"
+                    },
+                    {
+                     "style": "stroke"
+                    },
+                    {
+                     "alpha": "step(arrayGet(@values, @vi), @vlo) * (1 - step(arrayGet(@values, @vi), @q2))"
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "hatch",
+                     "detail": "@detail",
+                     "countries": "@valueCountries",
+                     "dot": 5
+                    }
+                   }
+                  }
+                 },
+                 {
+                  "paint": {
+                   "ops": [
+                    {
+                     "alpha": "step(arrayGet(@values, @vi), @q1) * (1 - step(arrayGet(@values, @vi), @q2))"
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "hatch-cross",
+                     "detail": "@detail",
+                     "countries": "@valueCountries",
+                     "dot": 5
+                    }
+                   }
+                  }
+                 },
+                 {
+                  "paint": {
+                   "ops": [
+                    {
+                     "color": "@colors.muted"
+                    },
+                    {
+                     "style": "fill"
+                    },
+                    {
+                     "alpha": "step(arrayGet(@values, @vi), @q2) * (1 - step(arrayGet(@values, @vi), @q3))"
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "countries",
+                     "detail": "@detail",
+                     "countries": [
+                      "@vc"
+                     ],
+                     "dot": 5
+                    }
+                   }
+                  }
+                 },
+                 {
+                  "paint": {
+                   "ops": [
+                    {
+                     "color": "@colors.onSurface"
+                    },
+                    {
+                     "alpha": "step(arrayGet(@values, @vi), @q3)"
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "countries",
+                     "detail": "@detail",
+                     "countries": [
+                      "@vc"
+                     ],
+                     "dot": 5
+                    }
+                   }
+                  }
+                 }
+                ]
+               },
+               {
+                "paint": {
+                 "ops": [
+                  {
+                   "color": "@colors.onSurface"
+                  },
+                  {
+                   "style": "stroke"
+                  }
+                 ]
+                }
+               },
+               {
+                "drawPath": {
+                 "path": {
+                  "$map": {
+                   "region": {
+                    "$if": "fit || fill",
+                    "then": {
+                     "$if": "fit",
+                     "then": [
+                      {
+                       "fit": "@fit"
+                      }
+                     ],
+                     "else": [
+                      {
+                       "fit": [
+                        "@region"
+                       ],
+                       "frame": true,
+                       "night": "@night"
+                      }
+                     ]
+                    },
+                    "else": "@region"
+                   },
+                   "layer": "countries",
+                   "detail": "@detail",
+                   "countries": [
+                    "@vc"
+                   ],
+                   "dot": 5
+                  }
+                 }
+                }
+               }
+              ]
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             }
+            ],
+            "else": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "fill"
+                }
+               ]
+              }
+             },
+             {
+              "$each": "valueCountries",
+              "as": "vc",
+              "index": "vi",
+              "do": [
+               {
+                "$each": "ramp",
+                "as": "rc",
+                "index": "ri",
+                "do": [
+                 {
+                  "paint": {
+                   "ops": [
+                    {
+                     "color": "@rc"
+                    },
+                    {
+                     "alpha": "clamp(0, 1, (arrayGet(@values, @vi) - @valueMin) * @rk + 1 - @ri) * step(arrayGet(@values, @vi), @vlo)"
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "drawPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "countries",
+                     "detail": "@detail",
+                     "countries": [
+                      "@vc"
+                     ],
+                     "dot": 5
+                    }
+                   }
+                  }
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         },
+         "else": {
+          "$if": "values",
+          "then": [
+           {
+            "paint": {
+             "ops": [
+              {
+               "$if": "theme.mono",
+               "then": {
+                "color": "@colors.onSurface"
+               },
+               "else": {
+                "color": "@valueColor"
+               }
+              },
+              {
+               "style": "fill"
+              }
+             ]
+            }
+           },
+           {
+            "$each": "valueCountries",
+            "as": "vc",
+            "index": "vi",
+            "do": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": "max(0, min(1, arrayGet(@values, @vi)))"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": {
+                "$map": {
+                 "region": {
+                  "$if": "fit || fill",
+                  "then": {
+                   "$if": "fit",
+                   "then": [
+                    {
+                     "fit": "@fit"
+                    }
+                   ],
+                   "else": [
+                    {
+                     "fit": [
+                      "@region"
+                     ],
+                     "frame": true,
+                     "night": "@night"
+                    }
+                   ]
+                  },
+                  "else": "@region"
+                 },
+                 "layer": "countries",
+                 "detail": "@detail",
+                 "countries": [
+                  "@vc"
+                 ],
+                 "dot": 5
+                }
+               }
+              }
+             }
+            ]
+           },
+           {
+            "paint": {
+             "ops": [
+              {
+               "alpha": 1
+              }
+             ]
+            }
+           },
+           {
+            "$if": "theme.mono",
+            "then": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeWidth": {
+                  "$if": "fit || fill",
+                  "then": "1.2 * @dk / @s",
+                  "else": "1.2 / @s"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": {
+                "$map": {
+                 "region": {
+                  "$if": "fit || fill",
+                  "then": {
+                   "$if": "fit",
+                   "then": [
+                    {
+                     "fit": "@fit"
+                    }
+                   ],
+                   "else": [
+                    {
+                     "fit": [
+                      "@region"
+                     ],
+                     "frame": true,
+                     "night": "@night"
+                    }
+                   ]
+                  },
+                  "else": "@region"
+                 },
+                 "layer": "land",
+                 "detail": "@detail"
+                }
+               }
+              }
+             }
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "$if": "states",
+         "then": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "$if": "theme.mono",
+              "then": {
+               "color": "@colors.onSurface"
+              },
+              "else": {
+               "color": "@borderColor"
+              }
+             },
+             {
+              "style": "stroke"
+             },
+             {
+              "strokeWidth": {
+               "$if": "fit || fill",
+               "then": "0.6 * @dk / @s",
+               "else": "0.6 / @s"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "drawPath": {
+            "path": {
+             "$map": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "layer": "states",
+              "detail": "@detail",
+              "countries": "@states"
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "$if": "night",
+         "then": [
+          {
+           "$if": "theme.mono",
+           "then": [
+            {
+             "save": [
+              {
+               "clipRect": {
+                "left": 0,
+                "top": 0,
+                "right": 1000,
+                "bottom": "@mh"
+               }
+              },
+              {
+               "pathExpression": {
+                "id": "wmNight",
+                "expressionX": "ifElse(a[0] * 1000, (2 - a[0]) * 1000, step(a[0], 1))",
+                "expressionY": "ifElse(233.333 - atan((0 - cos((a[0] * 360 + @off) * 0.0174533)) / tan(@decl)) * 159.155, @nEdge, step(a[0], 1))",
+                "start": 0,
+                "end": 2,
+                "count": 240
+               }
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "color": "@colors.highlight"
+                 },
+                 {
+                  "style": "fill"
+                 },
+                 {
+                  "alpha": 0.6
+                 }
+                ]
+               }
+              },
+              {
+               "$if": "borders",
+               "then": {
+                "drawPath": {
+                 "path": {
+                  "$map": {
+                   "region": {
+                    "$if": "fit || fill",
+                    "then": {
+                     "$if": "fit",
+                     "then": [
+                      {
+                       "fit": "@fit"
+                      }
+                     ],
+                     "else": [
+                      {
+                       "fit": [
+                        "@region"
+                       ],
+                       "frame": true,
+                       "night": "@night"
+                      }
+                     ]
+                    },
+                    "else": "@region"
+                   },
+                   "layer": "countries",
+                   "detail": "@detail"
+                  }
+                 }
+                }
+               },
+               "else": {
+                "drawPath": {
+                 "path": {
+                  "$map": {
+                   "region": {
+                    "$if": "fit || fill",
+                    "then": {
+                     "$if": "fit",
+                     "then": [
+                      {
+                       "fit": "@fit"
+                      }
+                     ],
+                     "else": [
+                      {
+                       "fit": [
+                        "@region"
+                       ],
+                       "frame": true,
+                       "night": "@night"
+                      }
+                     ]
+                    },
+                    "else": "@region"
+                   },
+                   "layer": "land",
+                   "detail": "@detail"
+                  }
+                 }
+                }
+               }
+              },
+              {
+               "save": [
+                {
+                 "clipPath": {
+                  "path": "wmNight"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "color": "@colors.shadow"
+                   },
+                   {
+                    "alpha": 0.5
+                   }
+                  ]
+                 }
+                },
+                {
+                 "$if": "borders",
+                 "then": {
+                  "drawPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "countries",
+                     "detail": "@detail"
+                    }
+                   }
+                  }
+                 },
+                 "else": {
+                  "drawPath": {
+                   "path": {
+                    "$map": {
+                     "region": {
+                      "$if": "fit || fill",
+                      "then": {
+                       "$if": "fit",
+                       "then": [
+                        {
+                         "fit": "@fit"
+                        }
+                       ],
+                       "else": [
+                        {
+                         "fit": [
+                          "@region"
+                         ],
+                         "frame": true,
+                         "night": "@night"
+                        }
+                       ]
+                      },
+                      "else": "@region"
+                     },
+                     "layer": "land",
+                     "detail": "@detail"
+                    }
+                   }
+                  }
+                 }
+                }
+               ]
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "alpha": 1
+                 },
+                 {
+                  "color": "@colors.onSurface"
+                 },
+                 {
+                  "style": "stroke"
+                 },
+                 {
+                  "strokeWidth": {
+                   "$if": "fit || fill",
+                   "then": "1.2 * @dk / @s",
+                   "else": "1.2 / @s"
+                  }
+                 }
+                ]
+               }
+              },
+              {
+               "$if": "borders",
+               "then": {
+                "drawPath": {
+                 "path": {
+                  "$map": {
+                   "region": {
+                    "$if": "fit || fill",
+                    "then": {
+                     "$if": "fit",
+                     "then": [
+                      {
+                       "fit": "@fit"
+                      }
+                     ],
+                     "else": [
+                      {
+                       "fit": [
+                        "@region"
+                       ],
+                       "frame": true,
+                       "night": "@night"
+                      }
+                     ]
+                    },
+                    "else": "@region"
+                   },
+                   "layer": "countries",
+                   "detail": "@detail"
+                  }
+                 }
+                }
+               },
+               "else": {
+                "drawPath": {
+                 "path": {
+                  "$map": {
+                   "region": {
+                    "$if": "fit || fill",
+                    "then": {
+                     "$if": "fit",
+                     "then": [
+                      {
+                       "fit": "@fit"
+                      }
+                     ],
+                     "else": [
+                      {
+                       "fit": [
+                        "@region"
+                       ],
+                       "frame": true,
+                       "night": "@night"
+                      }
+                     ]
+                    },
+                    "else": "@region"
+                   },
+                   "layer": "land",
+                   "detail": "@detail"
+                  }
+                 }
+                }
+               }
+              },
+              {
+               "save": [
+                {
+                 "clipRect": {
+                  "left": "1.5 / @s",
+                  "top": "1.5 / @s",
+                  "right": "1000 - 1.5 / @s",
+                  "bottom": "@mh - 1.5 / @s"
+                 }
+                },
+                {
+                 "drawPath": {
+                  "path": "wmNight"
+                 }
+                }
+               ]
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "style": "fill"
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           ],
+           "else": [
+            {
+             "$if": "twilight",
+             "then": [
+              {
+               "save": [
+                {
+                 "clipRect": {
+                  "left": 0,
+                  "top": 0,
+                  "right": 1000,
+                  "bottom": "@mh"
+                 }
+                },
+                {
+                 "pathExpression": {
+                  "id": "wmNightW",
+                  "expressionX": "ifElse(a[0] * 1000, (2 - a[0]) * 1000, step(a[0], 1))",
+                  "expressionY": "ifElse(233.333 - atan((0 - cos((a[0] * 360 + (@off + -5)) * 0.0174533)) / tan(@decl)) * 159.155, @nEdge, step(a[0], 1))",
+                  "start": 0,
+                  "end": 2,
+                  "count": 240
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "color": "@nightColor"
+                   },
+                   {
+                    "style": "fill"
+                   },
+                   {
+                    "alpha": "@na"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawPath": {
+                  "path": "wmNightW"
+                 }
+                },
+                {
+                 "pathExpression": {
+                  "id": "wmNight",
+                  "expressionX": "ifElse(a[0] * 1000, (2 - a[0]) * 1000, step(a[0], 1))",
+                  "expressionY": "ifElse(233.333 - atan((0 - cos((a[0] * 360 + @off) * 0.0174533)) / tan(@decl)) * 159.155, @nEdge, step(a[0], 1))",
+                  "start": 0,
+                  "end": 2,
+                  "count": 240
+                 }
+                },
+                {
+                 "drawPath": {
+                  "path": "wmNight"
+                 }
+                },
+                {
+                 "pathExpression": {
+                  "id": "wmNightE",
+                  "expressionX": "ifElse(a[0] * 1000, (2 - a[0]) * 1000, step(a[0], 1))",
+                  "expressionY": "ifElse(233.333 - atan((0 - cos((a[0] * 360 + (@off + 5)) * 0.0174533)) / tan(@decl)) * 159.155, @nEdge, step(a[0], 1))",
+                  "start": 0,
+                  "end": 2,
+                  "count": 240
+                 }
+                },
+                {
+                 "drawPath": {
+                  "path": "wmNightE"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "alpha": 1
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             ],
+             "else": [
+              {
+               "save": [
+                {
+                 "clipRect": {
+                  "left": 0,
+                  "top": 0,
+                  "right": 1000,
+                  "bottom": "@mh"
+                 }
+                },
+                {
+                 "pathExpression": {
+                  "id": "wmNight",
+                  "expressionX": "ifElse(a[0] * 1000, (2 - a[0]) * 1000, step(a[0], 1))",
+                  "expressionY": "ifElse(233.333 - atan((0 - cos((a[0] * 360 + @off) * 0.0174533)) / tan(@decl)) * 159.155, @nEdge, step(a[0], 1))",
+                  "start": 0,
+                  "end": 2,
+                  "count": 240
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "$if": "theme.mono",
+                    "then": {
+                     "color": "@colors.onSurface"
+                    },
+                    "else": {
+                     "color": "@nightColor"
+                    }
+                   },
+                   {
+                    "style": "fill"
+                   },
+                   {
+                    "$if": "theme.mono",
+                    "then": {
+                     "alpha": 0.25
+                    },
+                    "else": {
+                     "alpha": "@nightAlpha"
+                    }
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawPath": {
+                  "path": "wmNight"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "alpha": 1
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "$if": "borders",
+         "then": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "$if": "theme.mono",
+              "then": {
+               "color": "@colors.onSurface"
+              },
+              "else": {
+               "color": "@borderColor"
+              }
+             },
+             {
+              "style": "stroke"
+             },
+             {
+              "strokeWidth": {
+               "$if": "fit || fill",
+               "then": "0.8 * @dk / @s",
+               "else": "0.8 / @s"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "drawPath": {
+            "path": {
+             "$map": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "layer": "countries",
+              "detail": "@detail"
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "$if": "sun",
+         "then": [
+          {
+           "$if": "theme.mono",
+           "then": [
+            {
+             "paint": {
+              "ops": [
+               {
+                "color": "@colors.onSurface"
+               },
+               {
+                "style": "stroke"
+               },
+               {
+                "strokeWidth": "1.6 * @su"
+               },
+               {
+                "strokeCap": "round"
+               }
+              ]
+             }
+            },
+            {
+             "loop": {
+              "index": "wsr",
+              "from": 0,
+              "until": 8,
+              "commands": [
+               {
+                "save": [
+                 {
+                  "rotate": {
+                   "angle": "wsr * 45",
+                   "pivotX": "@sx",
+                   "pivotY": "@sy"
+                  }
+                 },
+                 {
+                  "drawLine": {
+                   "x1": "@sx",
+                   "y1": "@sy - 9 * @su",
+                   "x2": "@sx",
+                   "y2": "@sy - 14 * @su"
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            },
+            {
+             "paint": {
+              "ops": [
+               {
+                "style": "fill"
+               }
+              ]
+             }
+            }
+           ],
+           "else": [
+            {
+             "paint": {
+              "ops": [
+               {
+                "color": "@sunColor"
+               },
+               {
+                "style": "fill"
+               },
+               {
+                "alpha": 0.1
+               }
+              ]
+             }
+            },
+            {
+             "drawCircle": {
+              "cx": "@sx",
+              "cy": "@sy",
+              "radius": "26 * @su"
+             }
+            },
+            {
+             "drawCircle": {
+              "cx": "@sx",
+              "cy": "@sy",
+              "radius": "17 * @su"
+             }
+            },
+            {
+             "paint": {
+              "ops": [
+               {
+                "alpha": 0.25
+               }
+              ]
+             }
+            },
+            {
+             "drawCircle": {
+              "cx": "@sx",
+              "cy": "@sy",
+              "radius": "10 * @su"
+             }
+            },
+            {
+             "paint": {
+              "ops": [
+               {
+                "alpha": 1
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "paint": {
+            "ops": [
+             {
+              "$if": "theme.mono",
+              "then": {
+               "color": "@colors.onSurface"
+              },
+              "else": {
+               "color": "@sunColor"
+              }
+             },
+             {
+              "style": "fill"
+             }
+            ]
+           }
+          },
+          {
+           "drawCircle": {
+            "cx": "@sx",
+            "cy": "@sy",
+            "radius": "5.5 * @su"
+           }
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "$if": "legend",
+       "then": [
+        {
+         "$if": "fit || fill",
+         "then": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@colors.surface"
+             },
+             {
+              "style": "fill"
+             },
+             {
+              "$if": "theme.mono",
+              "then": {
+               "alpha": 1
+              },
+              "else": {
+               "alpha": 0.9
+              }
+             }
+            ]
+           }
+          },
+          {
+           "drawRoundRect": {
+            "left": "@lx - 6 / @s",
+            "top": "@ly - 6 / @s",
+            "right": "@lx + @lw + 6 / @s",
+            "bottom": "@ly + 17 / @s + @lts * 1.2",
+            "rx": "6 / @s",
+            "ry": "6 / @s"
+           }
+          },
+          {
+           "paint": {
+            "ops": [
+             {
+              "alpha": 1
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "$if": "theme.mono",
+         "then": [
+          {
+           "save": [
+            {
+             "clipRect": {
+              "left": "@lx + @lw * 0.0",
+              "top": "@ly",
+              "right": "@lx + @lw * 0.25 - 2 / @s",
+              "bottom": "@ly + 8 / @s"
+             }
+            },
+            {
+             "paint": {
+              "ops": [
+               {
+                "color": "@colors.onSurface"
+               },
+               {
+                "style": "stroke"
+               },
+               {
+                "strokeWidth": {
+                 "$if": "fit || fill",
+                 "then": "1 * @dk / @s",
+                 "else": "1 / @s"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "loop": {
+              "index": "wh",
+              "from": "0 - 8 / @s / 18 - 1",
+              "until": "@lw / 72 + 1",
+              "commands": [
+               {
+                "drawLine": {
+                 "x1": "@lx + @lw * 0.0 + wh * 18",
+                 "y1": "@ly + 8 / @s",
+                 "x2": "@lx + @lw * 0.0 + wh * 18 + 8 / @s",
+                 "y2": "@ly"
+                }
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "save": [
+            {
+             "clipRect": {
+              "left": "@lx + @lw * 0.25",
+              "top": "@ly",
+              "right": "@lx + @lw * 0.5 - 2 / @s",
+              "bottom": "@ly + 8 / @s"
+             }
+            },
+            {
+             "paint": {
+              "ops": [
+               {
+                "color": "@colors.onSurface"
+               },
+               {
+                "style": "stroke"
+               },
+               {
+                "strokeWidth": {
+                 "$if": "fit || fill",
+                 "then": "1 * @dk / @s",
+                 "else": "1 / @s"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "loop": {
+              "index": "wh",
+              "from": "0 - 8 / @s / 18 - 1",
+              "until": "@lw / 72 + 1",
+              "commands": [
+               {
+                "drawLine": {
+                 "x1": "@lx + @lw * 0.25 + wh * 18",
+                 "y1": "@ly + 8 / @s",
+                 "x2": "@lx + @lw * 0.25 + wh * 18 + 8 / @s",
+                 "y2": "@ly"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "loop": {
+              "index": "wh",
+              "from": "0 - 8 / @s / 18 - 1",
+              "until": "@lw / 72 + 1",
+              "commands": [
+               {
+                "drawLine": {
+                 "x1": "@lx + @lw * 0.25 + wh * 18",
+                 "y1": "@ly",
+                 "x2": "@lx + @lw * 0.25 + wh * 18 + 8 / @s",
+                 "y2": "@ly + 8 / @s"
+                }
+               }
+              ]
+             }
+            }
+           ]
+          },
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@colors.muted"
+             },
+             {
+              "style": "fill"
+             }
+            ]
+           }
+          },
+          {
+           "drawRect": {
+            "left": "@lx + @lw * 0.5",
+            "top": "@ly",
+            "right": "@lx + @lw * 0.75 - 2 / @s",
+            "bottom": "@ly + 8 / @s"
+           }
+          },
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@colors.onSurface"
+             },
+             {
+              "style": "fill"
+             }
+            ]
+           }
+          },
+          {
+           "drawRect": {
+            "left": "@lx + @lw * 0.75",
+            "top": "@ly",
+            "right": "@lx + @lw * 1.0 - 2 / @s",
+            "bottom": "@ly + 8 / @s"
+           }
+          },
+          {
+           "paint": {
+            "ops": [
+             {
+              "color": "@colors.onSurface"
+             },
+             {
+              "style": "stroke"
+             },
+             {
+              "strokeWidth": {
+               "$if": "fit || fill",
+               "then": "1 * @dk / @s",
+               "else": "1 / @s"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "drawRect": {
+            "left": "@lx + @lw * 0.0",
+            "top": "@ly",
+            "right": "@lx + @lw * 0.25 - 2 / @s",
+            "bottom": "@ly + 8 / @s"
+           }
+          },
+          {
+           "drawRect": {
+            "left": "@lx + @lw * 0.25",
+            "top": "@ly",
+            "right": "@lx + @lw * 0.5 - 2 / @s",
+            "bottom": "@ly + 8 / @s"
+           }
+          }
+         ],
+         "else": [
+          {
+           "paint": {
+            "ops": [
+             {
+              "linearGradient": {
+               "x1": "@lx",
+               "y1": 0,
+               "x2": "@lx + @lw",
+               "y2": 0,
+               "colors": "@ramp"
+              }
+             },
+             {
+              "style": "fill"
+             }
+            ]
+           }
+          },
+          {
+           "drawRect": {
+            "left": "@lx",
+            "top": "@ly",
+            "right": "@lx + @lw",
+            "bottom": "@ly + 8 / @s"
+           }
+          },
+          {
+           "paint": {
+            "ops": [
+             {
+              "shader": 0
+             }
+            ]
+           }
+          }
+         ]
+        },
+        {
+         "paint": {
+          "ops": [
+           {
+            "color": "@colors.muted"
+           },
+           {
+            "style": "fill"
+           },
+           {
+            "textSize": "@lts"
+           }
+          ]
+         }
+        },
+        {
+         "drawTextAnchored": {
+          "text": {
+           "type": "textFromFloat",
+           "value": "@valueMin",
+           "whole": 7,
+           "decimal": "@legendDecimals",
+           "flags": 533
+          },
+          "x": "@lx",
+          "y": "@ly + 11 / @s",
+          "panX": -1,
+          "panY": 1
+         }
+        },
+        {
+         "drawTextAnchored": {
+          "text": {
+           "type": "textMerge",
+           "id1": {
+            "type": "textFromFloat",
+            "value": "@valueMax",
+            "whole": 7,
+            "decimal": "@legendDecimals",
+            "flags": 533
+           },
+           "id2": " @units"
+          },
+          "x": "@lx + @lw",
+          "y": "@ly + 11 / @s",
+          "panX": 1,
+          "panY": 1
+         }
+        }
+       ]
+      },
+      {
+       "$if": "routeFrom",
+       "then": [
+        {
+         "paint": {
+          "ops": [
+           {
+            "$if": "theme.mono",
+            "then": {
+             "color": "@colors.onSurface"
+            },
+            "else": {
+             "color": "@routeColor"
+            }
+           },
+           {
+            "style": "stroke"
+           },
+           {
+            "strokeWidth": {
+             "$if": "fit || fill",
+             "then": "1.5 * @dk / @s",
+             "else": "1.5 / @s"
+            }
+           },
+           {
+            "strokeCap": "round"
+           }
+          ]
+         }
+        },
+        {
+         "drawPath": {
+          "path": {
+           "$mapRoute": {
+            "region": {
+             "$if": "fit || fill",
+             "then": {
+              "$if": "fit",
+              "then": [
+               {
+                "fit": "@fit"
+               }
+              ],
+              "else": [
+               {
+                "fit": [
+                 "@region"
+                ],
+                "frame": true,
+                "night": "@night"
+               }
+              ]
+             },
+             "else": "@region"
+            },
+            "from": "@routeFrom",
+            "to": "@routeTo"
+           }
+          }
+         }
+        },
+        {
+         "$if": "progress",
+         "then": [
+          {
+           "pathExpression": {
+            "id": "wmFlown",
+            "expressionX": {
+             "$mapRoute": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "from": "@routeFrom",
+              "to": "@routeTo",
+              "axis": "x",
+              "wrap": "arraySpline({}, a[0])"
+             }
+            },
+            "expressionY": {
+             "$mapRoute": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "from": "@routeFrom",
+              "to": "@routeTo",
+              "axis": "y",
+              "wrap": "arraySpline({}, a[0])"
+             }
+            },
+            "start": 0,
+            "end": "max(0.002, min(1, @progress))",
+            "count": 48
+           }
+          },
+          {
+           "paint": {
+            "ops": [
+             {
+              "$if": "theme.mono",
+              "then": {
+               "color": "@colors.onSurface"
+              },
+              "else": {
+               "color": "@flownColor"
+              }
+             },
+             {
+              "strokeWidth": {
+               "$if": "fit || fill",
+               "then": "3 * @dk / @s",
+               "else": "3 / @s"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "drawPath": {
+            "path": "wmFlown"
+           }
+          }
+         ]
+        },
+        {
+         "paint": {
+          "ops": [
+           {
+            "$if": "theme.mono",
+            "then": {
+             "color": "@colors.onSurface"
+            },
+            "else": {
+             "color": "@flownColor"
+            }
+           },
+           {
+            "style": "fill"
+           }
+          ]
+         }
+        },
+        {
+         "drawCircle": {
+          "cx": {
+           "$mapPoint": {
+            "region": {
+             "$if": "fit || fill",
+             "then": {
+              "$if": "fit",
+              "then": [
+               {
+                "fit": "@fit"
+               }
+              ],
+              "else": [
+               {
+                "fit": [
+                 "@region"
+                ],
+                "frame": true,
+                "night": "@night"
+               }
+              ]
+             },
+             "else": "@region"
+            },
+            "at": "@routeFrom"
+           }
+          },
+          "cy": {
+           "$mapPoint": {
+            "region": {
+             "$if": "fit || fill",
+             "then": {
+              "$if": "fit",
+              "then": [
+               {
+                "fit": "@fit"
+               }
+              ],
+              "else": [
+               {
+                "fit": [
+                 "@region"
+                ],
+                "frame": true,
+                "night": "@night"
+               }
+              ]
+             },
+             "else": "@region"
+            },
+            "at": "@routeFrom",
+            "axis": "y"
+           }
+          },
+          "radius": {
+           "$if": "fit || fill",
+           "then": "@markerSize * @dk / @s",
+           "else": "@markerSize / @s"
+          }
+         }
+        },
+        {
+         "drawCircle": {
+          "cx": {
+           "$mapPoint": {
+            "region": {
+             "$if": "fit || fill",
+             "then": {
+              "$if": "fit",
+              "then": [
+               {
+                "fit": "@fit"
+               }
+              ],
+              "else": [
+               {
+                "fit": [
+                 "@region"
+                ],
+                "frame": true,
+                "night": "@night"
+               }
+              ]
+             },
+             "else": "@region"
+            },
+            "at": "@routeTo"
+           }
+          },
+          "cy": {
+           "$mapPoint": {
+            "region": {
+             "$if": "fit || fill",
+             "then": {
+              "$if": "fit",
+              "then": [
+               {
+                "fit": "@fit"
+               }
+              ],
+              "else": [
+               {
+                "fit": [
+                 "@region"
+                ],
+                "frame": true,
+                "night": "@night"
+               }
+              ]
+             },
+             "else": "@region"
+            },
+            "at": "@routeTo",
+            "axis": "y"
+           }
+          },
+          "radius": {
+           "$if": "fit || fill",
+           "then": "@markerSize * @dk / @s",
+           "else": "@markerSize / @s"
+          }
+         }
+        },
+        {
+         "$if": "progress",
+         "then": {
+          "$if": "plane",
+          "then": {
+           "save": [
+            {
+             "translate": {
+              "dx": {
+               "$mapRoute": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "from": "@routeFrom",
+                "to": "@routeTo",
+                "axis": "x",
+                "wrap": "arraySpline({}, max(0, min(1, @progress)))"
+               }
+              },
+              "dy": {
+               "$mapRoute": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "from": "@routeFrom",
+                "to": "@routeTo",
+                "axis": "y",
+                "wrap": "arraySpline({}, max(0, min(1, @progress)))"
+               }
+              }
+             }
+            },
+            {
+             "rotate": {
+              "angle": {
+               "$mapRoute": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "from": "@routeFrom",
+                "to": "@routeTo",
+                "axis": "angle",
+                "wrap": "arraySpline({}, max(0, min(1, @progress))) + 90"
+               }
+              }
+             }
+            },
+            {
+             "scale": {
+              "sx": "@markerSize * 7 / @s / 960",
+              "sy": "@markerSize * 7 / @s / 960"
+             }
+            },
+            {
+             "translate": {
+              "dx": -480,
+              "dy": -480
+             }
+            },
+            {
+             "$if": "theme.mono",
+             "then": [
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "color": "@colors.surface"
+                 },
+                 {
+                  "style": "stroke"
+                 },
+                 {
+                  "strokeWidth": 90
+                 }
+                ]
+               }
+              },
+              {
+               "drawPath": {
+                "path": {
+                 "$icon": {
+                  "name": "flight",
+                  "style": "rounded",
+                  "filled": true
+                 }
+                }
+               }
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "color": "@colors.onSurface"
+                 },
+                 {
+                  "style": "fill"
+                 }
+                ]
+               }
+              }
+             ]
+            },
+            {
+             "drawPath": {
+              "path": {
+               "$icon": {
+                "name": "flight",
+                "style": "rounded",
+                "filled": true
+               }
+              }
+             }
+            }
+           ]
+          },
+          "else": {
+           "drawCircle": {
+            "cx": {
+             "$mapRoute": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "from": "@routeFrom",
+              "to": "@routeTo",
+              "axis": "x",
+              "wrap": "arraySpline({}, max(0, min(1, @progress)))"
+             }
+            },
+            "cy": {
+             "$mapRoute": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "from": "@routeFrom",
+              "to": "@routeTo",
+              "axis": "y",
+              "wrap": "arraySpline({}, max(0, min(1, @progress)))"
+             }
+            },
+            "radius": {
+             "$if": "fit || fill",
+             "then": "@markerSize * 1.4 * @dk / @s",
+             "else": "@markerSize * 1.4 / @s"
+            }
+           }
+          }
+         }
+        }
+       ]
+      },
+      {
+       "$if": "legs",
+       "then": [
+        {
+         "paint": {
+          "ops": [
+           {
+            "$if": "theme.mono",
+            "then": {
+             "color": "@colors.onSurface"
+            },
+            "else": {
+             "color": "@legColor"
+            }
+           },
+           {
+            "style": "stroke"
+           },
+           {
+            "$if": "theme.mono",
+            "then": {
+             "strokeWidth": {
+              "$if": "fit || fill",
+              "then": "2.5 * @dk / @s",
+              "else": "2.5 / @s"
+             }
+            },
+            "else": {
+             "strokeWidth": {
+              "$if": "fit || fill",
+              "then": "1.5 * @dk / @s",
+              "else": "1.5 / @s"
+             }
+            }
+           },
+           {
+            "strokeCap": "round"
+           }
+          ]
+         }
+        },
+        {
+         "$each": "legs",
+         "as": "leg",
+         "index": "li",
+         "fields": [
+          "from",
+          "to",
+          "label"
+         ],
+         "do": [
+          {
+           "drawPath": {
+            "path": {
+             "$mapRoute": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "from": "@leg_from",
+              "to": "@leg_to",
+              "points": 32
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "paint": {
+          "ops": [
+           {
+            "style": "fill"
+           }
+          ]
+         }
+        },
+        {
+         "$each": "legs",
+         "as": "leg",
+         "index": "li",
+         "fields": [
+          "from",
+          "to",
+          "label"
+         ],
+         "do": [
+          {
+           "drawCircle": {
+            "cx": {
+             "$mapPoint": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "at": "@leg_from"
+             }
+            },
+            "cy": {
+             "$mapPoint": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "at": "@leg_from",
+              "axis": "y"
+             }
+            },
+            "radius": {
+             "$if": "fit || fill",
+             "then": "@markerSize * @dk / @s",
+             "else": "@markerSize / @s"
+            }
+           }
+          },
+          {
+           "drawCircle": {
+            "cx": {
+             "$mapPoint": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "at": "@leg_to"
+             }
+            },
+            "cy": {
+             "$mapPoint": {
+              "region": {
+               "$if": "fit || fill",
+               "then": {
+                "$if": "fit",
+                "then": [
+                 {
+                  "fit": "@fit"
+                 }
+                ],
+                "else": [
+                 {
+                  "fit": [
+                   "@region"
+                  ],
+                  "frame": true,
+                  "night": "@night"
+                 }
+                ]
+               },
+               "else": "@region"
+              },
+              "at": "@leg_to",
+              "axis": "y"
+             }
+            },
+            "radius": {
+             "$if": "fit || fill",
+             "then": "@markerSize * @dk / @s",
+             "else": "@markerSize / @s"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "paint": {
+          "ops": [
+           {
+            "color": "@colors.surface"
+           },
+           {
+            "style": "stroke"
+           },
+           {
+            "$if": "theme.mono",
+            "then": {
+             "strokeWidth": {
+              "$if": "fit || fill",
+              "then": "6 * @dk / @s",
+              "else": "6 / @s"
+             }
+            },
+            "else": {
+             "strokeWidth": {
+              "$if": "fit || fill",
+              "then": "4 * @dk / @s",
+              "else": "4 / @s"
+             }
+            }
+           },
+           {
+            "strokeJoin": "round"
+           },
+           {
+            "$if": "fit || fill",
+            "then": {
+             "textSize": "@ts"
+            },
+            "else": {
+             "textSize": "@labelSize / @s"
+            }
+           }
+          ]
+         }
+        },
+        {
+         "$each": "legs",
+         "as": "leg",
+         "index": "li",
+         "fields": [
+          "from",
+          "to",
+          "label"
+         ],
+         "do": [
+          {
+           "$if": "fit || fill",
+           "then": {
+            "$if": "leg_label || legDistance",
+            "then": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": {
+                  "$mapPoint": {
+                   "region": {
+                    "$if": "fit",
+                    "then": [
+                     {
+                      "fit": "@fit"
+                     }
+                    ],
+                    "else": [
+                     {
+                      "fit": [
+                       "@region"
+                      ],
+                      "frame": true,
+                      "night": "@night"
+                     }
+                    ]
+                   },
+                   "at": {
+                    "labels": {
+                     "cities": "@cities",
+                     "names": "@labels",
+                     "legs": "@legs",
+                     "size": "@labelSize",
+                     "distance": "@legDistance",
+                     "marker": "@markerSize"
+                    },
+                    "leg": "@li",
+                    "part": "min"
+                   },
+                   "wrap": "step(@s, {})"
+                  }
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": {
+                "$if": "leg_label",
+                "then": "@leg_label",
+                "else": {
+                 "type": "textMerge",
+                 "id1": {
+                  "type": "textFromFloat",
+                  "value": {
+                   "$mapRoute": {
+                    "region": {
+                     "$if": "fit || fill",
+                     "then": {
+                      "$if": "fit",
+                      "then": [
+                       {
+                        "fit": "@fit"
+                       }
+                      ],
+                      "else": [
+                       {
+                        "fit": [
+                         "@region"
+                        ],
+                        "frame": true,
+                        "night": "@night"
+                       }
+                      ]
+                     },
+                     "else": "@region"
+                    },
+                    "from": "@leg_from",
+                    "to": "@leg_to",
+                    "points": 32,
+                    "axis": "km"
+                   }
+                  },
+                  "whole": 6,
+                  "decimal": 0,
+                  "flags": 21
+                 },
+                 "id2": " km"
+                }
+               },
+               "x": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "leg": "@li",
+                  "k": "@tk"
+                 }
+                }
+               },
+               "y": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "leg": "@li",
+                  "k": "@tk"
+                 },
+                 "axis": "y"
+                }
+               },
+               "panX": 0,
+               "panY": 0
+              }
+             }
+            ]
+           },
+           "else": {
+            "$if": "leg_label || legDistance",
+            "then": {
+             "drawTextAnchored": {
+              "text": {
+               "$if": "leg_label",
+               "then": "@leg_label",
+               "else": {
+                "type": "textMerge",
+                "id1": {
+                 "type": "textFromFloat",
+                 "value": {
+                  "$mapRoute": {
+                   "region": {
+                    "$if": "fit || fill",
+                    "then": {
+                     "$if": "fit",
+                     "then": [
+                      {
+                       "fit": "@fit"
+                      }
+                     ],
+                     "else": [
+                      {
+                       "fit": [
+                        "@region"
+                       ],
+                       "frame": true,
+                       "night": "@night"
+                      }
+                     ]
+                    },
+                    "else": "@region"
+                   },
+                   "from": "@leg_from",
+                   "to": "@leg_to",
+                   "points": 32,
+                   "axis": "km"
+                  }
+                 },
+                 "whole": 6,
+                 "decimal": 0,
+                 "flags": 21
+                },
+                "id2": " km"
+               }
+              },
+              "x": {
+               "$mapPoint": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "at": {
+                 "legs": "@legs",
+                 "leg": "@li",
+                 "size": "@labelSize",
+                 "height": "@height",
+                 "distance": "@legDistance"
+                }
+               }
+              },
+              "y": {
+               "$mapPoint": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "at": {
+                 "legs": "@legs",
+                 "leg": "@li",
+                 "size": "@labelSize",
+                 "height": "@height",
+                 "distance": "@legDistance"
+                },
+                "axis": "y"
+               }
+              },
+              "panX": 0,
+              "panY": 0
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "paint": {
+          "ops": [
+           {
+            "color": "@colors.onSurface"
+           },
+           {
+            "style": "fill"
+           }
+          ]
+         }
+        },
+        {
+         "$each": "legs",
+         "as": "leg",
+         "index": "li",
+         "fields": [
+          "from",
+          "to",
+          "label"
+         ],
+         "do": [
+          {
+           "$if": "fit || fill",
+           "then": {
+            "$if": "leg_label || legDistance",
+            "then": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": {
+                  "$mapPoint": {
+                   "region": {
+                    "$if": "fit",
+                    "then": [
+                     {
+                      "fit": "@fit"
+                     }
+                    ],
+                    "else": [
+                     {
+                      "fit": [
+                       "@region"
+                      ],
+                      "frame": true,
+                      "night": "@night"
+                     }
+                    ]
+                   },
+                   "at": {
+                    "labels": {
+                     "cities": "@cities",
+                     "names": "@labels",
+                     "legs": "@legs",
+                     "size": "@labelSize",
+                     "distance": "@legDistance",
+                     "marker": "@markerSize"
+                    },
+                    "leg": "@li",
+                    "part": "min"
+                   },
+                   "wrap": "step(@s, {})"
+                  }
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": {
+                "$if": "leg_label",
+                "then": "@leg_label",
+                "else": {
+                 "type": "textMerge",
+                 "id1": {
+                  "type": "textFromFloat",
+                  "value": {
+                   "$mapRoute": {
+                    "region": {
+                     "$if": "fit || fill",
+                     "then": {
+                      "$if": "fit",
+                      "then": [
+                       {
+                        "fit": "@fit"
+                       }
+                      ],
+                      "else": [
+                       {
+                        "fit": [
+                         "@region"
+                        ],
+                        "frame": true,
+                        "night": "@night"
+                       }
+                      ]
+                     },
+                     "else": "@region"
+                    },
+                    "from": "@leg_from",
+                    "to": "@leg_to",
+                    "points": 32,
+                    "axis": "km"
+                   }
+                  },
+                  "whole": 6,
+                  "decimal": 0,
+                  "flags": 21
+                 },
+                 "id2": " km"
+                }
+               },
+               "x": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "leg": "@li",
+                  "k": "@tk"
+                 }
+                }
+               },
+               "y": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "leg": "@li",
+                  "k": "@tk"
+                 },
+                 "axis": "y"
+                }
+               },
+               "panX": 0,
+               "panY": 0
+              }
+             }
+            ]
+           },
+           "else": {
+            "$if": "leg_label || legDistance",
+            "then": {
+             "drawTextAnchored": {
+              "text": {
+               "$if": "leg_label",
+               "then": "@leg_label",
+               "else": {
+                "type": "textMerge",
+                "id1": {
+                 "type": "textFromFloat",
+                 "value": {
+                  "$mapRoute": {
+                   "region": {
+                    "$if": "fit || fill",
+                    "then": {
+                     "$if": "fit",
+                     "then": [
+                      {
+                       "fit": "@fit"
+                      }
+                     ],
+                     "else": [
+                      {
+                       "fit": [
+                        "@region"
+                       ],
+                       "frame": true,
+                       "night": "@night"
+                      }
+                     ]
+                    },
+                    "else": "@region"
+                   },
+                   "from": "@leg_from",
+                   "to": "@leg_to",
+                   "points": 32,
+                   "axis": "km"
+                  }
+                 },
+                 "whole": 6,
+                 "decimal": 0,
+                 "flags": 21
+                },
+                "id2": " km"
+               }
+              },
+              "x": {
+               "$mapPoint": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "at": {
+                 "legs": "@legs",
+                 "leg": "@li",
+                 "size": "@labelSize",
+                 "height": "@height",
+                 "distance": "@legDistance"
+                }
+               }
+              },
+              "y": {
+               "$mapPoint": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "at": {
+                 "legs": "@legs",
+                 "leg": "@li",
+                 "size": "@labelSize",
+                 "height": "@height",
+                 "distance": "@legDistance"
+                },
+                "axis": "y"
+               }
+              },
+              "panX": 0,
+              "panY": 0
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "$if": "fit || fill",
+         "then": {
+          "paint": {
+           "ops": [
+            {
+             "alpha": 1
+            }
+           ]
+          }
+         }
+        }
+       ]
+      },
+      {
+       "paint": {
+        "ops": [
+         {
+          "color": "@markerColor"
+         },
+         {
+          "style": "fill"
+         },
+         {
+          "textSize": "@labelSize / @s"
+         }
+        ]
+       }
+      },
+      {
+       "$if": "fit || fill",
+       "then": {
+        "$if": "cities",
+        "then": [
+         {
+          "$each": "cities",
+          "as": "city",
+          "do": [
+           {
+            "drawCircle": {
+             "cx": {
+              "$mapPoint": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "at": "@city"
+              }
+             },
+             "cy": {
+              "$mapPoint": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "at": "@city",
+               "axis": "y"
+              }
+             },
+             "radius": {
+              "$if": "fit || fill",
+              "then": "@markerSize * @dk / @s",
+              "else": "@markerSize / @s"
+             }
+            }
+           }
+          ]
+         },
+         {
+          "$if": "labels",
+          "then": [
+           {
+            "paint": {
+             "ops": [
+              {
+               "color": "@colors.surface"
+              },
+              {
+               "style": "stroke"
+              },
+              {
+               "$if": "theme.mono",
+               "then": {
+                "strokeWidth": {
+                 "$if": "fit || fill",
+                 "then": "6 * @dk / @s",
+                 "else": "6 / @s"
+                }
+               },
+               "else": {
+                "strokeWidth": {
+                 "$if": "fit || fill",
+                 "then": "4 * @dk / @s",
+                 "else": "4 / @s"
+                }
+               }
+              },
+              {
+               "strokeJoin": "round"
+              },
+              {
+               "textSize": "@ts"
+              }
+             ]
+            }
+           },
+           {
+            "$each": "cities",
+            "as": "city",
+            "index": "cii",
+            "do": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": {
+                  "$mapPoint": {
+                   "region": {
+                    "$if": "fit",
+                    "then": [
+                     {
+                      "fit": "@fit"
+                     }
+                    ],
+                    "else": [
+                     {
+                      "fit": [
+                       "@region"
+                      ],
+                      "frame": true,
+                      "night": "@night"
+                     }
+                    ]
+                   },
+                   "at": {
+                    "labels": {
+                     "cities": "@cities",
+                     "names": "@labels",
+                     "legs": "@legs",
+                     "size": "@labelSize",
+                     "distance": "@legDistance",
+                     "marker": "@markerSize"
+                    },
+                    "city": "@cii",
+                    "part": "min"
+                   },
+                   "wrap": "step(@s, {})"
+                  }
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "@city",
+               "x": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "k": "@tk"
+                 }
+                }
+               },
+               "y": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "k": "@tk"
+                 },
+                 "axis": "y"
+                }
+               },
+               "panX": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "part": "pan"
+                 }
+                }
+               },
+               "panY": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "part": "pan"
+                 },
+                 "axis": "y"
+                }
+               }
+              }
+             }
+            ]
+           },
+           {
+            "paint": {
+             "ops": [
+              {
+               "color": "@markerColor"
+              },
+              {
+               "style": "fill"
+              }
+             ]
+            }
+           },
+           {
+            "$each": "cities",
+            "as": "city",
+            "index": "cii",
+            "do": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": {
+                  "$mapPoint": {
+                   "region": {
+                    "$if": "fit",
+                    "then": [
+                     {
+                      "fit": "@fit"
+                     }
+                    ],
+                    "else": [
+                     {
+                      "fit": [
+                       "@region"
+                      ],
+                      "frame": true,
+                      "night": "@night"
+                     }
+                    ]
+                   },
+                   "at": {
+                    "labels": {
+                     "cities": "@cities",
+                     "names": "@labels",
+                     "legs": "@legs",
+                     "size": "@labelSize",
+                     "distance": "@legDistance",
+                     "marker": "@markerSize"
+                    },
+                    "city": "@cii",
+                    "part": "min"
+                   },
+                   "wrap": "step(@s, {})"
+                  }
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "@city",
+               "x": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "k": "@tk"
+                 }
+                }
+               },
+               "y": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "k": "@tk"
+                 },
+                 "axis": "y"
+                }
+               },
+               "panX": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "part": "pan"
+                 }
+                }
+               },
+               "panY": {
+                "$mapPoint": {
+                 "region": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "at": {
+                  "labels": {
+                   "cities": "@cities",
+                   "names": "@labels",
+                   "legs": "@legs",
+                   "size": "@labelSize",
+                   "distance": "@legDistance",
+                   "marker": "@markerSize"
+                  },
+                  "city": "@cii",
+                  "part": "pan"
+                 },
+                 "axis": "y"
+                }
+               }
+              }
+             }
+            ]
+           },
+           {
+            "paint": {
+             "ops": [
+              {
+               "alpha": 1
+              }
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       },
+       "else": {
+        "$if": "cities",
+        "then": [
+         {
+          "$if": "legs",
+          "then": {
+           "$if": "labels",
+           "then": [
+            {
+             "paint": {
+              "ops": [
+               {
+                "color": "@colors.surface"
+               },
+               {
+                "style": "stroke"
+               },
+               {
+                "$if": "theme.mono",
+                "then": {
+                 "strokeWidth": "6 / @s"
+                },
+                "else": {
+                 "strokeWidth": "4 / @s"
+                }
+               },
+               {
+                "strokeJoin": "round"
+               }
+              ]
+             }
+            },
+            {
+             "$each": "cities",
+             "as": "city",
+             "do": [
+              {
+               "drawTextAnchored": {
+                "text": "@city",
+                "x": {
+                 "$mapPoint": {
+                  "region": {
+                   "$if": "fit || fill",
+                   "then": {
+                    "$if": "fit",
+                    "then": [
+                     {
+                      "fit": "@fit"
+                     }
+                    ],
+                    "else": [
+                     {
+                      "fit": [
+                       "@region"
+                      ],
+                      "frame": true,
+                      "night": "@night"
+                     }
+                    ]
+                   },
+                   "else": "@region"
+                  },
+                  "at": "@city"
+                 }
+                },
+                "y": {
+                 "$mapPoint": {
+                  "region": {
+                   "$if": "fit || fill",
+                   "then": {
+                    "$if": "fit",
+                    "then": [
+                     {
+                      "fit": "@fit"
+                     }
+                    ],
+                    "else": [
+                     {
+                      "fit": [
+                       "@region"
+                      ],
+                      "frame": true,
+                      "night": "@night"
+                     }
+                    ]
+                   },
+                   "else": "@region"
+                  },
+                  "at": "@city",
+                  "axis": "y"
+                 }
+                },
+                "panX": {
+                 "$mapPoint": {
+                  "region": {
+                   "$if": "fit || fill",
+                   "then": {
+                    "$if": "fit",
+                    "then": [
+                     {
+                      "fit": "@fit"
+                     }
+                    ],
+                    "else": [
+                     {
+                      "fit": [
+                       "@region"
+                      ],
+                      "frame": true,
+                      "night": "@night"
+                     }
+                    ]
+                   },
+                   "else": "@region"
+                  },
+                  "at": "@city",
+                  "wrap": "ifElse(-1.25, 1.25, step({}, 800))"
+                 }
+                },
+                "panY": 0
+               }
+              }
+             ]
+            },
+            {
+             "paint": {
+              "ops": [
+               {
+                "color": "@markerColor"
+               },
+               {
+                "style": "fill"
+               }
+              ]
+             }
+            }
+           ]
+          }
+         },
+         {
+          "$each": "cities",
+          "as": "city",
+          "do": [
+           {
+            "drawCircle": {
+             "cx": {
+              "$mapPoint": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "at": "@city"
+              }
+             },
+             "cy": {
+              "$mapPoint": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "at": "@city",
+               "axis": "y"
+              }
+             },
+             "radius": "@markerSize / @s"
+            }
+           },
+           {
+            "$if": "labels",
+            "then": {
+             "drawTextAnchored": {
+              "text": "@city",
+              "x": {
+               "$mapPoint": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "at": "@city"
+               }
+              },
+              "y": {
+               "$mapPoint": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "at": "@city",
+                "axis": "y"
+               }
+              },
+              "panX": {
+               "$mapPoint": {
+                "region": {
+                 "$if": "fit || fill",
+                 "then": {
+                  "$if": "fit",
+                  "then": [
+                   {
+                    "fit": "@fit"
+                   }
+                  ],
+                  "else": [
+                   {
+                    "fit": [
+                     "@region"
+                    ],
+                    "frame": true,
+                    "night": "@night"
+                   }
+                  ]
+                 },
+                 "else": "@region"
+                },
+                "at": "@city",
+                "wrap": "ifElse(-1.25, 1.25, step({}, 800))"
+               }
+              },
+              "panY": 0
+             }
+            }
+           }
+          ]
+         }
+        ]
+       }
+      },
+      {
+       "$if": "daylight",
+       "then": [
+        {
+         "$gen": {
+          "kind": "daylight",
+          "cities": "@cities",
+          "region": "@region",
+          "decl": "@decl",
+          "sunLon": "@sunLon",
+          "radius": "@mr",
+          "dayColor": "@dayColor",
+          "nightColor": "@markerColor",
+          "ringColor": "@colors.surface"
+         }
+        }
+       ]
+      },
+      {
+       "$if": "markLat",
+       "then": [
+        {
+         "drawCircle": {
+          "cx": "@mx",
+          "cy": "@my",
+          "radius": {
+           "$if": "fit || fill",
+           "then": "@markerSize * 1.4 * @dk / @s",
+           "else": "@markerSize * 1.4 / @s"
+          }
+         }
+        }
+       ]
+      },
+      {
+       "$if": "pointsLon",
+       "then": [
+        {
+         "paint": {
+          "ops": [
+           {
+            "color": "@markerColor"
+           },
+           {
+            "style": "fill"
+           }
+          ]
+         }
+        },
+        {
+         "loop": {
+          "index": "wk",
+          "from": 0,
+          "until": "arrayLength(@pointsLon)",
+          "commands": [
+           {
+            "drawCircle": {
+             "cx": {
+              "$mapPoint": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "lon": "arrayGet(@pointsLon, wk)",
+               "lat": "arrayGet(@pointsLat, wk)"
+              }
+             },
+             "cy": {
+              "$mapPoint": {
+               "region": {
+                "$if": "fit || fill",
+                "then": {
+                 "$if": "fit",
+                 "then": [
+                  {
+                   "fit": "@fit"
+                  }
+                 ],
+                 "else": [
+                  {
+                   "fit": [
+                    "@region"
+                   ],
+                   "frame": true,
+                   "night": "@night"
+                  }
+                 ]
+                },
+                "else": "@region"
+               },
+               "lon": "arrayGet(@pointsLon, wk)",
+               "lat": "arrayGet(@pointsLat, wk)",
+               "axis": "y"
+              }
+             },
+             "radius": {
+              "$if": "fit || fill",
+              "then": "@markerSize * @dk / @s",
+              "else": "@markerSize / @s"
+             }
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "pitfalls": [
+  "Geometry is fixed when the document is built (region, detail, borders, highlight, cities, states, the route's ends); at run time the app can colour countries (values + valueCountries), move points (pointsLon/pointsLat arrays), move the marker (markLon/markLat), advance the route (progress) and the clock moves the night",
+  "night assumes the world box (\"world\": latitudes 84 to -58, plate carr\u00e9e): on a continent or a country it is not drawn correctly; leave it off there. The night side is one filled pathExpression along the terminator (atan(-cos(H) / tan(declination)))",
+  "Bytes grow with detail and borders: a world of land at low detail is ~6 KB, countries ~10 KB; Europe with borders at medium ~28 KB; each valueCountries entry adds its own outline (Europe's 48 at low ~30 KB). Prefer land for a backdrop and borders only where they matter",
+  "For anything else at map coordinates draw in your own canvas inside the same translate/scale: {\"$mapPoint\": {\"region\": ..., \"lon\": \"@lon\", \"lat\": \"@lat\"}} (x; \"axis\": \"y\" for y), {\"$mapHeight\": region} (the box height for width 1000), {\"$mapRoute\": {region, from, to, axis: \"path\" | \"x\" | \"y\" | \"angle\"}} (a great circle, or its samples as an array for arraySpline(@array, t)). In your own canvas use {\"$map\": {..., \"outline\": true}} for a stroked coast (a clipped fill's straight edges would show)",
+  "In mono the land is an outline (no fills), the highlight a fill, the night a grey shade",
+  "It fills the width it is given (fillMaxWidth): beside other content in a row, give it a weight or a width, or the row's other children get nothing",
+  "A list region frames those places, not a continent: [\"Dubai\", \"London\", \"Singapore\"]. Name the legs' cities in it (or [from, to] pairs, which add the arc's bulge): an arc to a place outside the frame leaves the map, routes are not clipped",
+  "legs draws each leg's arc and end dots; labels and the hub's name come from cities + labels (draw them too, the leg labels avoid them). With region, a label is placed for a map about 300 dp wide at the given height and a much smaller map can crowd them; with fit, text scales with the map and labels that would collide at a small size are hidden",
+  "fit + fill is the map that follows the window: {\"fit\": [\"Dubai\", \"London\"], \"fill\": true} takes the column's remaining height (put it last or give its siblings fixed sizes) and frames the places at whatever size the window has; the geometry covers boxes from 0.9:1 to 2.6:1 (outside that, blank bands)",
+  "ramp needs values + valueCountries; the values are raw (valueMin..valueMax, e.g. 0..250 \u20ac/MWh), not 0..1. Start the ramp with a colour unlike the land (not @colors.track), or the lowest values read as no data. Use borders: true so neighbours of close values stay apart, and legend: true for the scale",
+  "A world clock: night + twilight + sun + daylight with cities is the whole map of SHW-21: the soft edge (three shades), the sun over the subsolar point and city dots that glow where the sun is up. All three new options assume the world box (region \"world\" or \"world-full\") and repaint once a minute with the clock; the subsolar longitude ignores the equation of time (up to 4 degrees)"
+ ]
+}

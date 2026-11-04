@@ -1,0 +1,850 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 720,
+  "profiles": 513,
+  "contentDescription": "World clock: a world map with the night side shaded and the sun over the place where it is noon, and six cities with their local time, each card showing that city's sky"
+ },
+ "components": {
+  "CityCard": {
+   "summary": "One city: its sky (day, twilight or night from the sun's height there), the name, the local time and the day and UTC offset.",
+   "params": {
+    "name": {
+     "type": "string",
+     "required": true,
+     "doc": "City name"
+    },
+    "k": {
+     "type": "float",
+     "static": true,
+     "doc": "Index into the city arrays, from 0"
+    }
+   },
+   "locals": {
+    "off": "arrayGet(@utcOffsets, @k)",
+    "raw": "@utcMin + @off * 60",
+    "lm": "(@raw + 1440) % 1440",
+    "hh": "floor(@lm / 60)",
+    "mm": "floor(@lm % 60)",
+    "dd": "floor(@raw / 1440) + 1",
+    "el": "arrayGet(@cSinLat, @k) * sin(@decl) + arrayGet(@cCosLat, @k) * cos(@decl) * cos((arrayGet(@cLon, @k) - @sunLon) * 0.0174533)",
+    "sunY": "0.62 - @el * 0.55"
+   },
+   "call": {
+    "CityCard": {
+     "name": "London",
+     "k": 2
+    }
+   },
+   "body": {
+    "box": {
+     "modifiers": [
+      {
+       "width": "@cw"
+      },
+      {
+       "height": "@ch"
+      },
+      {
+       "padding": 4
+      }
+     ],
+     "children": [
+      {
+       "canvas": {
+        "modifiers": [
+         "fillMaxSize"
+        ],
+        "commands": [
+         {
+          "global": {
+           "commands": [
+            {
+             "textSubtext": {
+              "text": "YesterdayToday    Tomorrow ",
+              "start": "@dd * 9",
+              "len": 9,
+              "varName": "rel9"
+             }
+            },
+            {
+             "textTransform": {
+              "text": "@rel9",
+              "start": 0,
+              "len": -1,
+              "operation": 3,
+              "varName": "rel"
+             }
+            },
+            {
+             "textSubtext": {
+              "text": "-+",
+              "start": "step(@off, -0.5)",
+              "len": 1,
+              "varName": "sgn"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "variable": {
+           "name": "cwp",
+           "value": "componentWidth()"
+          }
+         },
+         {
+          "variable": {
+           "name": "chp",
+           "value": "componentHeight()"
+          }
+         },
+         {
+          "$if": "theme.mono",
+          "then": [
+           {
+            "paint": {
+             "ops": [
+              {
+               "color": "@colors.onSurface"
+              },
+              {
+               "style": "stroke"
+              },
+              {
+               "strokeWidth": 1.5
+              }
+             ]
+            }
+           },
+           {
+            "drawRoundRect": {
+             "left": 0.75,
+             "top": 0.75,
+             "right": "@cwp - 0.75",
+             "bottom": "@chp - 0.75",
+             "rx": 14,
+             "ry": 14
+            }
+           },
+           {
+            "paint": {
+             "ops": [
+              {
+               "style": "fill"
+              }
+             ]
+            }
+           },
+           {
+            "conditionalOperations": {
+             "condition": "gt",
+             "v1": "@el",
+             "v2": 0,
+             "commands": [
+              {
+               "drawCircle": {
+                "cx": "@cwp - 26",
+                "cy": 26,
+                "radius": 6
+               }
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "style": "stroke"
+                 },
+                 {
+                  "strokeWidth": 1.6
+                 },
+                 {
+                  "strokeCap": "round"
+                 }
+                ]
+               }
+              },
+              {
+               "loop": {
+                "index": "j",
+                "from": 0,
+                "until": 8,
+                "commands": [
+                 {
+                  "save": {
+                   "commands": [
+                    {
+                     "rotate": {
+                      "angle": "j * 45",
+                      "pivotX": "@cwp - 26",
+                      "pivotY": 26
+                     }
+                    },
+                    {
+                     "drawLine": {
+                      "x1": "@cwp - 26",
+                      "y1": 15,
+                      "x2": "@cwp - 26",
+                      "y2": 11.5
+                     }
+                    }
+                   ]
+                  }
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           },
+           {
+            "conditionalOperations": {
+             "condition": "le",
+             "v1": "@el",
+             "v2": 0,
+             "commands": [
+              {
+               "drawCircle": {
+                "cx": "@cwp - 26",
+                "cy": 26,
+                "radius": 10
+               }
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "color": "@colors.background"
+                 }
+                ]
+               }
+              },
+              {
+               "drawCircle": {
+                "cx": "@cwp - 21",
+                "cy": 22,
+                "radius": 9
+               }
+              }
+             ]
+            }
+           }
+          ],
+          "else": [
+           {
+            "paint": {
+             "ops": [
+              {
+               "style": "fill"
+              },
+              {
+               "linearGradient": {
+                "x1": 0,
+                "y1": 0,
+                "x2": 0,
+                "y2": "@chp",
+                "colors": [
+                 "#FF0B1430",
+                 "#FF1C2850"
+                ]
+               }
+              }
+             ]
+            }
+           },
+           {
+            "conditionalOperations": {
+             "condition": "gt",
+             "v1": "@el",
+             "v2": -0.105,
+             "commands": [
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "linearGradient": {
+                   "x1": 0,
+                   "y1": 0,
+                   "x2": 0,
+                   "y2": "@chp",
+                   "colors": [
+                    "#FF33407A",
+                    "#FFB35F6E",
+                    "#FFF2A65A"
+                   ],
+                   "stops": [
+                    0,
+                    0.6,
+                    1
+                   ]
+                  }
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           },
+           {
+            "conditionalOperations": {
+             "condition": "gt",
+             "v1": "@el",
+             "v2": 0.105,
+             "commands": [
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "linearGradient": {
+                   "x1": 0,
+                   "y1": 0,
+                   "x2": 0,
+                   "y2": "@chp",
+                   "colors": [
+                    "#FF2F78D2",
+                    "#FF6BB2F0"
+                   ]
+                  }
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           },
+           {
+            "drawRoundRect": {
+             "left": 0,
+             "top": 0,
+             "right": "@cwp",
+             "bottom": "@chp",
+             "rx": 14,
+             "ry": 14
+            }
+           },
+           {
+            "paint": {
+             "shader": 0
+            }
+           },
+           {
+            "conditionalOperations": {
+             "condition": "lt",
+             "v1": "@el",
+             "v2": -0.105,
+             "commands": [
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "color": "#FFFFFFFF"
+                 },
+                 {
+                  "alpha": 0.7
+                 }
+                ]
+               }
+              },
+              {
+               "drawCircle": {
+                "cx": "@cwp * 0.58",
+                "cy": "@chp * 0.16",
+                "radius": 1
+               }
+              },
+              {
+               "drawCircle": {
+                "cx": "@cwp * 0.70",
+                "cy": "@chp * 0.40",
+                "radius": 0.8
+               }
+              },
+              {
+               "drawCircle": {
+                "cx": "@cwp * 0.50",
+                "cy": "@chp * 0.33",
+                "radius": 0.7
+               }
+              },
+              {
+               "drawCircle": {
+                "cx": "@cwp * 0.92",
+                "cy": "@chp * 0.52",
+                "radius": 0.9
+               }
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "alpha": 1
+                 }
+                ]
+               }
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "color": "#FFE9EEF8"
+                 }
+                ]
+               }
+              },
+              {
+               "drawCircle": {
+                "cx": "@cwp - 26",
+                "cy": 26,
+                "radius": 10
+               }
+              },
+              {
+               "paint": {
+                "ops": [
+                 {
+                  "color": "#FF0F1936"
+                 }
+                ]
+               }
+              },
+              {
+               "drawCircle": {
+                "cx": "@cwp - 21",
+                "cy": 22,
+                "radius": 9
+               }
+              }
+             ]
+            }
+           },
+           {
+            "conditionalOperations": {
+             "condition": "gt",
+             "v1": "@el",
+             "v2": -0.105,
+             "commands": [
+              {
+               "save": {
+                "commands": [
+                 {
+                  "clipRect": {
+                   "left": 0,
+                   "top": 0,
+                   "right": "@cwp",
+                   "bottom": "@chp * 0.9"
+                  }
+                 },
+                 {
+                  "paint": {
+                   "ops": [
+                    {
+                     "color": "#FFFFE7A3"
+                    },
+                    {
+                     "alpha": 0.35
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "drawCircle": {
+                   "cx": "@cwp - 28",
+                   "cy": "@chp * @sunY",
+                   "radius": 17
+                  }
+                 },
+                 {
+                  "paint": {
+                   "ops": [
+                    {
+                     "color": "#FFFFD45C"
+                    },
+                    {
+                     "alpha": 1
+                    }
+                   ]
+                  }
+                 },
+                 {
+                  "drawCircle": {
+                   "cx": "@cwp - 28",
+                   "cy": "@chp * @sunY",
+                   "radius": 10
+                  }
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       }
+      },
+      {
+       "column": {
+        "modifiers": [
+         "fillMaxSize",
+         {
+          "padding": 12
+         }
+        ],
+        "children": [
+         {
+          "row": {
+           "modifiers": [
+            "fillMaxWidth"
+           ],
+           "children": [
+            {
+             "text": {
+              "value": "@name",
+              "fontSize": "@nsz",
+              "fontWeight": 600,
+              "color": "@colors.onSky",
+              "maxLines": 1,
+              "overflow": "ellipsis",
+              "modifiers": [
+               {
+                "weight": 1
+               }
+              ]
+             }
+            },
+            {
+             "box": {
+              "modifiers": [
+               {
+                "width": 30
+               }
+              ]
+             }
+            }
+           ]
+          }
+         },
+         {
+          "box": {
+           "modifiers": [
+            {
+             "verticalWeight": 1
+            }
+           ]
+          }
+         },
+         {
+          "text": {
+           "value": {
+            "type": "textMerge",
+            "id1": {
+             "type": "textMerge",
+             "id1": {
+              "type": "textFromFloat",
+              "value": "@hh",
+              "whole": 2,
+              "decimal": 0,
+              "flags": 12
+             },
+             "id2": ":"
+            },
+            "id2": {
+             "type": "textFromFloat",
+             "value": "@mm",
+             "whole": 2,
+             "decimal": 0,
+             "flags": 12
+            }
+           },
+           "fontSize": "@tsz",
+           "fontWeight": 300,
+           "color": "@colors.onSky"
+          }
+         },
+         {
+          "text": {
+           "value": {
+            "type": "textMerge",
+            "id1": {
+             "type": "textMerge",
+             "id1": "@rel",
+             "id2": "  UTC"
+            },
+            "id2": {
+             "type": "textMerge",
+             "id1": "@sgn",
+             "id2": {
+              "type": "textFromFloat",
+              "value": "abs(@off)",
+              "whole": 2,
+              "decimal": 0,
+              "flags": 4
+             }
+            }
+           },
+           "fontSize": "@fsz",
+           "color": "@colors.onSky",
+           "maxLines": 1
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   }
+  }
+ },
+ "resources": {
+  "colors": {
+   "sea": {
+    "light": "#FFD9E6F2",
+    "dark": "#FF0C1828",
+    "mono-dark": "#FF000000",
+    "mono-light": "#FFFFFFFF"
+   },
+   "land": {
+    "light": "#FFFDFEFF",
+    "dark": "#FF46597A",
+    "mono-dark": "#FF9E9E9E",
+    "mono-light": "#FF9E9E9E"
+   },
+   "nightShade": {
+    "light": "#FF0B1A3A",
+    "dark": "#FF000000",
+    "mono-dark": "#FF000000",
+    "mono-light": "#FFFFFFFF"
+   },
+   "sun": {
+    "value": "#FFFFC93C",
+    "mono-dark": "#FFFFFFFF",
+    "mono-light": "#FF000000"
+   },
+   "cityDay": {
+    "value": "#FFFF9F1C",
+    "mono-dark": "#FFFFFFFF",
+    "mono-light": "#FF000000"
+   },
+   "cityNight": {
+    "light": "#FF5B6B85",
+    "dark": "#FFB8C7DD",
+    "mono-dark": "#FFFFFFFF",
+    "mono-light": "#FF000000"
+   },
+   "onSky": {
+    "value": "#FFFFFFFF",
+    "mono-dark": "#FFFFFFFF",
+    "mono-light": "#FF000000"
+   }
+  },
+  "floatArrays": {
+   "utcOffsets": {
+    "value": [
+     -8,
+     -5,
+     0,
+     4,
+     9,
+     11
+    ],
+    "export": true
+   },
+   "cLon": [
+    -122.42,
+    -74.01,
+    -0.13,
+    55.27,
+    139.69,
+    151.21
+   ],
+   "cSinLat": [
+    0.6125,
+    0.6522,
+    0.7827,
+    0.4258,
+    0.5834,
+    -0.5573
+   ],
+   "cCosLat": [
+    0.7905,
+    0.758,
+    0.6224,
+    0.9048,
+    0.8122,
+    0.8303
+   ]
+  },
+  "variables": {
+   "utcMin": "(timeInMin() - offsetToUtc() / 60 + 1440) % 1440",
+   "utcH": "floor(@utcMin / 60)",
+   "utcM": "floor(@utcMin % 60)",
+   "decl": "23.44 * sin(6.283185 * (284 + dayOfYear()) / 365) * 0.0174533",
+   "sunLon": "0 - 15 * (@utcMin / 60 - 12)",
+   "ww": "windowWidth() - 32",
+   "avail": "windowHeight() - 32 - 44",
+   "cols": "ifElse(2, 6, step(windowWidth(), 600) * step(windowWidth() / windowHeight(), 1.3))",
+   "rows": "6 / @cols",
+   "cw": "floor(@ww / @cols)",
+   "ch": "clamp(104, max(200, @cw * 0.8), (@avail - @ww / 2.5355 - 12) / @rows)",
+   "tsz": "clamp(24, 48, @ch * 0.2)",
+   "nsz": "clamp(15, 22, @ch * 0.075)",
+   "fsz": "clamp(12, 16, @ch * 0.055)"
+  }
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 16
+    }
+   ],
+   "children": [
+    {
+     "row": {
+      "modifiers": [
+       "fillMaxWidth",
+       {
+        "height": 32
+       }
+      ],
+      "verticalAlignment": "center",
+      "children": [
+       {
+        "text": {
+         "value": "World clock",
+         "fontSize": 20,
+         "fontWeight": 600,
+         "color": "@colors.onSurface",
+         "modifiers": [
+          {
+           "weight": 1
+          }
+         ]
+        }
+       },
+       {
+        "text": {
+         "value": {
+          "type": "textMerge",
+          "id1": {
+           "type": "textMerge",
+           "id1": {
+            "type": "textFromFloat",
+            "value": "@utcH",
+            "whole": 2,
+            "decimal": 0,
+            "flags": 12
+           },
+           "id2": ":"
+          },
+          "id2": {
+           "type": "textMerge",
+           "id1": {
+            "type": "textFromFloat",
+            "value": "@utcM",
+            "whole": 2,
+            "decimal": 0,
+            "flags": 12
+           },
+           "id2": " UTC"
+          }
+         },
+         "fontSize": 14,
+         "color": "@colors.muted"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "WorldMap": {
+      "fill": true,
+      "detail": "medium",
+      "night": true,
+      "twilight": true,
+      "sun": true,
+      "daylight": true,
+      "cities": [
+       "San Francisco",
+       "New York",
+       "London",
+       "Dubai",
+       "Tokyo",
+       "Sydney"
+      ],
+      "labels": true,
+      "markerSize": 3.6,
+      "sea": "@colors.sea",
+      "land": "@colors.land",
+      "nightColor": "@colors.nightShade",
+      "nightAlpha": 0.49,
+      "markerColor": "@colors.cityNight",
+      "dayColor": "@colors.cityDay",
+      "sunColor": "@colors.sun",
+      "label": "World map: the night side shaded, the sun over the place where it is noon, six cities marked"
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "height": 12
+       }
+      ]
+     }
+    },
+    {
+     "flow": {
+      "modifiers": [
+       "fillMaxWidth"
+      ],
+      "children": [
+       {
+        "CityCard": {
+         "name": "San Francisco",
+         "k": 0
+        }
+       },
+       {
+        "CityCard": {
+         "name": "New York",
+         "k": 1
+        }
+       },
+       {
+        "CityCard": {
+         "name": "London",
+         "k": 2
+        }
+       },
+       {
+        "CityCard": {
+         "name": "Dubai",
+         "k": 3
+        }
+       },
+       {
+        "CityCard": {
+         "name": "Tokyo",
+         "k": 4
+        }
+       },
+       {
+        "CityCard": {
+         "name": "Sydney",
+         "k": 5
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

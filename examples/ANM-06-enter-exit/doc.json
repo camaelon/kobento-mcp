@@ -1,0 +1,308 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 300,
+  "profiles": 513,
+  "contentDescription": "Three notifications: tapping one slides it away to the right and the others close the gap; Restore fades them back in"
+ },
+ "root": [
+  {
+   "variable": {
+    "name": "n1",
+    "vtype": "int",
+    "value": 1
+   }
+  },
+  {
+   "variable": {
+    "name": "n2",
+    "vtype": "int",
+    "value": 1
+   }
+  },
+  {
+   "variable": {
+    "name": "n3",
+    "vtype": "int",
+    "value": 1
+   }
+  },
+  {
+   "column": {
+    "modifiers": [
+     "fillMaxSize",
+     {
+      "background": "@colors.background"
+     },
+     {
+      "padding": 16
+     },
+     {
+      "spacedBy": 8
+     }
+    ],
+    "children": [
+     {
+      "row": {
+       "verticalAlignment": "center",
+       "modifiers": [
+        "fillMaxWidth"
+       ],
+       "children": [
+        {
+         "text": {
+          "value": "Notifications",
+          "fontSize": 18,
+          "color": "@colors.onSurface",
+          "modifiers": [
+           {
+            "weight": 1
+           }
+          ]
+         }
+        },
+        {
+         "Button": {
+          "label": "Restore",
+          "style": "text",
+          "onClick": [
+           {
+            "type": "valueIntegerChange",
+            "target": "@n1",
+            "value": 1
+           },
+           {
+            "type": "valueIntegerChange",
+            "target": "@n2",
+            "value": 1
+           },
+           {
+            "type": "valueIntegerChange",
+            "target": "@n3",
+            "value": 1
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     {
+      "box": {
+       "modifiers": [
+        {
+         "visibility": "@n1"
+        },
+        {
+         "animationSpec": {
+          "motionDuration": 300,
+          "visibilityDuration": 350,
+          "enterAnimation": "FADE_IN",
+          "exitAnimation": "SLIDE_RIGHT",
+          "enterSequence": "AFTER",
+          "exitSequence": "BEFORE"
+         }
+        },
+        "fillMaxWidth",
+        {
+         "clip": 14
+        },
+        {
+         "background": "@colors.surface"
+        }
+       ],
+       "children": [
+        {
+         "ListItem": {
+          "title": "Mia sent a photo",
+          "subtitle": "2 min ago",
+          "padding": 14,
+          "onClick": {
+           "type": "valueIntegerChange",
+           "target": "@n1",
+           "value": 0
+          },
+          "slots": {
+           "leading": [
+            {
+             "box": {
+              "modifiers": [
+               {
+                "size": [
+                 32,
+                 32
+                ]
+               },
+               {
+                "clip": 16
+               },
+               {
+                "background": "@colors.primary"
+               }
+              ]
+             }
+            }
+           ],
+           "trailing": [
+            {
+             "Icon": {
+              "name": "close",
+              "size": 20,
+              "color": "@colors.muted"
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "box": {
+       "modifiers": [
+        {
+         "visibility": "@n2"
+        },
+        {
+         "animationSpec": {
+          "motionDuration": 300,
+          "visibilityDuration": 350,
+          "enterAnimation": "FADE_IN",
+          "exitAnimation": "SLIDE_RIGHT",
+          "enterSequence": "AFTER",
+          "exitSequence": "BEFORE"
+         }
+        },
+        "fillMaxWidth",
+        {
+         "clip": 14
+        },
+        {
+         "background": "@colors.surface"
+        }
+       ],
+       "children": [
+        {
+         "ListItem": {
+          "title": "Your ride is here",
+          "subtitle": "5 min ago",
+          "padding": 14,
+          "onClick": {
+           "type": "valueIntegerChange",
+           "target": "@n2",
+           "value": 0
+          },
+          "slots": {
+           "leading": [
+            {
+             "box": {
+              "modifiers": [
+               {
+                "size": [
+                 32,
+                 32
+                ]
+               },
+               {
+                "clip": 16
+               },
+               {
+                "background": "@colors.success"
+               }
+              ]
+             }
+            }
+           ],
+           "trailing": [
+            {
+             "Icon": {
+              "name": "close",
+              "size": 20,
+              "color": "@colors.muted"
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     },
+     {
+      "box": {
+       "modifiers": [
+        {
+         "visibility": "@n3"
+        },
+        {
+         "animationSpec": {
+          "motionDuration": 300,
+          "visibilityDuration": 350,
+          "enterAnimation": "FADE_IN",
+          "exitAnimation": "SLIDE_RIGHT",
+          "enterSequence": "AFTER",
+          "exitSequence": "BEFORE"
+         }
+        },
+        "fillMaxWidth",
+        {
+         "clip": 14
+        },
+        {
+         "background": "@colors.surface"
+        }
+       ],
+       "children": [
+        {
+         "ListItem": {
+          "title": "Battery at 20%",
+          "subtitle": "12 min ago",
+          "padding": 14,
+          "onClick": {
+           "type": "valueIntegerChange",
+           "target": "@n3",
+           "value": 0
+          },
+          "slots": {
+           "leading": [
+            {
+             "box": {
+              "modifiers": [
+               {
+                "size": [
+                 32,
+                 32
+                ]
+               },
+               {
+                "clip": 16
+               },
+               {
+                "background": "@colors.warning"
+               }
+              ]
+             }
+            }
+           ],
+           "trailing": [
+            {
+             "Icon": {
+              "name": "close",
+              "size": 20,
+              "color": "@colors.muted"
+             }
+            }
+           ]
+          }
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

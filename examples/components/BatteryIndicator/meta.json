@@ -1,0 +1,527 @@
+{
+ "id": "BatteryIndicator",
+ "name": "battery-indicator",
+ "version": 2,
+ "title": "Battery indicator",
+ "prompt": "Show the phone's battery level as a battery icon with the percentage, green when charged, amber at half and red with a warning mark when low, and a lightning bolt while it charges.",
+ "level": 1,
+ "use_cases": [
+  "widget",
+  "watch-face"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "battery",
+  "battery indicator",
+  "battery icon",
+  "battery level",
+  "charge level",
+  "low battery",
+  "battery percentage",
+  "status bar",
+  "power",
+  "charging",
+  "battery charging",
+  "plugged in"
+ ],
+ "teaches": [
+  "{\"BatteryIndicator\": {\"level\": \"@battery\", \"charging\": \"@charging\"}} draws a battery filled to an exported host float, with \"76%\" after it, and a bolt over the body while the host's charging flag is 1",
+  "The fill turns amber below warnAt (50) and red below lowAt (20) through conditionalOperations around a paint change, and low also draws a !, so mono shows it by shape; while charging the fill stays green and the ! is not drawn",
+  "The bolt is the library bolt icon (one shared path) drawn twice: a surface-coloured halo stroke, then an onSurface fill, so it reads over the green fill and the empty part; in mono the two swap (a black bolt, white-outlined over black)",
+  "size scales the icon (it is half as tall as it is wide); showPercent: false leaves only the icon"
+ ],
+ "snippets": [
+  {
+   "pointer": "/resources/variables",
+   "shows": "host.variables",
+   "note": "battery and charging, set by the host"
+  },
+  {
+   "pointer": "/root/column/children/1",
+   "shows": "text.dynamic",
+   "note": "bound to the host level and charging flag, with the percentage"
+  },
+  {
+   "pointer": "/root/column/children/2",
+   "shows": "data.condition",
+   "note": "95, 40 and 18 % in a flow: green, amber, red with a !"
+  },
+  {
+   "pointer": "/root/column/children/3",
+   "shows": "image.icon",
+   "note": "54 % and 5 % charging: a bolt over a green fill, no !"
+  },
+  {
+   "pointer": "/root/column/children/3/flow/children/1",
+   "shows": "draw.path",
+   "note": "5 % charging: the bolt path (halo stroke, then fill) over the body instead of the !"
+  },
+  {
+   "pointer": "/root/column/children/4",
+   "shows": "draw.shapes",
+   "note": "72 dp, icon only"
+  }
+ ],
+ "inputs": {
+  "variables": {
+   "battery": {
+    "type": "float",
+    "meaning": "battery charge, percent",
+    "default": 76,
+    "min": 0,
+    "max": 100
+   },
+   "charging": {
+    "type": "float",
+    "meaning": "1 while the battery charges, else 0",
+    "default": 0,
+    "min": 0,
+    "max": 1
+   }
+  },
+  "clock": null,
+  "touch": false
+ },
+ "check": {
+  "describe": "The host level (76, not charging) gives a green icon about three quarters full and \"76%\"; the first flow shows 95 (green, nearly full), 40 (amber) and 18 (red, with a red ! in the empty part); the second flow shows 54 and 5 charging: both green with a dark (light theme) or light (dark theme) bolt with a thin halo over the body, and no ! on the 5. The large icon follows the host level. With battery = 15 (the low render) the first and last icons turn red and show the !; with charging = 1 (the charging render) they keep the green fill and gain the bolt. In mono the bolt is a black silhouette on the white fill and a white outline over the black empty part (the reverse in mono-light). The icons keep their size and sit in flows: at 240 dp the 18% one wraps to a second line, at 420 dp everything stays at the start.",
+  "render": {},
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "low",
+    "variables": {
+     "battery": 15
+    }
+   },
+   {
+    "name": "charging",
+    "variables": {
+     "charging": 1
+    }
+   },
+   {
+    "name": "low-charging",
+    "variables": {
+     "battery": 15,
+     "charging": 1
+    }
+   },
+   {
+    "name": "narrow",
+    "width": 240,
+    "height": 240
+   },
+   {
+    "name": "wide",
+    "width": 420,
+    "height": 240
+   }
+  ]
+ },
+ "related": [
+  "CMP-11",
+  "HST-03",
+  "SHW-04"
+ ],
+ "derived": {
+  "components": [
+   "BatteryIndicator"
+  ],
+  "component_instances": 7,
+  "component_modes": {
+   "BatteryIndicator": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 6507,
+  "header": {
+   "width": 300,
+   "height": 240
+  },
+  "op_count": 369,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 7,
+   "ANIMATED_FLOAT": 27,
+   "COLOR_CONSTANT": 14,
+   "COLOR_EXPRESSIONS": 14,
+   "COMPONENT_VALUE": 14,
+   "CanvasContent": 7,
+   "ConditionalOperations": 18,
+   "CoreText": 7,
+   "DATA_FLOAT": 2,
+   "DATA_TEXT": 4,
+   "DRAW_CIRCLE": 7,
+   "DRAW_PATH": 8,
+   "DRAW_ROUND_RECT": 28,
+   "HEADER": 1,
+   "LAYOUT_BOX": 5,
+   "LAYOUT_CANVAS": 7,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_FLOW": 2,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 7,
+   "LayoutComponentContent": 29,
+   "LoopOperation": 14,
+   "MATRIX_RESTORE": 4,
+   "MATRIX_SAVE": 4,
+   "MATRIX_SCALE": 11,
+   "MATRIX_TRANSLATE": 11,
+   "MODIFIER_BACKGROUND": 1,
+   "MODIFIER_HEIGHT": 8,
+   "MODIFIER_PADDING": 6,
+   "MODIFIER_WIDTH": 10,
+   "NAMED_VARIABLE": 9,
+   "PAINT_VALUES": 43,
+   "PATH_DATA": 1,
+   "THEME": 21,
+   "TextFromFloat": 6,
+   "TextMerge": 10
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "battery",
+    "type": "float",
+    "value": 76
+   },
+   {
+    "name": "charging",
+    "type": "float",
+    "value": 0
+   },
+   {
+    "name": "error",
+    "type": "color",
+    "value": "#FFEF5350"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "success",
+    "type": "color",
+    "value": "#FF66BB6A"
+   },
+   {
+    "name": "surface",
+    "type": "color",
+    "value": "#FF1C2433"
+   },
+   {
+    "name": "warning",
+    "type": "color",
+    "value": "#FFFFB74D"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 0
+  },
+  "audit_findings": [],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 0,
+   "click": 0,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 5764,
+    "component_modes": {
+     "BatteryIndicator": "expand"
+    },
+    "op_count": 311,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "battery",
+      "type": "float",
+      "value": 76
+     },
+     {
+      "name": "charging",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "error",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "success",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "warning",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 5764,
+    "component_modes": {
+     "BatteryIndicator": "expand"
+    },
+    "op_count": 311,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "battery",
+      "type": "float",
+      "value": 76
+     },
+     {
+      "name": "charging",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "error",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "success",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "warning",
+      "type": "color",
+      "value": "#FF000000"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "low": {
+    "render": "render-low.png",
+    "render_findings": []
+   },
+   "charging": {
+    "render": "render-charging.png",
+    "render_findings": []
+   },
+   "low-charging": {
+    "render": "render-low-charging.png",
+    "render_findings": []
+   },
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     240,
+     240
+    ],
+    "audit_findings": []
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     420,
+     240
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "BatteryIndicator",
+   "apiLevel",
+   "background",
+   "battery",
+   "batteryindicator1_lc",
+   "batteryindicator1_lv",
+   "batteryindicator7_lc",
+   "batteryindicator7_lv",
+   "bottom",
+   "box",
+   "canvas",
+   "charging",
+   "children",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "condition",
+   "conditionalOperations",
+   "contentDescription",
+   "cx",
+   "cy",
+   "dark",
+   "decimal",
+   "drawCircle",
+   "drawPath",
+   "drawRoundRect",
+   "dx",
+   "dy",
+   "end",
+   "error",
+   "export",
+   "flags",
+   "flow",
+   "fontSize",
+   "header",
+   "height",
+   "icon_bolt_rounded_filled",
+   "id1",
+   "id2",
+   "left",
+   "level",
+   "light",
+   "modifiers",
+   "muted",
+   "name",
+   "onSurface",
+   "ops",
+   "padding",
+   "paint",
+   "path",
+   "paths",
+   "profiles",
+   "radius",
+   "resources",
+   "right",
+   "root",
+   "row",
+   "rx",
+   "ry",
+   "save",
+   "scale",
+   "semantics",
+   "showPercent",
+   "size",
+   "spacedBy",
+   "strokeCap",
+   "strokeJoin",
+   "strokeWidth",
+   "style",
+   "success",
+   "surface",
+   "sx",
+   "sy",
+   "text",
+   "top",
+   "translate",
+   "type",
+   "v1",
+   "v2",
+   "value",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "warning",
+   "whole",
+   "width",
+   "x",
+   "x1",
+   "x2",
+   "y",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "draw.shapes": [
+    "drawRoundRect",
+    "drawCircle"
+   ],
+   "draw.path": [
+    "drawPath"
+   ],
+   "image.icon": [
+    "icon_"
+   ],
+   "data.condition": [
+    "conditionalOperations"
+   ],
+   "text.dynamic": [
+    "textFromFloat",
+    "textMerge"
+   ],
+   "host.variables": [
+    "export",
+    "colors"
+   ]
+  },
+  "built_at": "2026-11-01T22:50:29.031Z"
+ }
+}

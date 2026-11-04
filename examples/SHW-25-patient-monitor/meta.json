@@ -1,0 +1,910 @@
+{
+ "id": "SHW-25",
+ "name": "patient-monitor",
+ "version": 1,
+ "title": "ICU patient monitor: sweeping ECG, pleth and respiration traces with alarm limits",
+ "summary": "A bedside monitor drawn in one canvas: ECG lead II, SpO2 pleth and respiration traces sweep left to right with the erase gap of a real monitor, rebuilt every frame from three small float arrays and the clock; heart rate, SpO2, respiration rate and blood pressure come from host variables, and the HR (or SpO2) tile and a top banner flash red when a value leaves its alarm limits. Landscape on a tablet, numerics under the traces on a phone.",
+ "prompt": "Build an ICU-style patient monitor: a scrolling ECG trace drawn from a waveform array looping with the clock, with the sweep-and-erase gap of a real monitor, an SpO2 pleth wave, heart rate and SpO2 numbers from host variables, and a flashing red alarm when the heart rate is out of range. Dark, crisp, legible, on a tablet and on a phone.",
+ "level": 5,
+ "family": "SHW",
+ "capabilities": {
+  "primary": [
+   "draw.plot",
+   "data.spline",
+   "time.clock",
+   "host.variables"
+  ],
+  "secondary": [
+   "data.array",
+   "data.condition",
+   "expr.select",
+   "expr.format",
+   "text.dynamic",
+   "text.anchor",
+   "draw.stroke",
+   "anim.loop",
+   "a11y.labels"
+  ]
+ },
+ "use_cases": [
+  "dashboard",
+  "fitness",
+  "chart"
+ ],
+ "form_factor": "tablet",
+ "keywords": [
+  "patient monitor",
+  "icu",
+  "ecg",
+  "ekg",
+  "heart rate",
+  "spo2",
+  "pulse oximetry",
+  "pleth",
+  "plethysmograph",
+  "respiration",
+  "nibp",
+  "blood pressure",
+  "vital signs",
+  "bedside monitor",
+  "medical",
+  "alarm",
+  "sweep",
+  "oscilloscope",
+  "waveform",
+  "telemetry"
+ ],
+ "teaches": [
+  "The three traces are SweepTrace calls in a column laid over the canvas: offset under the top bar, width and height computed from the screen (componentWidth() in a modifier is the parent's), so the same rows serve landscape and portrait",
+  "A sweep-and-erase trace without a sample buffer: the head is x_h = fract(T / D) * width, and the sample at x shows the time T - fract((x_h - x) / width + 1) * D, so the new sweep and the previous one both stay put on screen while the head moves",
+  "The ECG beat is stored as a fixed 0.62 s window (100 samples) read with min(1, fract(phase) * k): the QRS keeps its real width at any heart rate and the baseline fills the rest of the RR interval, so 148 bpm looks like tachycardia rather than a squashed beat",
+  "The alarm is data, not layout: hrA = ifElse(0, 1, max(hr - hrHi, hrLo - hr)) and blink = ifElse(0, 1, 0.5 - fract(T * 2)) drive conditionalOperations that paint the tile red, turn its text white and show the banner",
+  "One canvas serves both orientations: land = ifElse(0, 1, W - 1.15 H) and every tile rectangle is lerp(portrait, landscape, @land)"
+ ],
+ "pitfalls": [
+  "TypeScript player: PathExpression.evalRPN has no case for splineLoop (op 75), so a pathExpression using splineLoop draws vertical spikes there; use spline(@a, fract(t)) with the first value repeated at the end, which both players evaluate",
+  "Without flags 2 (monotonic) the default spline path overshoots around the sharp R wave",
+  "Changing hr re-times the history already on screen (the trace is recomputed from the clock, not stored), so the old sweep reflows once when the rate changes",
+  "continuousSec() wraps at the hour: the traces jump once an hour",
+  "Canvas text has no font weight: the big numerics use the default face"
+ ],
+ "inputs": {
+  "variables": {
+   "hr": {
+    "type": "float",
+    "meaning": "heart rate, bpm",
+    "default": 72,
+    "min": 20,
+    "max": 220
+   },
+   "spo2": {
+    "type": "float",
+    "meaning": "oxygen saturation, %",
+    "default": 98,
+    "min": 60,
+    "max": 100
+   },
+   "rr": {
+    "type": "float",
+    "meaning": "respiration rate, breaths per minute",
+    "default": 16,
+    "min": 4,
+    "max": 50
+   },
+   "sys": {
+    "type": "float",
+    "meaning": "systolic blood pressure, mmHg",
+    "default": 118,
+    "min": 50,
+    "max": 240
+   },
+   "dia": {
+    "type": "float",
+    "meaning": "diastolic blood pressure, mmHg",
+    "default": 76,
+    "min": 30,
+    "max": 150
+   },
+   "hrHi": {
+    "type": "float",
+    "meaning": "upper HR alarm limit",
+    "default": 120,
+    "min": 60,
+    "max": 220
+   },
+   "hrLo": {
+    "type": "float",
+    "meaning": "lower HR alarm limit",
+    "default": 50,
+    "min": 20,
+    "max": 100
+   },
+   "spo2Lo": {
+    "type": "float",
+    "meaning": "lower SpO2 alarm limit",
+    "default": 90,
+    "min": 70,
+    "max": 99
+   }
+  },
+  "clock": "drives the sweep",
+  "touch": false
+ },
+ "check": {
+  "describe": "800x480 at 14:37:04: three traces (green ECG with narrow R waves, cyan pleth with a dicrotic notch, yellow respiration), each with an 18 px erase gap and a bright head dot; tiles HR 72, SpO2 98 with a perfusion bar, RR 16, NIBP 118/76 MAP 90. At 14:37:06 the heads have moved 200 px (ECG, pleth) and 50 px (resp). hr 148: banner HR HIGH 148, the HR tile red with white text, 148 bpm beats with normal-width QRS. 360x640: traces on top, tiles in a 2x2 grid. alarm-off-phase (0.3 s later in the blink): the red tile and banner dimmed. Light: a light page with white tiles and deeper green, blue and amber traces; the alarm tile red with white text. Mono-dark (hr 148): white on black, no glow, traces and blink step once a second; the alarm tile is filled solid white with black numbers on the blink and outlined 4 px between, the banner a solid pill. Mono-light: the same in black on white.",
+  "render": {
+   "clock": "2026-11-02T14:37:04"
+  },
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light",
+    "clock": "2026-11-02T14:37:04"
+   },
+   {
+    "name": "dark",
+    "theme": "dark",
+    "clock": "2026-11-02T14:37:04"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark",
+    "clock": "2026-11-02T14:37:04",
+    "variables": {
+     "hr": 148
+    },
+    "duration": 1.1
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light",
+    "clock": "2026-11-02T14:37:04"
+   },
+   {
+    "name": "later",
+    "clock": "2026-11-02T14:37:06"
+   },
+   {
+    "name": "alarm",
+    "clock": "2026-11-02T14:37:04",
+    "variables": {
+     "hr": 148
+    },
+    "duration": 1.1
+   },
+   {
+    "name": "alarm-off-phase",
+    "clock": 1793659024300,
+    "variables": {
+     "hr": 148
+    },
+    "duration": 1.1
+   },
+   {
+    "name": "spo2-low",
+    "clock": "2026-11-02T14:37:04",
+    "variables": {
+     "spo2": 86,
+     "hr": 96
+    },
+    "duration": 1.1
+   },
+   {
+    "name": "phone",
+    "width": 360,
+    "height": 640,
+    "clock": "2026-11-02T14:37:04"
+   },
+   {
+    "name": "phone-alarm",
+    "width": 360,
+    "height": 640,
+    "clock": "2026-11-02T14:37:04",
+    "variables": {
+     "hr": 42
+    },
+    "duration": 1.1
+   },
+   {
+    "name": "large",
+    "width": 1280,
+    "height": 800,
+    "clock": "2026-11-02T14:37:04"
+   },
+   {
+    "name": "light-alarm",
+    "theme": "light",
+    "clock": "2026-11-02T14:37:04",
+    "variables": {
+     "hr": 148
+    },
+    "duration": 1.1
+   }
+  ]
+ },
+ "related": [
+  "DRW-06",
+  "VAR-07",
+  "EXP-07",
+  "HST-02",
+  "TIM-04"
+ ],
+ "derived": {
+  "components": [
+   "SweepTrace"
+  ],
+  "component_instances": 3,
+  "component_modes": {
+   "SweepTrace": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 12122,
+  "header": {
+   "width": 800,
+   "height": 480
+  },
+  "op_count": 516,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 4,
+   "ANIMATED_FLOAT": 162,
+   "COLOR_CONSTANT": 20,
+   "COLOR_EXPRESSIONS": 20,
+   "COMPONENT_VALUE": 8,
+   "CanvasContent": 4,
+   "ConditionalOperations": 17,
+   "DATA_FLOAT": 8,
+   "DATA_TEXT": 19,
+   "DRAW_CIRCLE": 7,
+   "DRAW_LINE": 3,
+   "DRAW_PATH": 10,
+   "DRAW_RECT": 1,
+   "DRAW_ROUND_RECT": 10,
+   "DRAW_TEXT_ANCHOR": 32,
+   "DataListFloat": 3,
+   "HEADER": 1,
+   "LAYOUT_BOX": 5,
+   "LAYOUT_CANVAS": 4,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_ROOT": 1,
+   "LayoutComponentContent": 10,
+   "LoopOperation": 20,
+   "MODIFIER_HEIGHT": 10,
+   "MODIFIER_OFFSET": 1,
+   "MODIFIER_WIDTH": 10,
+   "NAMED_VARIABLE": 18,
+   "PAINT_VALUES": 59,
+   "PathExpression": 6,
+   "THEME": 30,
+   "TextFromFloat": 12
+  },
+  "host_variables": [
+   {
+    "name": "alarm",
+    "type": "color",
+    "value": "#FFFF3B3B"
+   },
+   {
+    "name": "dia",
+    "type": "float",
+    "value": 76
+   },
+   {
+    "name": "ecg",
+    "type": "color",
+    "value": "#FF3CF07A"
+   },
+   {
+    "name": "hr",
+    "type": "float",
+    "value": 72
+   },
+   {
+    "name": "hrHi",
+    "type": "float",
+    "value": 120
+   },
+   {
+    "name": "hrLo",
+    "type": "float",
+    "value": 50
+   },
+   {
+    "name": "ink",
+    "type": "color",
+    "value": "#FFEFF3F7"
+   },
+   {
+    "name": "inkMuted",
+    "type": "color",
+    "value": "#FF7A8696"
+   },
+   {
+    "name": "line",
+    "type": "color",
+    "value": "#FF1A232C"
+   },
+   {
+    "name": "onAlarm",
+    "type": "color",
+    "value": "#FFFFFFFF"
+   },
+   {
+    "name": "panel",
+    "type": "color",
+    "value": "#FF0C1218"
+   },
+   {
+    "name": "pleth",
+    "type": "color",
+    "value": "#FF2FD5FF"
+   },
+   {
+    "name": "resp",
+    "type": "color",
+    "value": "#FFFFD23F"
+   },
+   {
+    "name": "rr",
+    "type": "float",
+    "value": 16
+   },
+   {
+    "name": "screen",
+    "type": "color",
+    "value": "#FF05080B"
+   },
+   {
+    "name": "spo2",
+    "type": "float",
+    "value": 98
+   },
+   {
+    "name": "spo2Lo",
+    "type": "float",
+    "value": 90
+   },
+   {
+    "name": "sys",
+    "type": "float",
+    "value": 118
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 1,
+   "info": 2
+  },
+  "audit_findings": [
+   "warning: text_in_canvas",
+   "info: repaint_continuous",
+   "info: expression_entries"
+  ],
+  "repaint": "continuous",
+  "interaction_targets": {
+   "total": 0,
+   "click": 0,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 11792,
+    "component_modes": {
+     "SweepTrace": "expand"
+    },
+    "op_count": 467,
+    "host_variables": [
+     {
+      "name": "alarm",
+      "type": "color",
+      "value": "#FFFF3B3B"
+     },
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "dia",
+      "type": "float",
+      "value": 76
+     },
+     {
+      "name": "ecg",
+      "type": "color",
+      "value": "#FF3CF07A"
+     },
+     {
+      "name": "hr",
+      "type": "float",
+      "value": 72
+     },
+     {
+      "name": "hrHi",
+      "type": "float",
+      "value": 120
+     },
+     {
+      "name": "hrLo",
+      "type": "float",
+      "value": 50
+     },
+     {
+      "name": "ink",
+      "type": "color",
+      "value": "#FFEFF3F7"
+     },
+     {
+      "name": "inkMuted",
+      "type": "color",
+      "value": "#FF7A8696"
+     },
+     {
+      "name": "line",
+      "type": "color",
+      "value": "#FF1A232C"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onAlarm",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "panel",
+      "type": "color",
+      "value": "#FF0C1218"
+     },
+     {
+      "name": "pleth",
+      "type": "color",
+      "value": "#FF2FD5FF"
+     },
+     {
+      "name": "resp",
+      "type": "color",
+      "value": "#FFFFD23F"
+     },
+     {
+      "name": "rr",
+      "type": "float",
+      "value": 16
+     },
+     {
+      "name": "screen",
+      "type": "color",
+      "value": "#FF05080B"
+     },
+     {
+      "name": "spo2",
+      "type": "float",
+      "value": 98
+     },
+     {
+      "name": "spo2Lo",
+      "type": "float",
+      "value": 90
+     },
+     {
+      "name": "sys",
+      "type": "float",
+      "value": 118
+     }
+    ],
+    "java_identical": true,
+    "repaint": "scheduled",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 11792,
+    "component_modes": {
+     "SweepTrace": "expand"
+    },
+    "op_count": 467,
+    "host_variables": [
+     {
+      "name": "alarm",
+      "type": "color",
+      "value": "#FFDC1F2E"
+     },
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "dia",
+      "type": "float",
+      "value": 76
+     },
+     {
+      "name": "ecg",
+      "type": "color",
+      "value": "#FF07914A"
+     },
+     {
+      "name": "hr",
+      "type": "float",
+      "value": 72
+     },
+     {
+      "name": "hrHi",
+      "type": "float",
+      "value": 120
+     },
+     {
+      "name": "hrLo",
+      "type": "float",
+      "value": 50
+     },
+     {
+      "name": "ink",
+      "type": "color",
+      "value": "#FF0F172A"
+     },
+     {
+      "name": "inkMuted",
+      "type": "color",
+      "value": "#FF5B6573"
+     },
+     {
+      "name": "line",
+      "type": "color",
+      "value": "#FFD9DEE5"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onAlarm",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "panel",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "pleth",
+      "type": "color",
+      "value": "#FF0272B0"
+     },
+     {
+      "name": "resp",
+      "type": "color",
+      "value": "#FFA86200"
+     },
+     {
+      "name": "rr",
+      "type": "float",
+      "value": 16
+     },
+     {
+      "name": "screen",
+      "type": "color",
+      "value": "#FFF2F4F7"
+     },
+     {
+      "name": "spo2",
+      "type": "float",
+      "value": 98
+     },
+     {
+      "name": "spo2Lo",
+      "type": "float",
+      "value": 90
+     },
+     {
+      "name": "sys",
+      "type": "float",
+      "value": 118
+     }
+    ],
+    "java_identical": true,
+    "repaint": "scheduled",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "later": {
+    "render": "render-later.png",
+    "render_findings": []
+   },
+   "alarm": {
+    "render": "render-alarm.png",
+    "render_findings": []
+   },
+   "alarm-off-phase": {
+    "render": "render-alarm-off-phase.png",
+    "render_findings": []
+   },
+   "spo2-low": {
+    "render": "render-spo2-low.png",
+    "render_findings": []
+   },
+   "phone": {
+    "render": "render-phone.png",
+    "render_findings": [],
+    "size": [
+     360,
+     640
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   },
+   "phone-alarm": {
+    "render": "render-phone-alarm.png",
+    "render_findings": [],
+    "size": [
+     360,
+     640
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   },
+   "large": {
+    "render": "render-large.png",
+    "render_findings": [],
+    "size": [
+     1280,
+     800
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   },
+   "light-alarm": {
+    "theme": "light",
+    "render": "render-light-alarm.png",
+    "render_findings": []
+   }
+  },
+  "json_keys": [
+   "$if",
+   "SweepTrace",
+   "alarm",
+   "alpha",
+   "apiLevel",
+   "baseline",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "condition",
+   "conditionalOperations",
+   "contentDescription",
+   "count",
+   "cx",
+   "cy",
+   "dark",
+   "decimal",
+   "delay",
+   "dia",
+   "drawCircle",
+   "drawLine",
+   "drawPath",
+   "drawRect",
+   "drawRoundRect",
+   "drawTextAnchored",
+   "ecg",
+   "else",
+   "end",
+   "export",
+   "expressionX",
+   "expressionY",
+   "flags",
+   "floatArrays",
+   "glow",
+   "header",
+   "height",
+   "hr",
+   "hrHi",
+   "hrLo",
+   "id",
+   "ink",
+   "inkMuted",
+   "label",
+   "left",
+   "light",
+   "line",
+   "modifiers",
+   "name",
+   "offset",
+   "onAlarm",
+   "ops",
+   "paint",
+   "panX",
+   "panY",
+   "panel",
+   "path",
+   "pathExpression",
+   "pleth",
+   "profiles",
+   "radius",
+   "rate",
+   "resources",
+   "resp",
+   "right",
+   "root",
+   "rr",
+   "rx",
+   "ry",
+   "sample",
+   "scale",
+   "screen",
+   "semantics",
+   "speed",
+   "spo2",
+   "spo2Lo",
+   "start",
+   "strokeCap",
+   "strokeJoin",
+   "strokeWidth",
+   "style",
+   "sweeptrace1_T",
+   "sweeptrace1_k",
+   "sweeptrace1_rr",
+   "sweeptrace2_T",
+   "sweeptrace2_rr",
+   "sweeptrace3_T",
+   "sweeptrace3_rr",
+   "sys",
+   "text",
+   "textSize",
+   "then",
+   "thickness",
+   "top",
+   "type",
+   "v1",
+   "v2",
+   "value",
+   "values",
+   "variable",
+   "variables",
+   "verticalWeight",
+   "whole",
+   "width",
+   "window",
+   "x",
+   "x1",
+   "x2",
+   "y",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "draw.plot": [
+    "pathExpression"
+   ],
+   "data.spline": [
+    "spline"
+   ],
+   "time.clock": [
+    "timeInHr",
+    "timeInMin",
+    "continuousSec"
+   ],
+   "host.variables": [
+    "export",
+    "colors"
+   ],
+   "data.array": [
+    "floatArrays"
+   ],
+   "data.condition": [
+    "conditionalOperations",
+    "ifElse"
+   ],
+   "expr.select": [
+    "ifElse("
+   ],
+   "expr.format": [
+    "textFromFloat"
+   ],
+   "text.dynamic": [
+    "textFromFloat"
+   ],
+   "text.anchor": [
+    "drawTextAnchored"
+   ],
+   "draw.stroke": [
+    "strokeWidth",
+    "strokeCap",
+    "strokeJoin"
+   ],
+   "anim.loop": [
+    "continuousSec"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ]
+  },
+  "built_at": "2026-11-02T22:50:40.689Z"
+ },
+ "snippets": [
+  {
+   "pointer": "/resources/floatArrays/ecg",
+   "shows": "data.array",
+   "note": "one beat as a fixed 0.62 s window"
+  },
+  {
+   "pointer": "/root/box/children/1/box/children/0/column/children/0/box/children/0",
+   "shows": "draw.plot",
+   "note": "the ECG: a SweepTrace with a beat window and a glow"
+  },
+  {
+   "pointer": "/root/box/children/1/box/children/0/column/children/1/box/children/0",
+   "shows": "data.spline",
+   "note": "pleth trailing the beat by 0.18 cycles"
+  },
+  {
+   "pointer": "/root/box/children/1/box/children/0/column",
+   "shows": "time.clock",
+   "note": "three traces in a column sized from the screen, swept by the clock"
+  },
+  {
+   "pointer": "/root/box/children/0/canvas/commands/16",
+   "shows": "host.variables",
+   "note": "alarm state from the host heart rate and its limits"
+  },
+  {
+   "pointer": "/resources/variables",
+   "shows": "host.variables",
+   "note": "vitals and alarm limits the host sets"
+  }
+ ],
+ "components": [
+  "SweepTrace"
+ ]
+}

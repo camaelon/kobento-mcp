@@ -1,0 +1,965 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 420,
+  "profiles": 513,
+  "contentDescription": "An Inbox app bar shown at five widths: as it narrows, the unread chip, then share, then search are dropped by priority; the title and overflow menu stay"
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 16
+    },
+    {
+     "spacedBy": 6
+    }
+   ],
+   "children": [
+    {
+     "text": {
+      "value": "full width: everything fits at 328 dp",
+      "fontSize": 11,
+      "color": "@colors.muted"
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       "fillMaxWidth"
+      ],
+      "children": [
+       {
+        "collapsibleRow": {
+         "verticalAlignment": "center",
+         "modifiers": [
+          "fillMaxWidth",
+          {
+           "height": 48
+          },
+          {
+           "clip": 14
+          },
+          {
+           "background": "@colors.monoOutline"
+          },
+          {
+           "padding": 1
+          },
+          {
+           "clip": 13
+          },
+          {
+           "background": "@colors.surface"
+          },
+          {
+           "padding": [
+            11,
+            0,
+            3,
+            0
+           ]
+          }
+         ],
+         "children": [
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 76
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "text": {
+               "value": "Inbox",
+               "fontSize": 20,
+               "fontWeight": 700,
+               "color": "@colors.onSurface"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 64
+             },
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 1
+              }
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "Badge": {
+               "text": "12 new",
+               "color": "@colors.primary"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "spacer": {
+            "modifiers": [
+             {
+              "weight": 1
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 3
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Search",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "search",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 2
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Share",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "share",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "IconButton": {
+            "label": "More options",
+            "slots": {
+             "icon": [
+              {
+               "Icon": {
+                "name": "more_vert",
+                "color": "@colors.muted"
+               }
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "text": {
+      "value": "240 dp: the “12 new” chip goes first (priority 1)",
+      "fontSize": 11,
+      "color": "@colors.muted",
+      "modifiers": [
+       {
+        "padding": [
+         0,
+         8,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "width": 240
+       }
+      ],
+      "children": [
+       {
+        "collapsibleRow": {
+         "verticalAlignment": "center",
+         "modifiers": [
+          "fillMaxWidth",
+          {
+           "height": 48
+          },
+          {
+           "clip": 14
+          },
+          {
+           "background": "@colors.monoOutline"
+          },
+          {
+           "padding": 1
+          },
+          {
+           "clip": 13
+          },
+          {
+           "background": "@colors.surface"
+          },
+          {
+           "padding": [
+            11,
+            0,
+            3,
+            0
+           ]
+          }
+         ],
+         "children": [
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 76
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "text": {
+               "value": "Inbox",
+               "fontSize": 20,
+               "fontWeight": 700,
+               "color": "@colors.onSurface"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 64
+             },
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 1
+              }
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "Badge": {
+               "text": "12 new",
+               "color": "@colors.primary"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "spacer": {
+            "modifiers": [
+             {
+              "weight": 1
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 3
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Search",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "search",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 2
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Share",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "share",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "IconButton": {
+            "label": "More options",
+            "slots": {
+             "icon": [
+              {
+               "Icon": {
+                "name": "more_vert",
+                "color": "@colors.muted"
+               }
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "text": {
+      "value": "200 dp: then share (priority 2)",
+      "fontSize": 11,
+      "color": "@colors.muted",
+      "modifiers": [
+       {
+        "padding": [
+         0,
+         8,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "width": 200
+       }
+      ],
+      "children": [
+       {
+        "collapsibleRow": {
+         "verticalAlignment": "center",
+         "modifiers": [
+          "fillMaxWidth",
+          {
+           "height": 48
+          },
+          {
+           "clip": 14
+          },
+          {
+           "background": "@colors.monoOutline"
+          },
+          {
+           "padding": 1
+          },
+          {
+           "clip": 13
+          },
+          {
+           "background": "@colors.surface"
+          },
+          {
+           "padding": [
+            11,
+            0,
+            3,
+            0
+           ]
+          }
+         ],
+         "children": [
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 76
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "text": {
+               "value": "Inbox",
+               "fontSize": 20,
+               "fontWeight": 700,
+               "color": "@colors.onSurface"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 64
+             },
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 1
+              }
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "Badge": {
+               "text": "12 new",
+               "color": "@colors.primary"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "spacer": {
+            "modifiers": [
+             {
+              "weight": 1
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 3
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Search",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "search",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 2
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Share",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "share",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "IconButton": {
+            "label": "More options",
+            "slots": {
+             "icon": [
+              {
+               "Icon": {
+                "name": "more_vert",
+                "color": "@colors.muted"
+               }
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "text": {
+      "value": "152 dp: then search (priority 3)",
+      "fontSize": 11,
+      "color": "@colors.muted",
+      "modifiers": [
+       {
+        "padding": [
+         0,
+         8,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "width": 152
+       }
+      ],
+      "children": [
+       {
+        "collapsibleRow": {
+         "verticalAlignment": "center",
+         "modifiers": [
+          "fillMaxWidth",
+          {
+           "height": 48
+          },
+          {
+           "clip": 14
+          },
+          {
+           "background": "@colors.monoOutline"
+          },
+          {
+           "padding": 1
+          },
+          {
+           "clip": 13
+          },
+          {
+           "background": "@colors.surface"
+          },
+          {
+           "padding": [
+            11,
+            0,
+            3,
+            0
+           ]
+          }
+         ],
+         "children": [
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 76
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "text": {
+               "value": "Inbox",
+               "fontSize": 20,
+               "fontWeight": 700,
+               "color": "@colors.onSurface"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 64
+             },
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 1
+              }
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "Badge": {
+               "text": "12 new",
+               "color": "@colors.primary"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "spacer": {
+            "modifiers": [
+             {
+              "weight": 1
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 3
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Search",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "search",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 2
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Share",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "share",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "IconButton": {
+            "label": "More options",
+            "slots": {
+             "icon": [
+              {
+               "Icon": {
+                "name": "more_vert",
+                "color": "@colors.muted"
+               }
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "text": {
+      "value": "112 dp: then ⋮: unprioritized items keep document order",
+      "fontSize": 11,
+      "color": "@colors.muted",
+      "modifiers": [
+       {
+        "padding": [
+         0,
+         8,
+         0,
+         0
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "width": 112
+       }
+      ],
+      "children": [
+       {
+        "collapsibleRow": {
+         "verticalAlignment": "center",
+         "modifiers": [
+          "fillMaxWidth",
+          {
+           "height": 48
+          },
+          {
+           "clip": 14
+          },
+          {
+           "background": "@colors.monoOutline"
+          },
+          {
+           "padding": 1
+          },
+          {
+           "clip": 13
+          },
+          {
+           "background": "@colors.surface"
+          },
+          {
+           "padding": [
+            11,
+            0,
+            3,
+            0
+           ]
+          }
+         ],
+         "children": [
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 76
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "text": {
+               "value": "Inbox",
+               "fontSize": 20,
+               "fontWeight": 700,
+               "color": "@colors.onSurface"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "width": 64
+             },
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 1
+              }
+             }
+            ],
+            "horizontalAlignment": "start",
+            "children": [
+             {
+              "Badge": {
+               "text": "12 new",
+               "color": "@colors.primary"
+              }
+             }
+            ]
+           }
+          },
+          {
+           "spacer": {
+            "modifiers": [
+             {
+              "weight": 1
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 3
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Search",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "search",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "box": {
+            "modifiers": [
+             {
+              "collapsiblePriority": {
+               "orientation": "horizontal",
+               "priority": 2
+              }
+             }
+            ],
+            "children": [
+             {
+              "IconButton": {
+               "label": "Share",
+               "slots": {
+                "icon": [
+                 {
+                  "Icon": {
+                   "name": "share",
+                   "color": "@colors.muted"
+                  }
+                 }
+                ]
+               }
+              }
+             }
+            ]
+           }
+          },
+          {
+           "IconButton": {
+            "label": "More options",
+            "slots": {
+             "icon": [
+              {
+               "Icon": {
+                "name": "more_vert",
+                "color": "@colors.muted"
+               }
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,204 @@
+#!/usr/bin/env bash
+# Install or update the RemoteCompose MCP servers on a Debian/Ubuntu VPS (x86_64 or arm64).
+#
+#   sudo kobento-mcp/mcp/deploy/setup.sh mcp.example.com      # from checkouts on the VPS
+#
+# It needs four sibling checkouts in one folder: kobento-mcp (this), kobento-tools (json2rc,
+# rc2image, the inspector, the icon converter), kobento-libs (the C++ engine rc2image builds
+# on) and kobento-ts (the web player).
+#
+# Idempotent: re-run it after `git pull` (in each) to rebuild and restart. It
+#   - installs the build/runtime packages (and Caddy, for TLS),
+#   - copies the checkouts to /opt/kobento and builds rc2image and rc2layout there,
+#   - creates the `rcmcp` user and the workspace /var/lib/rcmcp,
+#   - writes /etc/rcmcp/*.env, generating a token the first time,
+#   - builds the TypeScript web player once (rc-deploy embeds it in the pages it makes),
+#   - installs and (re)starts rcmcp@remotecompose (the single front door over all of them),
+#     and rcmcp@json2rc, rcmcp@rc-render, rcmcp@guide, rcmcp@deploy, rcmcp@inspect and
+#     rcmcp@examples,
+#     and the Caddy site.
+set -euo pipefail
+
+DOMAIN="${1:-}"
+[[ $EUID -eq 0 ]] || { echo "run as root (sudo)" >&2; exit 1; }
+[[ -n "$DOMAIN" ]] || { echo "usage: $0 DOMAIN   (the name the servers will be reached at)" >&2; exit 1; }
+
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"   # the folder holding the kobento-* checkouts
+DEST=/opt/kobento
+for r in kobento-mcp kobento-tools kobento-libs kobento-ts; do
+    [[ -d "$SRC/$r" ]] || { echo "missing $SRC/$r: check it out next to kobento-mcp" >&2; exit 1; }
+done
+MCP="$DEST/kobento-mcp"
+
+echo "== packages"
+apt-get update -qq
+# The same set CI builds with (.github/workflows/cpp.yml). The prebuilt Skia links against
+# X11/GL even though rc2image renders on the CPU with no display; only the libraries are
+# needed, no X server. Without a font Skia draws text as nothing, silently: fonts-dejavu-core.
+apt-get install -y -qq git cmake pkg-config build-essential curl ca-certificates rsync \
+    libfontconfig1-dev libfreetype-dev libgl1-mesa-dev libglfw3-dev \
+    libx11-dev libxext-dev libxrender-dev fonts-dejavu-core nodejs python3
+if ! command -v caddy >/dev/null && ! apt-get install -y -qq caddy; then
+    echo "caddy is not in this distro's repositories; add Caddy's own apt repo first:" >&2
+    echo "  https://caddyserver.com/docs/install#debian-ubuntu-raspbian" >&2
+    exit 1
+fi
+NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)"
+# npm installs esbuild, which builds the web player. Debian ships it separately from node;
+# NodeSource's node includes it (and conflicts with the Debian package), hence the check.
+command -v npm >/dev/null || apt-get install -y -qq npm
+# Accounts live in SQLite through node:sqlite, built in from Node 22.13 (no npm package).
+if ! node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a===22&&b>=13)?0:1)' 2>/dev/null \
+   || ! node -e 'require("node:sqlite")' 2>/dev/null; then
+    echo "node $(node -v 2>/dev/null || echo '(none)') is too old (need 22.13+, for node:sqlite: accounts and usage). Install a current one, e.g.:" >&2
+    echo "  curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs" >&2
+    exit 1
+fi
+
+echo "== code -> $DEST"
+if [[ "$SRC" != "$DEST" ]]; then
+    mkdir -p "$DEST"
+    # Sources only: no local build trees (cpp/build, the gitignored build-node, build-mcp),
+    # no node_modules. json2rc/build is the committed converter, so it is kept.
+    for r in kobento-mcp kobento-tools kobento-libs kobento-ts; do
+        rsync -a --delete \
+            --exclude .git --exclude node_modules --exclude '/cpp/build/' \
+            --exclude '/build-node/' --exclude '/build-mcp/' \
+            --exclude 'assets/icons/converted/material-symbols/*/' \
+            --exclude 'assets/icons/converted/material-symbols/.stamp' \
+            --exclude 'assets/icons/converted/gallery/' \
+            "$SRC/$r/" "$DEST/$r/"
+    done
+fi
+
+echo "== build rc2image and rc2layout"
+# rc2layout is the C++ player's layout dump: inspect task=engines compares it with the
+# TypeScript layout (and convert's check reports whether the two players agree).
+cmake -S "$DEST/kobento-tools/cpp" -B "$DEST/kobento-tools/cpp/build" -DCMAKE_BUILD_TYPE=Release
+cmake --build "$DEST/kobento-tools/cpp/build" --target rc2image rc2layout -j"$(nproc)"
+
+echo "== web player"
+# The services cannot write the checkout, so the bundle is built here, as root, once.
+(cd "$MCP" && npm ci --no-audit --no-fund --loglevel=error)
+node "$MCP/mcp/lib/web-player.mjs" --build
+
+echo "== icons"
+# The converted Material Symbols are not in git (25k files): regenerate them from
+# assets/icons/source. Incremental (the rsync above keeps them), so a re-run is quick. The
+# Icon component reads them, and the gallery page needs its data chunks.
+python3 "$DEST/kobento-tools/avd/convert_icons.py"
+
+echo "== user, workspace, config"
+id rcmcp &>/dev/null || useradd --system --home /var/lib/rcmcp --shell /usr/sbin/nologin rcmcp
+install -d -o rcmcp -g rcmcp -m 750 /var/lib/rcmcp
+install -d -m 755 /etc/rcmcp
+if [[ ! -f /etc/rcmcp/common.env ]]; then
+    TOKEN="$(head -c 32 /dev/urandom | base64 | tr -d '/+=' | head -c 40)"
+    cat > /etc/rcmcp/common.env <<EOF
+MCP_TOKEN=$TOKEN
+MCP_ROOT=/var/lib/rcmcp
+MCP_HTTP_HOST=127.0.0.1
+MCP_OUT_TTL_HOURS=24
+MCP_MAX_RENDERS=2
+EOF
+    chmod 600 /etc/rcmcp/common.env
+fi
+# rc2image is rebuilt under /opt/kobento: an RC2IMAGE from the old single-repo layout
+# (/opt/remotecompose-experiments) would keep pointing at a stale binary.
+sed -i '/^RC2IMAGE=/d' /etc/rcmcp/common.env
+echo "RC2IMAGE=$DEST/kobento-tools/cpp/build/rc2image/rc2image" >> /etc/rcmcp/common.env
+# Accounts (lib/accounts.mjs): people register at /examples/account/ and get their own token;
+# every server checks tokens against, and records usage in, the one database. Added to an
+# existing common.env too (each line only if missing, so local edits stay).
+add_env() { grep -q "^$1=" /etc/rcmcp/common.env || echo "$1=$2" >> /etc/rcmcp/common.env; }
+add_env RC_ACCOUNTS 1
+add_env RC_DB /var/lib/rcmcp/rc.db
+add_env RC_ACCOUNT_URL "https://$DOMAIN/examples/account/"
+add_env RC_MCP_URL "https://$DOMAIN/mcp"
+# OAuth (lib/oauth.mjs): connectors sign in instead of pasting a token. The public origin makes
+# the discovery URLs; each server's mount (RC_MOUNT, in its own env file below) its resource.
+add_env RC_PUBLIC_ORIGIN "https://$DOMAIN"
+# Email (lib/mail.mjs, through Resend): confirmation links on registration and sign-in links.
+# The sender only; the API key is never written here (RESEND_API_KEY, by hand). Until it is
+# set, the links go to the log instead.
+add_env RC_MAIL_FROM "\"RemoteCompose <noreply@$DOMAIN>\""
+# (RC_SIGNUP=closed stops registration; RC_ADMIN_EMAILS=a@b,c@d makes those accounts admins;
+#  RC_EMAIL_VERIFY=off gives a token at registration, without the confirmation email.)
+# The database is the service user's: every server unit writes it (ReadWritePaths=/var/lib/rcmcp).
+for f in /var/lib/rcmcp/rc.db /var/lib/rcmcp/rc.db-wal /var/lib/rcmcp/rc.db-shm; do [[ -e $f ]] && chown rcmcp:rcmcp "$f"; done
+# RC_MOUNT: where Caddy mounts each server (the Caddyfile's handle_path), for OAuth's resource URLs.
+echo "MCP_HTTP_PORT=8808" > /etc/rcmcp/json2rc.env
+echo "RC_MOUNT=/json2rc" >> /etc/rcmcp/json2rc.env
+# rc-render returns public links to its renders under its own public base.
+printf 'MCP_HTTP_PORT=8809\nMCP_PUBLIC_URL=https://%s/rc-render\nRC_MOUNT=/rc-render\n' "$DOMAIN" > /etc/rcmcp/rc-render.env
+# The guide reports the public endpoints, so it needs to know the public name.
+printf 'MCP_HTTP_PORT=8810\nMCP_PUBLIC_BASE_URL=https://%s\nRC_MOUNT=/guide\n' "$DOMAIN" > /etc/rcmcp/guide.env
+# rc-deploy publishes pages under its own public base.
+printf 'MCP_HTTP_PORT=8811\nMCP_PUBLIC_URL=https://%s/deploy\nRC_MOUNT=/deploy\n' "$DOMAIN" > /etc/rcmcp/deploy.env
+printf 'MCP_HTTP_PORT=8812\nRC_MOUNT=/inspect\n' > /etc/rcmcp/inspect.env
+printf 'MCP_HTTP_PORT=8813\nRC_MOUNT=/examples\n' > /etc/rcmcp/examples.env
+# The front door serves at the domain root: its public routes (example gallery, playgrounds,
+# published pages, rendered images) live there too.
+printf 'MCP_HTTP_PORT=8814\nMCP_PUBLIC_URL=https://%s\n' "$DOMAIN" > /etc/rcmcp/remotecompose.env
+
+echo "== services"
+install -m 644 "$MCP/mcp/deploy/rcmcp@.service" /etc/systemd/system/rcmcp@.service
+systemctl daemon-reload
+systemctl enable --now rcmcp@remotecompose rcmcp@json2rc rcmcp@rc-render rcmcp@guide rcmcp@deploy rcmcp@inspect rcmcp@examples
+systemctl restart rcmcp@remotecompose rcmcp@json2rc rcmcp@rc-render rcmcp@guide rcmcp@deploy rcmcp@inspect rcmcp@examples
+
+echo "== caddy"
+install -d /etc/caddy/sites
+sed "s/DOMAIN/$DOMAIN/" "$MCP/mcp/deploy/Caddyfile" > /etc/caddy/sites/rcmcp.caddy
+grep -q 'import sites/\*' /etc/caddy/Caddyfile 2>/dev/null || echo 'import sites/*' >> /etc/caddy/Caddyfile
+systemctl reload caddy || systemctl restart caddy
+
+# Give each server a few seconds to come up; on failure show why, rather than pointing at logs.
+for svc in remotecompose:8814 json2rc:8808 rc-render:8809 guide:8810 deploy:8811 inspect:8812 examples:8813; do
+    name="${svc%%:*}" port="${svc##*:}"
+    for _ in $(seq 20); do curl -fsS "http://127.0.0.1:$port/healthz" >/dev/null 2>&1 && break; sleep 0.5; done
+    if ! curl -fsS "http://127.0.0.1:$port/healthz" >/dev/null 2>&1; then
+        echo "rcmcp@$name is not answering on :$port. Its last log lines:" >&2
+        journalctl -u "rcmcp@$name" -n 30 --no-pager >&2 || true
+        exit 1
+    fi
+done
+
+TOKEN="$(sed -n 's/^MCP_TOKEN=//p' /etc/rcmcp/common.env)"
+cat <<EOF
+
+Done. Endpoint (one for everything):
+  https://$DOMAIN/mcp             remotecompose: build_kit, find, get, check_component, convert,
+                                  render, audit, inspect, publish, pages, reference
+  https://$DOMAIN/                browse the examples (and /components/), public; published
+                                  pages at https://$DOMAIN/pages/
+
+The single-purpose servers are still there:
+  https://$DOMAIN/guide/mcp       describes the others
+  https://$DOMAIN/json2rc/mcp
+  https://$DOMAIN/rc-render/mcp
+  https://$DOMAIN/deploy/mcp      published pages: https://$DOMAIN/pages
+  https://$DOMAIN/inspect/mcp
+  https://$DOMAIN/examples/mcp     example catalog and component library
+  https://$DOMAIN/examples/        browse the components, layouts, structures, showcases and demos, public
+Connectors:   claude.ai / ChatGPT: add a custom connector with URL https://$DOMAIN/mcp and no token:
+              it asks to sign in (OAuth). Claude Code: claude mcp add --transport http remotecompose
+              https://$DOMAIN/mcp, then /mcp in Claude Code to sign in.
+Accounts:     https://$DOMAIN/examples/account/   register, get a token, see usage and published pages
+              (also at https://$DOMAIN/account/; RC_SIGNUP=closed in /etc/rcmcp/common.env stops sign-ups)
+Admin token (MCP_TOKEN, keep secret; works everywhere as an admin key): $TOKEN
+
+Claude Code:  claude mcp add --transport http remotecompose https://$DOMAIN/mcp --header "Authorization: Bearer $TOKEN"
+              (or a single-purpose one: https://$DOMAIN/rc-render/mcp, /json2rc/, /guide/, ...)
+claude.ai:    add a custom connector with URL https://$DOMAIN/mcp/$TOKEN
+Logs:         journalctl -u 'rcmcp@*' -f
+EOF
+if ! grep -q '^RESEND_API_KEY=.' /etc/rcmcp/common.env; then
+    cat <<EOF
+
+Email is not set up yet: set RESEND_API_KEY in /etc/rcmcp/common.env (Resend -> API Keys)
+and verify $DOMAIN in Resend (Domains: add the SPF/DKIM DNS records it lists), then restart:
+  systemctl restart 'rcmcp@*'
+Until then sign-in and confirmation links are written to the log (journalctl -u 'rcmcp@*').
+EOF
+fi

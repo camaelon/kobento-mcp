@@ -1,0 +1,107 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 480,
+  "profiles": 513,
+  "contentDescription": "World clocks in a divided list and sound settings in card rows with controls"
+ },
+ "resources": {
+  "variables": {
+   "wifi": {
+    "value": 1,
+    "export": true
+   },
+   "vol": {
+    "value": 60,
+    "export": true
+   }
+  }
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": [
+      12,
+      8
+     ]
+    }
+   ],
+   "children": [
+    {
+     "RowList": {
+      "embedded": true,
+      "title": "Cities",
+      "width": "windowWidth() - 24",
+      "height": "windowHeight() * 0.5 - 8",
+      "rows": [
+       {
+        "title": "London",
+        "subtitle": "+7 h",
+        "value": "10:30"
+       },
+       {
+        "title": "New York",
+        "subtitle": "+3 h",
+        "value": "06:30"
+       },
+       {
+        "title": "Tokyo",
+        "subtitle": "+16 h",
+        "value": "19:30"
+       }
+      ],
+      "readOnly": true
+     }
+    },
+    {
+     "RowList": {
+      "embedded": true,
+      "title": "Settings",
+      "surface": "card",
+      "trailWidth": 0.5,
+      "width": "windowWidth() - 24",
+      "height": "windowHeight() * 0.5 - 8",
+      "rows": [
+       {
+        "title": "Volume",
+        "trail": {
+         "Slider": {
+          "value": "@vol",
+          "max": 100,
+          "label": "Volume"
+         }
+        }
+       },
+       {
+        "title": "Wi-Fi",
+        "subtitle": "Home",
+        "trail": {
+         "box": {
+          "modifiers": [
+           "fillMaxWidth"
+          ],
+          "horizontalAlignment": "end",
+          "children": [
+           {
+            "Switch": {
+             "checked": "@wifi",
+             "label": "Wi-Fi"
+            }
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,435 @@
+{
+ "component": "AnalogClock",
+ "version": 4,
+ "summary": "A round analog clock face from the host clock: twelve ticks, hour and minute hands, an optional red second hand and an optional date window at 3 o'clock.",
+ "params": {
+  "size": {
+   "type": "float",
+   "default": 200,
+   "static": true,
+   "doc": "Width and height in dp: the design size the drawing is scaled from (with fill, or when the parent is smaller)"
+  },
+  "fill": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "Fill the space the caller gives it (fillMaxSize) instead of a fixed size; give it a parent with a size or a weight. The drawing is scaled to the box either way"
+  },
+  "showSeconds": {
+   "type": "bool",
+   "default": true,
+   "static": true,
+   "doc": "Draw the second hand (repaints every second instead of every minute)"
+  },
+  "showDate": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "Show the day of the month (dayOfMonth(), 1..31) in a small rounded window at 3 o'clock, between the hub and the rim: `hands`-coloured digits on a `face`-coloured window with a thin outline border (a ring with no fill in mono). It scales with the dial"
+  },
+  "face": {
+   "type": "color",
+   "default": "@colors.surface",
+   "doc": "Dial colour"
+  },
+  "hands": {
+   "type": "color",
+   "default": "@colors.onSurface",
+   "doc": "Hour and minute hands"
+  },
+  "accent": {
+   "type": "color",
+   "default": "@colors.error",
+   "doc": "Second hand and centre cap"
+  },
+  "label": {
+   "type": "string",
+   "default": "Clock",
+   "doc": "Accessibility label"
+  }
+ },
+ "capabilities": [
+  "time.clock",
+  "draw.transform",
+  "data.loop"
+ ],
+ "call": {
+  "AnalogClock": {
+   "size": 160
+  }
+ },
+ "body": {
+  "canvas": {
+   "modifiers": [
+    {
+     "$if": "fill",
+     "then": "fillMaxSize",
+     "else": {
+      "size": "@size"
+     }
+    },
+    {
+     "semantics": {
+      "contentDescription": "@label"
+     }
+    }
+   ],
+   "commands": [
+    {
+     "variable": {
+      "name": "s",
+      "value": "min(componentWidth(), componentHeight())"
+     }
+    },
+    {
+     "translate": {
+      "dx": "(componentWidth() - @s) / 2",
+      "dy": "(componentHeight() - @s) / 2"
+     }
+    },
+    {
+     "scale": {
+      "sx": "@s / @size",
+      "sy": "@s / @size"
+     }
+    },
+    {
+     "paint": {
+      "ops": [
+       {
+        "color": "@face"
+       },
+       {
+        "style": "fill"
+       }
+      ]
+     }
+    },
+    {
+     "drawCircle": {
+      "cx": "@size / 2",
+      "cy": "@size / 2",
+      "radius": "@size * 0.46"
+     }
+    },
+    {
+     "$if": "theme.mono",
+     "then": {
+      "paint": {
+       "ops": [
+        {
+         "color": "@colors.outline"
+        },
+        {
+         "style": "stroke"
+        },
+        {
+         "strokeWidth": "@theme.stroke"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "$if": "theme.mono",
+     "then": {
+      "drawCircle": {
+       "cx": "@size / 2",
+       "cy": "@size / 2",
+       "radius": "@size * 0.46 - 1"
+      }
+     }
+    },
+    {
+     "paint": {
+      "ops": [
+       {
+        "color": "@colors.muted"
+       },
+       {
+        "style": "stroke"
+       },
+       {
+        "strokeWidth": "@size * 0.015"
+       }
+      ]
+     }
+    },
+    {
+     "loop": {
+      "index": "i",
+      "from": 0,
+      "until": 12,
+      "step": 1,
+      "commands": [
+       {
+        "rotate": {
+         "angle": 30,
+         "pivotX": "@size / 2",
+         "pivotY": "@size / 2"
+        }
+       },
+       {
+        "drawLine": {
+         "x1": "@size / 2",
+         "y1": "@size * 0.07",
+         "x2": "@size / 2",
+         "y2": "@size * 0.12"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "$if": "showDate",
+     "then": [
+      {
+       "$if": "theme.mono",
+       "else": {
+        "paint": {
+         "ops": [
+          {
+           "color": "@face"
+          },
+          {
+           "style": "fill"
+          }
+         ]
+        }
+       }
+      },
+      {
+       "$if": "theme.mono",
+       "else": {
+        "drawRoundRect": {
+         "left": "@size * 0.685",
+         "top": "@size * 0.445",
+         "right": "@size * 0.835",
+         "bottom": "@size * 0.555",
+         "rx": "@size * 0.02",
+         "ry": "@size * 0.02"
+        }
+       }
+      },
+      {
+       "paint": {
+        "ops": [
+         {
+          "color": "@colors.outline"
+         },
+         {
+          "style": "stroke"
+         },
+         {
+          "strokeWidth": "@size * 0.01"
+         }
+        ]
+       }
+      },
+      {
+       "drawRoundRect": {
+        "left": "@size * 0.685",
+        "top": "@size * 0.445",
+        "right": "@size * 0.835",
+        "bottom": "@size * 0.555",
+        "rx": "@size * 0.02",
+        "ry": "@size * 0.02"
+       }
+      },
+      {
+       "paint": {
+        "ops": [
+         {
+          "color": "@hands"
+         },
+         {
+          "style": "fill"
+         },
+         {
+          "textSize": "@size * 0.085"
+         }
+        ]
+       }
+      },
+      {
+       "drawTextAnchored": {
+        "text": {
+         "type": "textFromFloat",
+         "value": "dayOfMonth()",
+         "whole": 2,
+         "decimal": 0,
+         "flags": 4
+        },
+        "x": "@size * 0.76",
+        "y": "@size / 2",
+        "panX": 0,
+        "panY": 0
+       }
+      }
+     ]
+    },
+    {
+     "save": {
+      "commands": [
+       {
+        "rotate": {
+         "angle": "(timeInMin() % 720) * 0.5",
+         "pivotX": "@size / 2",
+         "pivotY": "@size / 2"
+        }
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "color": "@hands"
+          },
+          {
+           "style": "stroke"
+          },
+          {
+           "strokeWidth": {
+            "$if": "theme.mono",
+            "then": "@size * 0.025",
+            "else": "@size * 0.035"
+           }
+          },
+          {
+           "strokeCap": "round"
+          }
+         ]
+        }
+       },
+       {
+        "drawLine": {
+         "x1": "@size / 2",
+         "y1": "@size / 2",
+         "x2": "@size / 2",
+         "y2": "@size / 2 - @size * 0.23"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "save": {
+      "commands": [
+       {
+        "rotate": {
+         "angle": {
+          "$if": "theme.mono",
+          "then": "(timeInMin() % 60) * 6",
+          "else": "(timeInMin() % 60) * 6 + (timeInSec() % 60) * 0.1"
+         },
+         "pivotX": "@size / 2",
+         "pivotY": "@size / 2"
+        }
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "color": "@hands"
+          },
+          {
+           "style": "stroke"
+          },
+          {
+           "strokeWidth": {
+            "$if": "theme.mono",
+            "then": "@size * 0.015",
+            "else": "@size * 0.02"
+           }
+          },
+          {
+           "strokeCap": "round"
+          }
+         ]
+        }
+       },
+       {
+        "drawLine": {
+         "x1": "@size / 2",
+         "y1": "@size / 2",
+         "x2": "@size / 2",
+         "y2": "@size / 2 - @size * 0.35"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "$if": "theme.mono",
+     "else": {
+      "$if": "showSeconds",
+      "then": {
+       "save": {
+        "commands": [
+         {
+          "rotate": {
+           "angle": "(timeInSec() % 60) * 6",
+           "pivotX": "@size / 2",
+           "pivotY": "@size / 2"
+          }
+         },
+         {
+          "paint": {
+           "ops": [
+            {
+             "color": "@accent"
+            },
+            {
+             "style": "stroke"
+            },
+            {
+             "strokeWidth": "@size * 0.01"
+            },
+            {
+             "strokeCap": "round"
+            }
+           ]
+          }
+         },
+         {
+          "drawLine": {
+           "x1": "@size / 2",
+           "y1": "@size / 2",
+           "x2": "@size / 2",
+           "y2": "@size / 2 - @size * 0.39"
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "paint": {
+      "ops": [
+       {
+        "color": "@accent"
+       },
+       {
+        "style": "fill"
+       }
+      ]
+     }
+    },
+    {
+     "drawCircle": {
+      "cx": "@size / 2",
+      "cy": "@size / 2",
+      "radius": "@size * 0.025"
+     }
+    }
+   ]
+  }
+ },
+ "pitfalls": [
+  "timeInMin() is minutes since midnight and timeInSec() seconds within the hour: % 720 for the hour hand, % 60 for the others",
+  "A clock that shows seconds repaints every second; without them, every minute",
+  "showDate draws dayOfMonth() as a two-digit textFromFloat (whole 2, decimal 0, flags 4: no padding) in a window at 3 o'clock, under the hands as on a watch; it reads the host clock, so pin `clock` to check a day",
+  "The twelve ticks are a loop that rotates the canvas 30° per pass (12 × 30° = 360°, back to the start), so the tick paint is set once and no save/restore is needed",
+  "A fixed `size` is the box the call asks for: a 160 dp clock still overflows a narrower widget. Where the space varies, pass fill: true and give the call a sized or weighted parent (weights ignore spacedBy: put the gap in a padding). Either way the face is drawn at `size` and a canvas variable (min(componentWidth(), componentHeight())) with one translate + scale fits it to the box it got, centred, so a call clamped by a smaller parent shrinks instead of being cut off; every coordinate stays a folded number. The variable keeps the call out of pattern mode, where min() over componentWidth()/componentHeight() comes out wrong (C++ and TS players)"
+ ]
+}

@@ -1,0 +1,3215 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 720,
+  "profiles": 513,
+  "contentDescription": "A stack of travel destination cards: swipe a card right to save it or left to pass, or use the buttons"
+ },
+ "resources": {
+  "variables": {
+   "likes": 0,
+   "nopes": 0
+  },
+  "floatArrays": {
+   "night": [
+    0.92,
+    0.15,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "warm": [
+    0.0,
+    0.85,
+    0.35,
+    1.0,
+    0.25
+   ],
+   "day": [
+    0.0,
+    0.0,
+    0.8,
+    0.0,
+    0.6
+   ],
+   "sunX": [
+    0.72,
+    0.3,
+    0.78,
+    0.5,
+    0.24
+   ],
+   "sunY": [
+    0.16,
+    0.36,
+    0.3,
+    0.42,
+    0.18
+   ],
+   "sunR": [
+    0.05,
+    0.11,
+    0.08,
+    0.17,
+    0.06
+   ],
+   "aur": [
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "rb": [
+    0.56,
+    0.6,
+    0.62,
+    0.58,
+    0.5,
+    0.66,
+    0.68,
+    0.7,
+    0.66,
+    0.62,
+    0.78,
+    0.8,
+    0.68,
+    0.76,
+    0.8
+   ],
+   "ra1": [
+    0.16,
+    0.05,
+    0.05,
+    0.03,
+    0.22,
+    0.1,
+    0.04,
+    0.1,
+    0.05,
+    0.06,
+    0.05,
+    0.03,
+    0.06,
+    0.04,
+    0.03
+   ],
+   "rf1": [
+    9.0,
+    3.0,
+    2.2,
+    2.0,
+    7.5,
+    11.0,
+    4.0,
+    3.0,
+    2.6,
+    5.0,
+    6.0,
+    5.0,
+    2.0,
+    1.6,
+    3.0
+   ],
+   "ra2": [
+    0.06,
+    0.02,
+    0.01,
+    0.01,
+    0.07,
+    0.04,
+    0.015,
+    0.03,
+    0.02,
+    0.02,
+    0.02,
+    0.01,
+    0.02,
+    0.01,
+    0.01
+   ],
+   "rf2": [
+    23.0,
+    11.0,
+    9.0,
+    7.0,
+    19.0,
+    27.0,
+    13.0,
+    10.0,
+    8.0,
+    14.0,
+    17.0,
+    15.0,
+    7.0,
+    5.0,
+    12.0
+   ],
+   "lw": [
+    0.0,
+    0.3,
+    0.35,
+    0.95,
+    0.15
+   ],
+   "sea": [
+    0.3,
+    0.0,
+    1.0,
+    0.0,
+    0.7
+   ],
+   "torii": [
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "houses": [
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0
+   ],
+   "cabins": [
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "colors": {
+   "like": {
+    "light": "#FF0E8A55",
+    "dark": "#FF3DDC97"
+   },
+   "nope": {
+    "light": "#FFD0303F",
+    "dark": "#FFFF5A6A"
+   }
+  }
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    }
+   ],
+   "children": [
+    {
+     "canvas": {
+      "modifiers": [
+       "fillMaxWidth",
+       {
+        "height": 76
+       }
+      ],
+      "commands": [
+       {
+        "paint": {
+         "ops": [
+          {
+           "color": "@colors.onSurface"
+          },
+          {
+           "style": "fill"
+          },
+          {
+           "textSize": 24
+          }
+         ]
+        }
+       },
+       {
+        "drawTextAnchored": {
+         "text": "Discover",
+         "x": 20,
+         "y": 42,
+         "panX": -1,
+         "panY": 0
+        }
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "color": "@colors.muted"
+          },
+          {
+           "textSize": 12
+          },
+          {
+           "alpha": "step(componentWidth(), 350)"
+          }
+         ]
+        }
+       },
+       {
+        "drawTextAnchored": {
+         "text": "Swipe right to save a trip, left to pass",
+         "x": 20,
+         "y": 62,
+         "panX": -1,
+         "panY": 0
+        }
+       },
+       {
+        "variable": {
+         "name": "cx2",
+         "value": "componentWidth() - 20"
+        }
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "alpha": 1
+          }
+         ]
+        }
+       },
+       {
+        "$if": "theme.mono",
+        "then": [
+         {
+          "paint": {
+           "ops": [
+            {
+             "color": "@colors.onSurface"
+            }
+           ]
+          }
+         }
+        ],
+        "else": [
+         {
+          "paint": {
+           "ops": [
+            {
+             "color": "@colors.like"
+            }
+           ]
+          }
+         }
+        ]
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "textSize": 16
+          }
+         ]
+        }
+       },
+       {
+        "drawTextAnchored": {
+         "text": {
+          "type": "textFromFloat",
+          "value": "@likes",
+          "whole": 3,
+          "decimal": 0,
+          "flags": 5
+         },
+         "x": "@cx2",
+         "y": 40,
+         "panX": 1,
+         "panY": 0
+        }
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "color": "@colors.muted"
+          },
+          {
+           "textSize": 10
+          }
+         ]
+        }
+       },
+       {
+        "drawTextAnchored": {
+         "text": "SAVED",
+         "x": "@cx2",
+         "y": 56,
+         "panX": 1,
+         "panY": 0
+        }
+       },
+       {
+        "$if": "theme.mono",
+        "then": [
+         {
+          "paint": {
+           "ops": [
+            {
+             "color": "@colors.onSurface"
+            }
+           ]
+          }
+         }
+        ],
+        "else": [
+         {
+          "paint": {
+           "ops": [
+            {
+             "color": "@colors.nope"
+            }
+           ]
+          }
+         }
+        ]
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "textSize": 16
+          }
+         ]
+        }
+       },
+       {
+        "drawTextAnchored": {
+         "text": {
+          "type": "textFromFloat",
+          "value": "@nopes",
+          "whole": 3,
+          "decimal": 0,
+          "flags": 5
+         },
+         "x": "@cx2 - 56",
+         "y": 40,
+         "panX": 1,
+         "panY": 0
+        }
+       },
+       {
+        "paint": {
+         "ops": [
+          {
+           "color": "@colors.muted"
+          },
+          {
+           "textSize": 10
+          }
+         ]
+        }
+       },
+       {
+        "drawTextAnchored": {
+         "text": "PASSED",
+         "x": "@cx2 - 56",
+         "y": 56,
+         "panX": 1,
+         "panY": 0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       "fillMaxWidth",
+       {
+        "verticalWeight": 1
+       }
+      ],
+      "children": [
+       {
+        "SwipeStack": {
+         "index": "@card",
+         "count": 5,
+         "cardWidth": 320,
+         "cardHeight": 470.588,
+         "liked": "@likes",
+         "passed": "@nopes",
+         "likeColor": "@colors.like",
+         "passColor": "@colors.nope",
+         "passButtonLabel": "Pass",
+         "likeButtonLabel": "Save",
+         "description": "Destination cards. Swipe right to save, left to pass",
+         "slots": {
+          "card": [
+           {
+            "$if": "theme.mono",
+            "then": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": 0,
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "alpha": "arrayGet(@night, @card) * 0.8"
+                }
+               ]
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 26,
+               "commands": [
+                {
+                 "drawCircle": {
+                  "cx": "320 * fract(j * 0.61803 + 0.13)",
+                  "cy": "470.588 * 0.5 * fract(j * 0.4142 + 0.07)",
+                  "radius": "0.6 + fract(j * 0.7548) * 1.1"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "variable": {
+               "name": "au",
+               "value": "arrayGet(@aur, @card)"
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "aurA",
+               "expressionX": "320 * a[0]",
+               "expressionY": "470.588 * (0.2 + 0.07 * sin(a[0] * 5.1 + 0.6) + 0.03 * sin(a[0] * 13))",
+               "start": 0,
+               "end": 1,
+               "count": 48
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "aurB",
+               "expressionX": "320 * a[0]",
+               "expressionY": "470.588 * (0.3 + 0.06 * sin(a[0] * 4.2 + 2.1) + 0.025 * sin(a[0] * 11))",
+               "start": 0,
+               "end": 1,
+               "count": 48
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeCap": "round"
+                },
+                {
+                 "strokeWidth": 1.5
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "@au"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "aurA"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "strokeWidth": 1
+                },
+                {
+                 "alpha": "@au * 0.6"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "aurB"
+              }
+             },
+             {
+              "variable": {
+               "name": "sx",
+               "value": "320 * arrayGet(@sunX, @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "sy",
+               "value": "470.588 * arrayGet(@sunY, @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "sr",
+               "value": "320 * arrayGet(@sunR, @card)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeWidth": 1.5
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "@sx",
+               "cy": "@sy",
+               "radius": "@sr"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "strokeWidth": 1
+                },
+                {
+                 "alpha": 0.35
+                }
+               ]
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "@sx",
+               "cy": "@sy",
+               "radius": "@sr + 6"
+              }
+             },
+             {
+              "variable": {
+               "name": "B0",
+               "value": "470.588 * arrayGet(@rb, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "A0",
+               "value": "470.588 * arrayGet(@ra1, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "F0",
+               "value": "arrayGet(@rf1, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "E0",
+               "value": "470.588 * arrayGet(@ra2, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "H0",
+               "value": "arrayGet(@rf2, 0 + @card)"
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "ridge0",
+               "expressionX": "320 * max(0, min(1, a[0]))",
+               "expressionY": "ifElse(470.588, @B0 - @A0 * sin(a[0] * @F0 + 1.3) - @E0 * sin(a[0] * @H0), step(a[0], -0.0001) * step(1.0001, a[0]))",
+               "start": -0.02,
+               "end": 1.02,
+               "count": 90
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge0"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "stroke"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "strokeWidth": 1.5
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge0"
+              }
+             },
+             {
+              "variable": {
+               "name": "B1",
+               "value": "470.588 * arrayGet(@rb, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "A1",
+               "value": "470.588 * arrayGet(@ra1, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "F1",
+               "value": "arrayGet(@rf1, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "E1",
+               "value": "470.588 * arrayGet(@ra2, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "H1",
+               "value": "arrayGet(@rf2, 5 + @card)"
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "ridge1",
+               "expressionX": "320 * max(0, min(1, a[0]))",
+               "expressionY": "ifElse(470.588, @B1 - @A1 * sin(a[0] * @F1 + 2.3) - @E1 * sin(a[0] * @H1), step(a[0], -0.0001) * step(1.0001, a[0]))",
+               "start": -0.02,
+               "end": 1.02,
+               "count": 90
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge1"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "stroke"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "strokeWidth": 1.5
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge1"
+              }
+             },
+             {
+              "variable": {
+               "name": "B2",
+               "value": "470.588 * arrayGet(@rb, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "A2",
+               "value": "470.588 * arrayGet(@ra1, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "F2",
+               "value": "arrayGet(@rf1, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "E2",
+               "value": "470.588 * arrayGet(@ra2, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "H2",
+               "value": "arrayGet(@rf2, 10 + @card)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "arrayGet(@sea, @card) * 0.8"
+                },
+                {
+                 "strokeWidth": 1
+                },
+                {
+                 "style": "stroke"
+                }
+               ]
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 6,
+               "commands": [
+                {
+                 "drawLine": {
+                  "x1": "320 * fract(j * 0.37 + 0.1)",
+                  "y1": "@B1 + @A1 * 0.4 + 10 + j * 9",
+                  "x2": "320 * fract(j * 0.37 + 0.1) + 30 + j * 6",
+                  "y2": "@B1 + @A1 * 0.4 + 10 + j * 9"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "ridge2",
+               "expressionX": "320 * max(0, min(1, a[0]))",
+               "expressionY": "ifElse(470.588, @B2 - @A2 * sin(a[0] * @F2 + 3.3) - @E2 * sin(a[0] * @H2), step(a[0], -0.0001) * step(1.0001, a[0]))",
+               "start": -0.02,
+               "end": 1.02,
+               "count": 90
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge2"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "stroke"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "strokeWidth": 1.5
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge2"
+              }
+             },
+             {
+              "variable": {
+               "name": "hs",
+               "value": "arrayGet(@houses, @card)"
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 9,
+               "commands": [
+                {
+                 "variable": {
+                  "name": "hx",
+                  "value": "320 * (0.08 + j * 0.105)"
+                 }
+                },
+                {
+                 "variable": {
+                  "name": "hy",
+                  "value": "@B2 - @A2 * sin(@hx / 320 * @F2 + 3.3) - 0.5 * @E2"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "style": "fill"
+                   },
+                   {
+                    "color": "@colors.background"
+                   },
+                   {
+                    "alpha": "@hs"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawRoundRect": {
+                  "left": "@hx",
+                  "top": "@hy - 13 - (j % 3) * 4",
+                  "right": "@hx + 15",
+                  "bottom": "@hy + 4",
+                  "rx": 2,
+                  "ry": 2
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "style": "stroke"
+                   },
+                   {
+                    "color": "@colors.onSurface"
+                   },
+                   {
+                    "strokeWidth": 1.2
+                   },
+                   {
+                    "alpha": "@hs"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawRoundRect": {
+                  "left": "@hx",
+                  "top": "@hy - 13 - (j % 3) * 4",
+                  "right": "@hx + 15",
+                  "bottom": "@hy + 4",
+                  "rx": 2,
+                  "ry": 2
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "style": "fill"
+                   },
+                   {
+                    "alpha": "@hs * step(j % 3, 0.5)"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawCircle": {
+                  "cx": "@hx + 7.5",
+                  "cy": "@hy - 13 - (j % 3) * 4",
+                  "radius": 5.5
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "variable": {
+               "name": "cb",
+               "value": "arrayGet(@cabins, @card)"
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 4,
+               "commands": [
+                {
+                 "variable": {
+                  "name": "kx",
+                  "value": "320 * (0.14 + j * 0.09)"
+                 }
+                },
+                {
+                 "variable": {
+                  "name": "ky",
+                  "value": "@B2 + @A2 * 0.2 - 2"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "style": "fill"
+                   },
+                   {
+                    "color": "@colors.onSurface"
+                   },
+                   {
+                    "alpha": "@cb"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawRect": {
+                  "left": "@kx",
+                  "top": "@ky - 9",
+                  "right": "@kx + 14",
+                  "bottom": "@ky"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "color": "@colors.onSurface"
+                   },
+                   {
+                    "alpha": "@cb"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawRect": {
+                  "left": "@kx - 1",
+                  "top": "@ky - 11",
+                  "right": "@kx + 15",
+                  "bottom": "@ky - 9"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "variable": {
+               "name": "tr",
+               "value": "arrayGet(@torii, @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "tx",
+               "value": "320 * 0.66"
+              }
+             },
+             {
+              "variable": {
+               "name": "tyy",
+               "value": "@B2 - 2"
+              }
+             },
+             {
+              "variable": {
+               "name": "tu",
+               "value": "320 * 0.11"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "@tr"
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx - @tu",
+               "top": "@tyy - @tu * 2.2",
+               "right": "@tx - @tu * 0.8",
+               "bottom": "@tyy"
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx + @tu * 0.8",
+               "top": "@tyy - @tu * 2.2",
+               "right": "@tx + @tu",
+               "bottom": "@tyy"
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx - @tu * 1.35",
+               "top": "@tyy - @tu * 2.45",
+               "right": "@tx + @tu * 1.35",
+               "bottom": "@tyy - @tu * 2.22"
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx - @tu * 1.1",
+               "top": "@tyy - @tu * 1.9",
+               "right": "@tx + @tu * 1.1",
+               "bottom": "@tyy - @tu * 1.75"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.background"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": "470.588 - 112",
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "stroke"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "strokeWidth": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawLine": {
+               "x1": 0,
+               "y1": "470.588 - 112",
+               "x2": "320",
+               "y2": "470.588 - 112"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Lofoten",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Norway  ·  Northern lights",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "7 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €1,490",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Kyoto",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Japan  ·  Temples at dusk",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "5 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €1,180",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Santorini",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Greece  ·  Caldera sunsets",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "6 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €960",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Wadi Rum",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Jordan  ·  Desert camp",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "4 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €840",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Patagonia",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Chile  ·  Torres del Paine",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.muted"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "9 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €2,150",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": 0.4
+                },
+                {
+                 "color": "@colors.onSurface"
+                },
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeWidth": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawLine": {
+               "x1": 20,
+               "y1": "470.588 - 36",
+               "x2": "320 - 20",
+               "y2": "470.588 - 36"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "fill"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             }
+            ],
+            "else": [
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFFFFFFF"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "linearGradient": {
+                  "x1": 0,
+                  "y1": 0,
+                  "x2": 0,
+                  "y2": "470.588 * 0.8",
+                  "colors": [
+                   "#FF20264F",
+                   "#FF7186C2"
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": 0,
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": "arrayGet(@night, @card)"
+                },
+                {
+                 "linearGradient": {
+                  "x1": 0,
+                  "y1": 0,
+                  "x2": 0,
+                  "y2": "470.588 * 0.7",
+                  "colors": [
+                   "#FF03061A",
+                   "#FF1B2C5A"
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": 0,
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": "arrayGet(@warm, @card)"
+                },
+                {
+                 "linearGradient": {
+                  "x1": 0,
+                  "y1": 0,
+                  "x2": 0,
+                  "y2": "470.588 * 0.75",
+                  "colors": [
+                   "#FF3A2560",
+                   "#FFE0705A",
+                   "#FFFFC27A"
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": 0,
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": "arrayGet(@day, @card)"
+                },
+                {
+                 "linearGradient": {
+                  "x1": 0,
+                  "y1": 0,
+                  "x2": 0,
+                  "y2": "470.588 * 0.7",
+                  "colors": [
+                   "#FF2F7FD0",
+                   "#FFBFE2F6"
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": 0,
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "color": "#FFFFFFFF"
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "alpha": "arrayGet(@night, @card) * 0.8"
+                }
+               ]
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 26,
+               "commands": [
+                {
+                 "drawCircle": {
+                  "cx": "320 * fract(j * 0.61803 + 0.13)",
+                  "cy": "470.588 * 0.5 * fract(j * 0.4142 + 0.07)",
+                  "radius": "0.6 + fract(j * 0.7548) * 1.1"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "variable": {
+               "name": "au",
+               "value": "arrayGet(@aur, @card)"
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "aurA",
+               "expressionX": "320 * a[0]",
+               "expressionY": "470.588 * (0.2 + 0.07 * sin(a[0] * 5.1 + 0.6) + 0.03 * sin(a[0] * 13))",
+               "start": 0,
+               "end": 1,
+               "count": 48
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "aurB",
+               "expressionX": "320 * a[0]",
+               "expressionY": "470.588 * (0.3 + 0.06 * sin(a[0] * 4.2 + 2.1) + 0.025 * sin(a[0] * 11))",
+               "start": 0,
+               "end": 1,
+               "count": 48
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeCap": "round"
+                },
+                {
+                 "strokeWidth": "320 * 0.07"
+                },
+                {
+                 "color": "#FF3CF0A0"
+                },
+                {
+                 "alpha": "@au * 0.16"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "aurA"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "strokeWidth": "320 * 0.014"
+                },
+                {
+                 "alpha": "@au * 0.75"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "aurA"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FF7A6CFF"
+                },
+                {
+                 "strokeWidth": "320 * 0.05"
+                },
+                {
+                 "alpha": "@au * 0.10"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "aurB"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FF46E8B0"
+                },
+                {
+                 "strokeWidth": "320 * 0.008"
+                },
+                {
+                 "alpha": "@au * 0.5"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "aurB"
+              }
+             },
+             {
+              "variable": {
+               "name": "sx",
+               "value": "320 * arrayGet(@sunX, @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "sy",
+               "value": "470.588 * arrayGet(@sunY, @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "sr",
+               "value": "320 * arrayGet(@sunR, @card)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FFFFFFFF"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "radialGradient": {
+                  "centerX": "@sx",
+                  "centerY": "@sy",
+                  "radius": "@sr * 3.2",
+                  "colors": [
+                   "#66FFE9C4",
+                   "#00FFE9C4"
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "@sx",
+               "cy": "@sy",
+               "radius": "@sr * 3.2"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "color": "#FFFFF4DE"
+                }
+               ]
+              }
+             },
+             {
+              "drawCircle": {
+               "cx": "@sx",
+               "cy": "@sy",
+               "radius": "@sr"
+              }
+             },
+             {
+              "variable": {
+               "name": "B0",
+               "value": "470.588 * arrayGet(@rb, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "A0",
+               "value": "470.588 * arrayGet(@ra1, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "F0",
+               "value": "arrayGet(@rf1, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "E0",
+               "value": "470.588 * arrayGet(@ra2, 0 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "H0",
+               "value": "arrayGet(@rf2, 0 + @card)"
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "ridge0",
+               "expressionX": "320 * max(0, min(1, a[0]))",
+               "expressionY": "ifElse(470.588, @B0 - @A0 * sin(a[0] * @F0 + 1.3) - @E0 * sin(a[0] * @H0), step(a[0], -0.0001) * step(1.0001, a[0]))",
+               "start": -0.02,
+               "end": 1.02,
+               "count": 90
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FF34416E"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge0"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFD98A6A"
+                },
+                {
+                 "alpha": "arrayGet(@lw, @card)"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge0"
+              }
+             },
+             {
+              "variable": {
+               "name": "B1",
+               "value": "470.588 * arrayGet(@rb, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "A1",
+               "value": "470.588 * arrayGet(@ra1, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "F1",
+               "value": "arrayGet(@rf1, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "E1",
+               "value": "470.588 * arrayGet(@ra2, 5 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "H1",
+               "value": "arrayGet(@rf2, 5 + @card)"
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "ridge1",
+               "expressionX": "320 * max(0, min(1, a[0]))",
+               "expressionY": "ifElse(470.588, @B1 - @A1 * sin(a[0] * @F1 + 2.3) - @E1 * sin(a[0] * @H1), step(a[0], -0.0001) * step(1.0001, a[0]))",
+               "start": -0.02,
+               "end": 1.02,
+               "count": 90
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FF1F2850"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge1"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFAA5538"
+                },
+                {
+                 "alpha": "arrayGet(@lw, @card)"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge1"
+              }
+             },
+             {
+              "variable": {
+               "name": "B2",
+               "value": "470.588 * arrayGet(@rb, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "A2",
+               "value": "470.588 * arrayGet(@ra1, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "F2",
+               "value": "arrayGet(@rf1, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "E2",
+               "value": "470.588 * arrayGet(@ra2, 10 + @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "H2",
+               "value": "arrayGet(@rf2, 10 + @card)"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FF1D4E7E"
+                },
+                {
+                 "alpha": "arrayGet(@sea, @card)"
+                },
+                {
+                 "linearGradient": {
+                  "x1": 0,
+                  "y1": "@B1",
+                  "x2": 0,
+                  "y2": "470.588",
+                  "colors": [
+                   "#FF2C6EA6",
+                   "#FF0B2A4A"
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": "@B1 + @A1 * 0.4",
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "color": "#FFFFFFFF"
+                },
+                {
+                 "alpha": "arrayGet(@sea, @card) * 0.35"
+                },
+                {
+                 "strokeWidth": 1
+                },
+                {
+                 "style": "stroke"
+                }
+               ]
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 6,
+               "commands": [
+                {
+                 "drawLine": {
+                  "x1": "320 * fract(j * 0.37 + 0.1)",
+                  "y1": "@B1 + @A1 * 0.4 + 10 + j * 9",
+                  "x2": "320 * fract(j * 0.37 + 0.1) + 30 + j * 6",
+                  "y2": "@B1 + @A1 * 0.4 + 10 + j * 9"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "pathExpression": {
+               "id": "ridge2",
+               "expressionX": "320 * max(0, min(1, a[0]))",
+               "expressionY": "ifElse(470.588, @B2 - @A2 * sin(a[0] * @F2 + 3.3) - @E2 * sin(a[0] * @H2), step(a[0], -0.0001) * step(1.0001, a[0]))",
+               "start": -0.02,
+               "end": 1.02,
+               "count": 90
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FF0C1124"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge2"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FF4E2418"
+                },
+                {
+                 "alpha": "arrayGet(@lw, @card)"
+                }
+               ]
+              }
+             },
+             {
+              "drawPath": {
+               "path": "ridge2"
+              }
+             },
+             {
+              "variable": {
+               "name": "hs",
+               "value": "arrayGet(@houses, @card)"
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 9,
+               "commands": [
+                {
+                 "variable": {
+                  "name": "hx",
+                  "value": "320 * (0.08 + j * 0.105)"
+                 }
+                },
+                {
+                 "variable": {
+                  "name": "hy",
+                  "value": "@B2 - @A2 * sin(@hx / 320 * @F2 + 3.3) - 0.5 * @E2"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "style": "fill"
+                   },
+                   {
+                    "color": "#FFFFFFFF"
+                   },
+                   {
+                    "alpha": "@hs"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawRoundRect": {
+                  "left": "@hx",
+                  "top": "@hy - 13 - (j % 3) * 4",
+                  "right": "@hx + 15",
+                  "bottom": "@hy + 4",
+                  "rx": 2,
+                  "ry": 2
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "color": "#FF2E6FD8"
+                   },
+                   {
+                    "alpha": "@hs * step(j % 3, 0.5)"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawCircle": {
+                  "cx": "@hx + 7.5",
+                  "cy": "@hy - 13 - (j % 3) * 4",
+                  "radius": 5.5
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "variable": {
+               "name": "cb",
+               "value": "arrayGet(@cabins, @card)"
+              }
+             },
+             {
+              "loop": {
+               "index": "j",
+               "from": 0,
+               "until": 4,
+               "commands": [
+                {
+                 "variable": {
+                  "name": "kx",
+                  "value": "320 * (0.14 + j * 0.09)"
+                 }
+                },
+                {
+                 "variable": {
+                  "name": "ky",
+                  "value": "@B2 + @A2 * 0.2 - 2"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "style": "fill"
+                   },
+                   {
+                    "color": "#FFC23B32"
+                   },
+                   {
+                    "alpha": "@cb"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawRect": {
+                  "left": "@kx",
+                  "top": "@ky - 9",
+                  "right": "@kx + 14",
+                  "bottom": "@ky"
+                 }
+                },
+                {
+                 "paint": {
+                  "ops": [
+                   {
+                    "color": "#FF5A1B18"
+                   },
+                   {
+                    "alpha": "@cb"
+                   }
+                  ]
+                 }
+                },
+                {
+                 "drawRect": {
+                  "left": "@kx - 1",
+                  "top": "@ky - 11",
+                  "right": "@kx + 15",
+                  "bottom": "@ky - 9"
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "variable": {
+               "name": "tr",
+               "value": "arrayGet(@torii, @card)"
+              }
+             },
+             {
+              "variable": {
+               "name": "tx",
+               "value": "320 * 0.66"
+              }
+             },
+             {
+              "variable": {
+               "name": "tyy",
+               "value": "@B2 - 2"
+              }
+             },
+             {
+              "variable": {
+               "name": "tu",
+               "value": "320 * 0.11"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FFE0452E"
+                },
+                {
+                 "alpha": "@tr"
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx - @tu",
+               "top": "@tyy - @tu * 2.2",
+               "right": "@tx - @tu * 0.8",
+               "bottom": "@tyy"
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx + @tu * 0.8",
+               "top": "@tyy - @tu * 2.2",
+               "right": "@tx + @tu",
+               "bottom": "@tyy"
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx - @tu * 1.35",
+               "top": "@tyy - @tu * 2.45",
+               "right": "@tx + @tu * 1.35",
+               "bottom": "@tyy - @tu * 2.22"
+              }
+             },
+             {
+              "drawRect": {
+               "left": "@tx - @tu * 1.1",
+               "top": "@tyy - @tu * 1.9",
+               "right": "@tx + @tu * 1.1",
+               "bottom": "@tyy - @tu * 1.75"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFFFFFFF"
+                },
+                {
+                 "alpha": 1
+                },
+                {
+                 "linearGradient": {
+                  "x1": 0,
+                  "y1": "470.588 * 0.52",
+                  "x2": 0,
+                  "y2": "470.588",
+                  "colors": [
+                   "#00080A12",
+                   "#C0080A12",
+                   "#F2080A12"
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             {
+              "drawRect": {
+               "left": 0,
+               "top": "470.588 * 0.5",
+               "right": "320",
+               "bottom": "470.588"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Lofoten",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Norway  ·  Northern lights",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFC9C6BF"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "7 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 0))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €1,490",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Kyoto",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Japan  ·  Temples at dusk",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFC9C6BF"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "5 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 1))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €1,180",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Santorini",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Greece  ·  Caldera sunsets",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFC9C6BF"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "6 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 2))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €960",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Wadi Rum",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Jordan  ·  Desert camp",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFC9C6BF"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "4 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 3))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €840",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "shader": 0
+                },
+                {
+                 "style": "fill"
+                },
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 34
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Patagonia",
+               "x": 20,
+               "y": "470.588 - 82",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "0.8 - 0.8 * min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "Chile  ·  Torres del Paine",
+               "x": 21,
+               "y": "470.588 - 50",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFC9C6BF"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 12
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "9 nights",
+               "x": 21,
+               "y": "470.588 - 18",
+               "panX": -1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "color": "#FFF3F1EC"
+                },
+                {
+                 "alpha": "1 - min(1, abs(@card - 4))"
+                },
+                {
+                 "textSize": 13
+                }
+               ]
+              }
+             },
+             {
+              "drawTextAnchored": {
+               "text": "from €2,150",
+               "x": "320 - 20",
+               "y": "470.588 - 18",
+               "panX": 1,
+               "panY": 0
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "alpha": 1
+                },
+                {
+                 "color": "#33FFFFFF"
+                },
+                {
+                 "style": "stroke"
+                },
+                {
+                 "strokeWidth": 1
+                }
+               ]
+              }
+             },
+             {
+              "drawLine": {
+               "x1": 20,
+               "y1": "470.588 - 36",
+               "x2": "320 - 20",
+               "y2": "470.588 - 36"
+              }
+             },
+             {
+              "paint": {
+               "ops": [
+                {
+                 "style": "fill"
+                },
+                {
+                 "alpha": 1
+                }
+               ]
+              }
+             }
+            ]
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

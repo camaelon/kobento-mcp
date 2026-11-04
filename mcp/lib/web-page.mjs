@@ -1,0 +1,1306 @@
+// A single self-contained HTML page that plays one RemoteCompose document with the
+// TypeScript player: the player script and the .rc bytes are both inlined, so the file
+// works from anywhere — a static host, an email attachment, or opened off the disk.
+//
+// Two kinds of page:
+//   - the bare player (controls: false): just the document, filling the window or a box;
+//   - the playground (controls: true): the document in a frame that can be resized freely
+//     (drag handles, typed sizes, presets), with an editor for each host variable, density,
+//     theme and play/pause — to see how a document behaves, not only how it looks. Its
+//     state lives in the URL, so a link reproduces what is on screen.
+
+import { MONO_VAR, monoPalettes } from "./components.mjs";
+import { APP_RUNTIME, APP_VAR, appScriptTag } from "./app-script.mjs";
+
+export const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+// Text placed inside a <script> element must not contain "</script" (it would end the
+// element early) or "<!--" (it can switch the parser into a script-data escape state).
+const scriptSafe = (s) => s.replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--");
+
+// JSON placed inside a script: `<` escaped so no tag can be formed, and the two line
+// separators JSON allows but older JS string literals did not.
+/** 7500 -> "7.3 KB": binary units, like a file browser shows. */
+export function formatBytes(n) {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(n < 10 * 1024 ? 1 : 0)} KB`;
+    return `${(n / 1024 / 1024).toFixed(1)} MB`;
+}
+
+const jsonInScript = (v) => JSON.stringify(v)
+    .replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+
+// Shared by both pages: error reporting and host-variable plumbing.
+const COMMON_JS = `
+  var errorBox = document.getElementById("rc-error");
+  function fail(e) {
+    errorBox.textContent = "This document could not be played: " + (e && e.message ? e.message : e);
+    errorBox.hidden = false;
+    if (window.console) console.error(e);
+  }
+  window.addEventListener("error", function (ev) { fail(ev.error || ev.message); });
+
+  // "#RRGGBB" / "#AARRGGBB" -> the signed ARGB int the engine stores colours as.
+  function parseColor(s) {
+    var m = /^#?([0-9a-f]{6}|[0-9a-f]{8})$/i.exec(String(s).trim());
+    if (!m) return null;
+    var v = parseInt(m[1], 16);
+    if (m[1].length === 6) v = 0xff000000 + v;
+    return v | 0;
+  }
+
+  function setVariable(ctx, name, type, value) {
+    if (type === "float") { var f = Number(value); if (isFinite(f)) ctx.setNamedFloatOverride(name, f); }
+    else if (type === "int") { var n = Number(value); if (isFinite(n)) ctx.setNamedIntegerOverride(name, Math.trunc(n)); }
+    else if (type === "color") { var c = parseColor(value); if (c !== null) ctx.setNamedColorOverride(name, c); }
+    else if (type === "string") ctx.setNamedStringOverride(name, String(value));
+    else if (type === "float_array" && ctx.setNamedFloatArrayOverride) {
+      // "1, 2, 3", "[1,2,3]" or "1 2 3": every number in the text, in order.
+      var xs = String(value).split(/[\s,;\[\]]+/).filter(function (t) { return t !== ""; }).map(Number);
+      if (xs.length && xs.every(isFinite)) ctx.setNamedFloatArrayOverride(name, xs);
+    }
+  }
+`;
+
+// The page side of an app script (C.app, lib/app-script.mjs): the script runs in a sandboxed
+// iframe (allow-scripts only: an opaque origin, no cookies, no access to this page) and asks
+// for things by postMessage; this side answers through the player's RC.createHostApi, which
+// only reaches the document's named variables. ?app=off in the URL leaves it out.
+const APP_BRIDGE_JS = `
+  var APP_RUNTIME = ${JSON.stringify(APP_RUNTIME).replace(/<\/(script)/gi, "<\\/$1")};
+  function appOff() { return new URLSearchParams(location.search).get("app") === "off"; }
+  // The script: the document's own (C.app.embedded: the ${APP_VAR} string it carries, read once,
+  // when it has loaded), or one given beside it (C.app.js, the catalog's app.ts).
+  function wrapScript(js) {
+    return ("self.__rcMain = async function () {\\n" + js + "\\n};").replace(/<\\/(script)/gi, "<\\\\/$1").replace(/<!-{2}/g, "<\\\\!--");
+  }
+  function startApp(handle, hooks) {
+    if (!C.app || !(C.app.js || C.app.embedded) || appOff() || !window.RC || !RC.createHostApi) return null;
+    hooks = hooks || {};
+    var api = RC.createHostApi(handle.player);
+    var frame = document.createElement("iframe");
+    frame.setAttribute("sandbox", "allow-scripts");
+    frame.setAttribute("aria-hidden", "true");
+    frame.tabIndex = -1;
+    frame.title = "App script";
+    frame.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden";
+    var KEY = "rc-app:" + (C.app.key || C.title || "");
+    var store = {};
+    try { store = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+    var log = function (level, text) { if (hooks.log) hooks.log(level, text); else (console[level] || console.log)("App script: " + text); };
+    function post(m) { m.rcHost = 1; try { frame.contentWindow.postMessage(m, "*"); } catch (e) {} }
+    function values() { var v = api.variables(), out = {}; for (var k in v) out[k] = api.get(k); return out; }
+    function whenLoaded(fn, tries) {
+      if (handle.player.getDocument() || (tries || 0) > 100) fn();
+      else setTimeout(function () { whenLoaded(fn, (tries || 0) + 1); }, 50);
+    }
+    window.addEventListener("message", function (ev) {
+      if (ev.source !== frame.contentWindow) return;
+      var m = ev.data;
+      if (!m || m.rcApp !== 1) return;
+      if (m.op === "hello") whenLoaded(function () { post({ op: "init", variables: api.variables(), values: values(), storage: store }); });
+      else if (m.op === "set") {
+        if (api.set(m.name, m.value)) { if (hooks.set) hooks.set(m.name, m.value); }
+        else log("warn", 'rc.set("' + m.name + '", ' + JSON.stringify(m.value) + "): not a value this variable takes");
+      }
+      else if (m.op === "store") {
+        if (m.remove) delete store[m.key]; else store[m.key] = m.value;
+        try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+      }
+      else if (m.op === "log") log(m.level === "warn" || m.level === "error" ? m.level : "log", String(m.text));
+      else if (m.op === "error") { if (hooks.error) hooks.error(m.message, m.stack); else console.error("App script: " + m.message); }
+      else if (m.op === "started" && hooks.started) hooks.started();
+    });
+    api.onAction("*", function (value, name) {
+      if (value && typeof value === "object" && typeof value.length === "number" && typeof value !== "string") value = Array.prototype.slice.call(value);
+      post({ op: "action", name: name, value: value });
+    });
+    api.onChange("*", function (value, name) { post({ op: "change", name: name, value: value }); });
+    function launch(js) {
+      frame.srcdoc = "<!doctype html><meta charset=utf-8><script>" + APP_RUNTIME + "<\\/script><script>" + js + "<\\/script>";
+      document.body.appendChild(frame);
+    }
+    if (C.app.js) launch(C.app.js);
+    else whenLoaded(function () {
+      var js = api.get(${JSON.stringify(APP_VAR)});
+      if (typeof js === "string" && js.trim()) launch(wrapScript(js));
+      else log("warn", "the document carries no app script (${APP_VAR})");
+    });
+    return { api: api, stop: function () { api.dispose(); frame.remove(); } };
+  }
+`;
+
+/**
+ * config: {
+ *   title, layout: "fill" | "fixed", width, height (CSS px; fixed, or the playground's
+ *   starting size), start: "fill" | "size" | "auto" (playground: begin filling the stage,
+ *   at width x height, or at the document's size if it fits and filling otherwise),
+ *   background (CSS colour), theme ("light" | "dark" | "auto"), density (number | "device"),
+ *   variables: [{name, type, value}]   applied when the document loads,
+ *   declared:  {name: type}            the document's settable host variables, for URL overrides,
+ *   urlVariables: bool                 whether ?name=value in the URL overrides them,
+ *   controls: bool                     the playground instead of the bare player,
+ *   info: [{name, type, value}]        every declared variable with its document default
+ *                                      (playground only; includes ones the page cannot set),
+ *   document: {width, height}          the size the document declares (playground only),
+ *   rcBytes, fileName                  the .rc's size and download name (playground only),
+ *   variants: [{name, label, href}]    playground only, optional: other documents of the same
+ *                                      example (a componentTheme expanded on its own, e.g.
+ *                                      mono and mono-light), shown as extra segments of the
+ *                                      look control next to Auto / Light / Dark; href is
+ *                                      the page that plays it (relative)
+ *   mono: {variable, palettes}         playground only, optional: the document switches to mono-dark / mono-light at
+ *                                      run time (componentTheme "auto": an exported float the host
+ *                                      sets to 1, and the named colours overridden with a palette,
+ *                                      {mono: {name: "#AARRGGBB"}, "mono-light": {...}}); Mono
+ *                                      and Mono light then join the look control and act in
+ *                                      place. Defaults to the library's palettes when the document
+ *                                      declares the float (MONO_VAR); a variant of the same name
+ *                                      is then not offered
+ *   looks: {mono, "mono-light"}     playground only, optional: the same JSON expanded for that look
+ *                                      (base64 .rc each: the components' other implementation, the
+ *                                      call sites unchanged); Mono and Mono light join the look
+ *                                      control and swap the document in place. Wins over `mono`
+ *   variant, mainHref                  this page plays that variant (its segment is pressed);
+ *                                      mainHref is the page of the main document, which
+ *                                      Auto / Light / Dark go back to
+ *   json: [{label, url | text, file}]  playground only, optional: a JSON button each, opening a
+ *                                      viewer (syntax-highlighted, copy, download) on the
+ *                                      document fetched from url, or on the text given
+ *   app: {js, ts, key}                 optional: an app script (lib/app-script.mjs compileAppScript's
+ *                                      js, and its TypeScript to show), run sandboxed next to the
+ *                                      document; key names its storage in the viewer's browser.
+ *                                      The playground adds a Script button and an App panel
+ * }
+ */
+/**
+ * The player script: inline (a page that stands alone, e.g. a download), or by URL ({src}: a
+ * published page, so the ~480 KB bundle is fetched once per browser and cached, not resent
+ * inside every page).
+ */
+function bundleTag(bundle) {
+    return typeof bundle === "object" && bundle?.src
+        ? `<script src="${bundle.src.replace(/"/g, "%22")}"></script>`
+        : `<script>\n${scriptSafe(bundle)}\n</script>`;
+}
+
+export function buildPage({ bundle, rcBase64, config }) {
+    if (config.app?.js || config.app?.embedded) {
+        const app = config.app.embedded ? { embedded: true, key: config.app.key ?? "" } : { js: appScriptTag(config.app.js), key: config.app.key ?? "" };
+        config = { ...config, app,
+            ...(config.controls && config.app.ts ? { json: [...(config.json ?? []), { label: "Script", text: config.app.ts, file: "app.ts", raw: true, title: "Show the app script: the TypeScript that runs next to the document" }] } : {}) };
+    }
+    if (config.controls && config.mono === undefined && (config.info ?? []).some((v) => v.name === MONO_VAR)) {
+        config = { ...config, mono: { variable: MONO_VAR, palettes: monoPalettes({}) } };
+    }
+    return config.controls ? playgroundPage(bundle, rcBase64, config) : barePage(bundle, rcBase64, config);
+}
+
+function barePage(bundle, rcBase64, config) {
+    const bg = config.background ?? (config.layout === "fill" ? "#000000" : "#f0f0f0");
+    return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="RemoteCompose deploy (mcp/deploy-server.mjs)">
+<title>${escapeHtml(config.title)}</title>
+<style>
+  html, body { margin: 0; height: 100%; background: ${escapeHtml(bg)}; }
+  body { display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #rc { position: relative; flex: none; touch-action: none; }
+  #rc canvas { display: block; }
+  #rc-error {
+    position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 12px 14px;
+    font: 13px/1.4 system-ui, sans-serif; color: #fff; background: #b3261e; border-radius: 8px;
+    white-space: pre-wrap;
+  }
+  #rc-error[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div id="rc" role="img" aria-label="${escapeHtml(config.title)}"></div>
+<div id="rc-error" hidden></div>
+${bundleTag(bundle)}
+<script>
+(function () {
+  var C = ${jsonInScript(config)};
+  var DATA = "${rcBase64}";
+  var host = document.getElementById("rc");
+${COMMON_JS}${config.app ? APP_BRIDGE_JS : ""}
+  function density() {
+    return C.density === "device" ? (window.devicePixelRatio || 1) : C.density;
+  }
+  // The box the document is shown in, in CSS pixels.
+  function box() {
+    return C.layout === "fill" ? [window.innerWidth, window.innerHeight] : [C.width, C.height];
+  }
+
+  function applyVariables() {
+    var ctx = handle.player.getRemoteContext();
+    if (!ctx) return;
+    (C.variables || []).forEach(function (v) { setVariable(ctx, v.name, v.type, v.value); });
+    if (C.urlVariables) {
+      var q = new URLSearchParams(window.location.search);
+      Object.keys(C.declared || {}).forEach(function (name) {
+        if (q.has(name)) setVariable(ctx, name, C.declared[name], q.get(name));
+      });
+    }
+  }
+
+  // The player lays the document out in physical pixels (the canvas size) at the given
+  // density, and shows the canvas at size / density CSS pixels: so CSS box x density.
+  function fit() {
+    var b = box(), d = density();
+    host.style.width = b[0] + "px";
+    host.style.height = b[1] + "px";
+    handle.resize(Math.max(1, Math.round(b[0] * d)), Math.max(1, Math.round(b[1] * d)));
+  }
+
+  var handle;
+  try {
+    handle = RC.createPlayer(host, {
+      theme: C.theme,
+      onLoad: function () { try { applyVariables(); } catch (e) { fail(e); } }
+    });
+    handle.player.setDensity(density());
+    fit();   // before loading: the load lays the document out at the canvas size
+    handle.loadFromBase64(DATA).catch(fail);
+    if (C.app) startApp(handle);
+  } catch (e) {
+    fail(e);
+    return;
+  }
+  if (C.layout === "fill") {
+    var pending = 0;
+    window.addEventListener("resize", function () {
+      cancelAnimationFrame(pending);
+      pending = requestAnimationFrame(fit);
+    });
+  }
+})();
+</script>
+</body>
+</html>
+`;
+}
+
+// ── The playground ───────────────────────────────────────────────────
+
+const PLAYGROUND_CSS = `
+  :root {
+    color-scheme: light dark;
+    --bg: #f3f3f5; --panel: #ffffff; --line: #dcdce2; --text: #1d1d22; --muted: #6b6b76;
+    --accent: #3a63e0; --field: #ffffff; --chip: #ececf1;
+    --check-a: #e6e6ea; --check-b: #f6f6f8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17171b; --panel: #202026; --line: #34343c; --text: #ececf0; --muted: #9a9aa6;
+      --accent: #7c9cff; --field: #15151a; --chip: #2c2c34;
+      --check-a: #222228; --check-b: #1b1b20;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "bar bar" "stage panel";
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  #bar {
+    grid-area: bar; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+    padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line);
+  }
+  #bar h1 { font-size: 14px; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 28ch; }
+  .group { display: flex; align-items: center; gap: 4px; }
+  .group > .lbl { color: var(--muted); margin-right: 2px; }
+  .sep { width: 1px; align-self: stretch; background: var(--line); }
+  .home { display: inline-flex; align-items: center; gap: 6px; color: var(--text); text-decoration: none; font-weight: 700; white-space: nowrap; }
+  .home svg { width: 18px; height: 18px; flex: none; }
+  .num { width: 62px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); }
+  select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); }
+  .btn {
+    padding: 4px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.icon { min-width: 30px; padding: 4px 7px; text-align: center; }
+  .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .spacer { flex: 1; }
+  .rc-size {
+    font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap;
+    padding: 3px 8px; border-radius: 999px; background: var(--chip); border: 1px solid var(--line);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  a.btn { color: var(--text); text-decoration: none; display: inline-flex; align-items: center; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  #stage {
+    grid-area: stage; overflow: auto; position: relative;
+    background-color: var(--check-b);
+    background-image: linear-gradient(45deg, var(--check-a) 25%, transparent 25%, transparent 75%, var(--check-a) 75%),
+                      linear-gradient(45deg, var(--check-a) 25%, transparent 25%, transparent 75%, var(--check-a) 75%);
+    background-size: 20px 20px; background-position: 0 0, 10px 10px;
+  }
+  #stage.custom-bg { background-image: none; }
+  #wrap { display: flex; min-width: 100%; min-height: 100%; width: max-content; padding: 28px 36px 44px; }
+  /* Fullscreen (?fullscreen=true): only the document, filling the window. */
+  body.fs { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); grid-template-areas: "stage"; }
+  body.fs #bar, body.fs #panel { display: none; }
+  body.fs #wrap { padding: 0; }
+  body.fs #frame { box-shadow: none; }
+  body.fs .handle, body.fs #size-tag { display: none; }
+  #fs-exit { position: fixed; top: 10px; right: 10px; z-index: 50; display: none; padding: 6px 10px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--text); opacity: .35; cursor: pointer; font: inherit; }
+  #fs-exit:hover, #fs-exit:focus { opacity: 1; }
+  body.fs #fs-exit { display: block; }
+  #frame { position: relative; margin: 0 auto; align-self: flex-start; box-shadow: 0 0 0 1px var(--line), 0 6px 24px rgba(0,0,0,.18); }
+  #frame.center { align-self: center; }
+  #rc { position: relative; touch-action: none; overflow: hidden; }
+  #rc canvas { display: block; }
+  .chk { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); white-space: nowrap; cursor: pointer; user-select: none; }
+  .chk input { margin: 0; }
+  .handle { position: absolute; z-index: 2; touch-action: none; }
+  .handle::after { content: ""; position: absolute; background: var(--muted); border-radius: 2px; opacity: .55; }
+  .handle:hover::after, .handle.active::after { background: var(--accent); opacity: 1; }
+  #h-r { top: 0; right: -14px; width: 14px; height: 100%; cursor: ew-resize; }
+  #h-r::after { left: 5px; top: 50%; width: 4px; height: 36px; margin-top: -18px; }
+  #h-b { left: 0; bottom: -14px; height: 14px; width: 100%; cursor: ns-resize; }
+  #h-b::after { top: 5px; left: 50%; height: 4px; width: 36px; margin-left: -18px; }
+  #h-c { right: -16px; bottom: -16px; width: 18px; height: 18px; cursor: nwse-resize; }
+  #h-c::after { right: 4px; bottom: 4px; width: 10px; height: 10px; border-radius: 0 0 4px 0;
+    background: none; border-right: 3px solid var(--muted); border-bottom: 3px solid var(--muted); }
+  #h-c:hover::after, #h-c.active::after { background: none; border-color: var(--accent); }
+  #size-tag {
+    position: absolute; left: 0; top: 100%; margin-top: 18px; color: var(--muted); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  #panel {
+    grid-area: panel; width: 320px; overflow: auto; background: var(--panel); border-left: 1px solid var(--line);
+    padding: 12px 14px 24px;
+  }
+  #panel[hidden] { display: none; }
+  #panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 8px; display: flex; align-items: center; }
+  #panel h2:first-child { margin-top: 2px; }
+  #panel h2 .btn { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: 12px; padding: 2px 8px; color: var(--text); }
+  #vars { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  #actions { list-style: none; margin: 0; padding: 0; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; max-height: 220px; overflow: auto; }
+  #actions li { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+  #actions li.none { font-family: inherit; color: var(--muted); border: 0; }
+  #actions .t { color: var(--muted); flex: none; }
+  #actions .n { font-weight: 600; flex: none; }
+  #actions .v { color: var(--muted); overflow-wrap: anywhere; }
+  #actions li.fresh { animation: fresh 1.2s ease-out; }
+  .app-state { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+  #app-log { list-style: none; margin: 0 0 8px; padding: 0; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; max-height: 200px; overflow: auto; }
+  #app-log li { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--line); }
+  #app-log li .t { color: var(--muted); flex: none; }
+  #app-log li .x { white-space: pre-wrap; overflow-wrap: anywhere; }
+  #app-log li.warn .x { color: #b26b00; }
+  #app-log li.error .x { color: #d0453a; }
+  #app-log li.fresh { animation: fresh 1.2s ease-out; }
+  @keyframes fresh { from { background: color-mix(in srgb, #4da3ff 30%, transparent); } to { background: transparent; } }
+  .empty { color: var(--muted); margin: 0; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  #rc-error {
+    position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 12px 14px; z-index: 10;
+    color: #fff; background: #b3261e; border-radius: 8px; white-space: pre-wrap;
+  }
+  #rc-error[hidden] { display: none; }
+  #toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); padding: 6px 12px; border-radius: 6px;
+    background: var(--text); color: var(--bg); opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 11;
+  }
+  #toast.show { opacity: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--chip); }
+  .seg button { border: 0; padding: 5px 12px; background: none; cursor: pointer; font-weight: 500; white-space: nowrap; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button:hover { background: var(--field); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .seg button.variant { font-style: normal; }
+  .seg .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; border: 1px solid currentColor; }
+  #json-dlg {
+    width: min(980px, calc(100vw - 32px)); height: min(84vh, 960px); padding: 0; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--panel); color: var(--text); box-shadow: 0 12px 48px rgba(0,0,0,.35);
+  }
+  #json-dlg[open] { display: flex; flex-direction: column; }
+  #json-dlg::backdrop { background: rgba(0,0,0,.45); }
+  #json-dlg header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  #json-dlg header .meta { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  #json-pre {
+    flex: 1; margin: 0; overflow: auto; padding: 12px 14px; background: var(--field); tab-size: 2;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre;
+  }
+  :root { --j-k: #0b5cad; --j-s: #1a7f37; --j-n: #b35900; --j-l: #8f3fb8; }
+  @media (prefers-color-scheme: dark) { :root { --j-k: #79b8ff; --j-s: #85e89d; --j-n: #ffab70; --j-l: #d2a8ff; } }
+  .j-k { color: var(--j-k); } .j-s { color: var(--j-s); } .j-n { color: var(--j-n); } .j-l { color: var(--j-l); font-weight: 600; }
+  @media (max-width: 760px) {
+    body { grid-template-rows: auto minmax(55vh, 1fr) auto; grid-template-columns: minmax(0, 1fr);
+           grid-template-areas: "bar" "stage" "panel"; height: auto; min-height: 100%; }
+    #panel { width: auto; border-left: 0; border-top: 1px solid var(--line); }
+    #wrap { padding: 16px 28px 40px 16px; }
+  }
+`;
+
+// <rc-variable name type value default>: an editor for one host variable. Fires a bubbling
+// "rc-change" event {name, type, value} as it is edited; "reset" puts the default back.
+// Float/int: a slider and a number field (the slider's range grows to fit what is typed);
+// colour: a picker, an alpha slider and the #AARRGGBB text; string: a text field. Types the
+// web player cannot set (long, float array) are shown read-only.
+const VARIABLE_ELEMENT_JS = `
+  var VAR_CSS =
+    "*{box-sizing:border-box}" +
+    ":host{display:block;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--bg)}" +
+    ".top{display:flex;align-items:center;gap:6px;margin-bottom:6px}" +
+    ".name{font-weight:600;overflow-wrap:anywhere}" +
+    ".type{font-size:11px;color:var(--muted);background:var(--chip);border-radius:4px;padding:0 5px}" +
+    ".reset{margin-left:auto;border:0;background:none;color:var(--accent);cursor:pointer;font:inherit;font-size:12px;padding:0}" +
+    ".reset[disabled]{color:var(--muted);opacity:.5;cursor:default}" +
+    ".row{display:flex;align-items:center;gap:8px}" +
+    "input,textarea{font:inherit;color:inherit}" +
+    "input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}" +
+    "input[type=number],input[type=text],textarea{border:1px solid var(--line);border-radius:6px;background:var(--field);padding:4px 6px}" +
+    "input[type=number]{width:84px}" +
+    "input[type=text],textarea{flex:1;min-width:0;width:100%}" +
+    "textarea{resize:vertical;min-height:52px}" +
+    "input[type=color]{width:36px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}" +
+    ".hex{font-family:ui-monospace,Menlo,monospace;width:100px!important;flex:none!important}" +
+    ".alpha{display:flex;align-items:center;gap:6px;flex:1;min-width:0;color:var(--muted);font-size:11px}" +
+    ".bounds{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:2px;font-variant-numeric:tabular-nums}" +
+    ".ro{color:var(--muted);font-family:ui-monospace,Menlo,monospace;overflow-wrap:anywhere}" +
+    ".bad{border-color:#d93025!important}" +
+    ".meaning{color:var(--muted);font-size:11px;margin:-2px 0 6px}";
+
+  function niceRange(v, isInt) {
+    if (!isInt && v >= 0 && v <= 1) return [0, 1];
+    var m = Math.max(Math.abs(v) * 2, isInt ? 10 : 1);
+    var p = Math.pow(10, Math.floor(Math.log10(m)));
+    m = Math.ceil(m / p) * p;
+    return v < 0 ? [-m, m] : [0, m];
+  }
+  function fmt(v, isInt) {
+    return isInt ? String(Math.trunc(v)) : String(Math.round(v * 1e4) / 1e4);
+  }
+  function hex2(n) { return (n < 16 ? "0" : "") + n.toString(16).toUpperCase(); }
+  function normColor(s) {
+    var m = /^#?([0-9a-f]{6}|[0-9a-f]{8})$/i.exec(String(s).trim());
+    if (!m) return null;
+    return "#" + (m[1].length === 6 ? "FF" + m[1] : m[1]).toUpperCase();
+  }
+
+  class RcVariable extends HTMLElement {
+    connectedCallback() {
+      if (this._root) return;
+      this._root = this.attachShadow({ mode: "open" });
+      this._type = this.getAttribute("type");
+      this._name = this.getAttribute("name");
+      this._default = this.getAttribute("default");
+      var style = document.createElement("style");
+      style.textContent = VAR_CSS;
+      this._root.appendChild(style);
+      var top = el("div", "top");
+      top.appendChild(el("span", "name", this._name));
+      top.appendChild(el("span", "type", this._type));
+      if (this.hasAttribute("meaning")) this.title = this.getAttribute("meaning");
+      this._reset = el("button", "reset", "reset");
+      this._reset.title = "Back to " + this._default;
+      this._reset.onclick = () => { this.value = this._default; this._emit(); };
+      this._root.appendChild(top);
+      if (this.hasAttribute("meaning")) this._root.appendChild(el("div", "meaning", this.getAttribute("meaning")));
+      var body = el("div");
+      this._root.appendChild(body);
+      if (this.hasAttribute("readonly")) {
+        body.appendChild(el("div", "ro", this.getAttribute("value")));
+        body.appendChild(el("div", "bounds", "the web player cannot set " + this._type + " variables"));
+        return;
+      }
+      top.appendChild(this._reset);
+      var build = { float: this._number, int: this._number, color: this._color, string: this._string, float_array: this._string }[this._type];
+      build.call(this, body);
+      this.value = this.getAttribute("value");
+    }
+
+    get value() { return this._value; }
+    set value(v) { this._value = String(v); this._show(); this._reset.disabled = this._value === String(this._default); }
+
+    _emit() {
+      this._reset.disabled = this._value === String(this._default);
+      this.dispatchEvent(new CustomEvent("rc-change", { bubbles: true, composed: true,
+        detail: { name: this._name, type: this._type, value: this._value } }));
+    }
+
+    _number(body) {
+      var isInt = this._type === "int";
+      var row = el("div", "row");
+      var range = el("input"); range.type = "range";
+      var num = el("input"); num.type = "number"; num.step = isInt ? "1" : "any";
+      row.appendChild(range); row.appendChild(num);
+      var bounds = el("div", "bounds"), lo = el("span"), hi = el("span");
+      bounds.appendChild(lo); bounds.appendChild(hi);
+      body.appendChild(row); body.appendChild(bounds);
+      var self = this;
+      var r = niceRange(Number(this.getAttribute("default")) || 0, isInt);
+      // A declared range (the document's metadata) fixes the slider and clamps what is typed.
+      var fixed = this.hasAttribute("min") && this.hasAttribute("max");
+      if (fixed) r = [Number(this.getAttribute("min")), Number(this.getAttribute("max"))];
+      var declaredStep = this.hasAttribute("step") ? Number(this.getAttribute("step")) : null;
+      function clampV(v) { return fixed ? Math.min(r[1], Math.max(r[0], v)) : v; }
+      function setRange(a, b) {
+        r = [a, b];
+        range.min = a; range.max = b;
+        range.step = declaredStep || (isInt ? 1 : (b - a) / 500);
+        lo.textContent = fmt(a, isInt); hi.textContent = fmt(b, isInt);
+      }
+      function widen(v) {   // grow the slider to include v, keeping round bounds
+        if (fixed || (v >= r[0] && v <= r[1])) return;
+        var n = niceRange(v, isInt);
+        setRange(Math.min(r[0], n[0]), Math.max(r[1], n[1]));
+      }
+      setRange(r[0], r[1]);
+      this._show = function () {
+        var v = Number(self._value);
+        if (!isFinite(v)) return;
+        widen(v);
+        range.value = v;
+        if (self._root.activeElement !== num) num.value = fmt(v, isInt);
+      };
+      range.oninput = function () {
+        self._value = fmt(Number(range.value), isInt);
+        num.value = self._value;
+        self._emit();
+      };
+      num.oninput = function () {
+        var v = Number(num.value);
+        var ok = num.value.trim() !== "" && isFinite(v);
+        num.classList.toggle("bad", !ok);
+        if (!ok) return;
+        if (isInt) v = Math.trunc(v);
+        v = clampV(v);
+        self._value = String(v);
+        widen(v); range.value = v;
+        self._emit();
+      };
+      num.onblur = function () { num.classList.remove("bad"); num.value = fmt(Number(self._value), isInt); };
+    }
+
+    _color(body) {
+      var row = el("div", "row");
+      var pick = el("input"); pick.type = "color";
+      var hex = el("input", "hex"); hex.type = "text"; hex.spellcheck = false;
+      var alphaBox = el("label", "alpha", "α");
+      var alpha = el("input"); alpha.type = "range"; alpha.min = 0; alpha.max = 255; alpha.step = 1;
+      alphaBox.appendChild(alpha);
+      row.appendChild(pick); row.appendChild(hex); row.appendChild(alphaBox);
+      body.appendChild(row);
+      var self = this;
+      this._show = function () {
+        var c = normColor(self._value);
+        if (!c) return;
+        pick.value = "#" + c.slice(3).toLowerCase();
+        alpha.value = parseInt(c.slice(1, 3), 16);
+        if (self._root.activeElement !== hex) hex.value = c;
+      };
+      function fromParts() {
+        self._value = "#" + hex2(Number(alpha.value)) + pick.value.slice(1).toUpperCase();
+        hex.value = self._value;
+        hex.classList.remove("bad");
+        self._emit();
+      }
+      pick.oninput = fromParts;
+      alpha.oninput = fromParts;
+      hex.oninput = function () {
+        var c = normColor(hex.value);
+        hex.classList.toggle("bad", !c);
+        if (!c) return;
+        self._value = c;
+        pick.value = "#" + c.slice(3).toLowerCase();
+        alpha.value = parseInt(c.slice(1, 3), 16);
+        self._emit();
+      };
+      hex.onblur = function () { hex.classList.remove("bad"); hex.value = self._value; };
+    }
+
+    _string(body) {
+      var v = this.getAttribute("value") || "";
+      var multi = v.indexOf("\\n") >= 0 || v.length > 40;
+      var input = el(multi ? "textarea" : "input");
+      if (!multi) input.type = "text";
+      body.appendChild(input);
+      var self = this;
+      this._show = function () { if (input.value !== self._value) input.value = self._value; };
+      input.oninput = function () { self._value = input.value; self._emit(); };
+    }
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  if (!customElements.get("rc-variable")) customElements.define("rc-variable", RcVariable);
+`;
+
+function playgroundPage(bundle, rcBase64, config) {
+    const t = escapeHtml(config.title);
+    const fileName = config.fileName ?? "document.rc";
+    const sizeTitle = `${(config.rcBytes ?? 0).toLocaleString("en-US")} bytes`;
+    const bgStyle = config.background ? ` style="background-color:${escapeHtml(config.background)}"` : "";
+    return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="RemoteCompose deploy (mcp/deploy-server.mjs)">
+<title>${t}</title>
+<style>${PLAYGROUND_CSS}</style>
+</head>
+<body>
+<header id="bar">
+  ${config.home ? `<a class="home" href="${escapeHtml(config.home.href ?? "/")}" title="${escapeHtml(config.home.title ?? "Home")}">${config.home.logo ?? ""}<span>${escapeHtml(config.home.label ?? "Home")}</span></a><span class="sep"></span>` : ""}
+  <h1 title="${t}">${t}</h1>
+  <div id="modes" class="seg" role="group" aria-label="Look: theme, or a monochrome version of the document"></div>
+  <div class="group">
+    <span class="rc-size" title="${escapeHtml(sizeTitle)}">${escapeHtml(formatBytes(config.rcBytes ?? 0))} .rc</span>
+    <button id="download" class="btn primary" title="Download the document as ${escapeHtml(fileName)} (${escapeHtml(sizeTitle)})">Download</button>
+    ${config.inspectHref ? `<a class="btn" href="${escapeHtml(config.inspectHref)}" target="_blank" rel="noopener" title="Open this document in the RemoteCompose inspector: its operations, layout, variables and bytes">Inspect</a>` : ""}
+  </div>
+  <div class="group" title="Size of the box the document is laid out in, in CSS pixels">
+    <span class="lbl">Size</span>
+    <input id="w" class="num" type="number" min="16" max="4096" step="1" aria-label="Width">
+    <span>×</span>
+    <input id="h" class="num" type="number" min="16" max="4096" step="1" aria-label="Height">
+    <button id="swap" class="btn" title="Swap width and height">⇄</button>
+    <select id="preset" aria-label="Size preset"></select>
+    <button id="fit" class="btn" aria-pressed="false" title="Follow the window: the document fills the area and re-lays out as it changes">Fill</button>
+    <label class="chk" title="Animate the layout while the size changes (components ease to their new bounds). Off: each size is laid out at once, as the inspector does: much faster on big documents"><input id="anim-resize" type="checkbox"> Animate</label>
+  </div>
+  <span class="sep"></span>
+  <div class="group">
+    <span class="lbl">Density</span>
+    <select id="density" aria-label="Density"></select>
+  </div>
+  <span class="sep"></span>
+  <div class="group">
+    <button id="play" class="btn icon" title="Pause animation" aria-label="Pause">❚❚</button>
+    <button id="restart" class="btn icon" title="Restart: reload the document, so animations start over and touch state is reset" aria-label="Restart">↻</button>
+  </div>
+  <span class="spacer"></span>
+  <div id="json-btns" class="group"></div>
+  <div class="group">
+    <button id="copy" class="btn" title="Copy a link to exactly this: size, density, theme and variable values">Copy link</button>
+    <button id="toggle" class="btn" aria-pressed="true" title="Show or hide the side panel">Panel</button>
+    <button id="window" class="btn" title="Only the document, filling the browser window (adds ?fullscreen=true to the link; Esc to leave)">Window</button>
+    <button id="fullscreen" class="btn" title="Real fullscreen: only the document, filling the screen (Esc to leave)">Fullscreen</button>
+  </div>
+</header>
+<button id="fs-exit" type="button" title="Back to the playground (Esc)">Exit</button>
+<main id="stage"${bgStyle}${config.background ? ' class="custom-bg"' : ""}>
+  <div id="wrap">
+    <div id="frame">
+      <div id="rc" role="img" aria-label="${t}"></div>
+      <div id="h-r" class="handle" title="Drag to resize"></div>
+      <div id="h-b" class="handle" title="Drag to resize"></div>
+      <div id="h-c" class="handle" title="Drag to resize"></div>
+      <div id="size-tag"></div>
+    </div>
+  </div>
+</main>
+<aside id="panel">
+  <h2>Host variables <button id="reset-all" class="btn" hidden>Reset all</button></h2>
+  <div id="vars"></div>
+  <h2>Host actions <button id="actions-clear" class="btn" hidden>Clear</button></h2>
+  <ol id="actions"><li class="none">None yet: actions the document sends the app (a tap on a hostNamedAction) show here, newest first, with their value.</li></ol>
+${config.app ? `  <h2>App <button id="app-toggle" class="btn" type="button"></button></h2>
+  <p id="app-state" class="app-state"></p>
+  <ol id="app-log"></ol>
+` : ""}  <h2>Document</h2>
+  <dl id="info"></dl>
+</aside>
+<div id="rc-error" hidden></div>
+<div id="toast"></div>
+<dialog id="json-dlg" aria-label="JSON">
+  <header>
+    <div id="json-tabs" class="seg" role="tablist"></div>
+    <span id="json-meta" class="meta"></span>
+    <span class="spacer"></span>
+    <button id="json-copy" class="btn" type="button">Copy</button>
+    <button id="json-dl" class="btn" type="button">Download</button>
+    <button id="json-close" class="btn" type="button" aria-label="Close">Close</button>
+  </header>
+  <pre id="json-pre" tabindex="0"></pre>
+</dialog>
+${bundleTag(bundle)}
+<script>
+(function () {
+  var C = ${jsonInScript(config)};
+  var DATA = "${rcBase64}";
+  var $ = function (id) { return document.getElementById(id); };
+  var host = $("rc"), stage = $("stage"), frame = $("frame");
+${COMMON_JS}${config.app ? APP_BRIDGE_JS : ""}
+${VARIABLE_ELEMENT_JS}
+  var MIN = 16, MAX = 4096;
+  var clampSize = function (v) { return Math.max(MIN, Math.min(MAX, Math.round(v))); };
+  var DOC = C.document || {};
+  var PRESETS = [
+    ["Watch", 192, 192], ["Small phone", 320, 568], ["Phone", 360, 780], ["Large phone", 412, 915],
+    ["Tablet", 800, 1280], ["Laptop", 1280, 800], ["Desktop", 1920, 1080],
+    ["Widget 2×2", 180, 180], ["Widget 4×2", 360, 180], ["Widget 4×1", 360, 90]
+  ];
+  if (DOC.width > 0 && DOC.height > 0) PRESETS.unshift(["Document", DOC.width, DOC.height]);
+
+  // ── State, and its reflection in the URL: ?var=value for variables (as the bare page
+  // reads them), #w=&h=&d=&t=&fill= for the view. ──
+  var hash = new URLSearchParams(location.hash.slice(1));
+  var query = new URLSearchParams(location.search);
+  var S = {
+    w: C.width, h: C.height, fill: false,
+    density: C.density, theme: C.theme,
+    values: {}, defaults: {}, docValues: {}, playing: true
+  };
+  (C.info || []).forEach(function (v) {
+    if (C.declared[v.name]) S.defaults[v.name] = S.docValues[v.name] = String(v.value);
+  });
+  (C.variables || []).forEach(function (v) { S.defaults[v.name] = String(v.value); });
+  Object.keys(S.defaults).forEach(function (n) {
+    S.values[n] = C.urlVariables && query.has(n) ? query.get(n) : S.defaults[n];
+  });
+  if (hash.has("w") && hash.has("h")) { S.w = clampSize(+hash.get("w") || S.w); S.h = clampSize(+hash.get("h") || S.h); }
+  else if (hash.get("fill") === "1") S.fill = true;
+  else if (C.start === "fill") S.fill = true;
+  else if (C.start === "auto") S.fill = null;   // decided once the stage can be measured
+  if (hash.has("d")) S.density = hash.get("d") === "device" ? "device" : (+hash.get("d") > 0 ? +hash.get("d") : S.density);
+  if (/^(auto|light|dark)$/.test(hash.get("t") || "")) S.theme = hash.get("t");
+  // Mono at run time (C.mono): the document's float set to 1 and its named colours overridden
+  // with a palette, after every load. Leaving it reloads the document (overrides cannot be undone).
+  var ALT = C.looks && !C.variant ? C.looks : null;   // the JSON expanded per look (wins over C.mono)
+  var MONO = ALT ? { variable: "", palettes: {} } : C.mono && !C.variant ? C.mono : null;
+  var MAIN = DATA;
+  var T0 = ({ mono: "mono-dark", "mono-inverted": "mono-light" })[hash.get("t")] || hash.get("t") || "";   // the looks' old names
+  S.mono = MONO && /^(mono-dark|mono-light)$/.test(T0) ? T0 : "";
+  // The look control: Auto / Light / Dark switch the player theme of this document; a variant
+  // (mono-dark, mono-light) is a document of its own, on its own page. #t= names either, so a
+  // link to a variant's look through the main page (or the reverse) goes to the right page.
+  var VARIANTS = (C.variants || []).filter(function (v) { return !(ALT && ALT[v.name]) && !(MONO && MONO.palettes && MONO.palettes[v.name]); });
+  if (ALT && S.mono && ALT[S.mono]) DATA = ALT[S.mono];
+  function variantOf(name) { for (var i = 0; i < VARIANTS.length; i++) if (VARIANTS[i].name === name) return VARIANTS[i]; return null; }
+  var wantT = hash.get("t") || "";
+  if (!C.variant && variantOf(wantT)) { location.replace(variantOf(wantT).href + location.search + location.hash); return; }
+  if (C.variant && C.mainHref && /^(auto|light|dark)$/.test(wantT)) { location.replace(C.mainHref + location.search + location.hash); return; }
+  if (C.variant && wantT !== C.variant && variantOf(wantT)) { location.replace(variantOf(wantT).href + location.search + location.hash); return; }
+
+  var urlTimer = 0;
+  function syncUrl() {
+    clearTimeout(urlTimer);
+    urlTimer = setTimeout(function () {
+      try { history.replaceState(null, "", currentUrl()); } catch (e) { /* file:// in some browsers */ }
+    }, 150);
+  }
+  function currentUrl() {
+    var q = new URLSearchParams(location.search);
+    Object.keys(S.values).forEach(function (n) {
+      if (S.values[n] !== S.defaults[n]) q.set(n, S.values[n]); else q.delete(n);
+    });
+    if (S.full) q.set("fullscreen", "true"); else q.delete("fullscreen");
+    var h = new URLSearchParams();
+    if (S.fill) h.set("fill", "1"); else { h.set("w", S.w); h.set("h", S.h); }
+    h.set("d", S.density); h.set("t", C.variant || S.mono || S.theme);
+    var qs = q.toString();
+    return location.pathname + (qs ? "?" + qs : "") + "#" + h.toString();
+  }
+
+  // ── The player ──
+  function density() { return S.density === "device" ? (window.devicePixelRatio || 1) : S.density; }
+  function stageBox() {
+    var cs = getComputedStyle($("wrap"));
+    return [stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+            stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)];
+  }
+
+  var handle, fitFrame = 0, lastPw = 0, lastPh = 0, quietTimer = 0;
+  function fit() {
+    cancelAnimationFrame(fitFrame);
+    fitFrame = 0;
+    if (S.fill) { var b = stageBox(); S.w = clampSize(b[0]); S.h = clampSize(b[1]); }
+    var d = density();
+    host.style.width = S.w + "px";
+    host.style.height = S.h + "px";
+    frame.classList.toggle("center", S.h < stageBox()[1]);
+    var pw = Math.max(1, Math.round(S.w * d)), ph = Math.max(1, Math.round(S.h * d));
+    if (handle && (pw !== lastPw || ph !== lastPh)) {
+      if (lastPw) quietLayout();
+      lastPw = pw; lastPh = ph;
+    }
+    if (handle) handle.resize(pw, ph);
+    showSize();
+  }
+  // A size change lays out at once, without the layout's bounds animation (unless Animate is
+  // checked), as the inspector does while its stage is dragged: easing every component to its
+  // new bounds on each step of a drag is what made big documents crawl. Animations come back
+  // once the size has been still for a moment.
+  function quietLayout() {
+    var ctx = handle && handle.player.getRemoteContext && handle.player.getRemoteContext();
+    if (!ctx || !ctx.setAnimationEnabled || $("anim-resize").checked) return;
+    ctx.setAnimationEnabled(false);
+    clearTimeout(quietTimer);
+    quietTimer = setTimeout(function () { ctx.setAnimationEnabled(true); }, 300);
+  }
+  function fitSoon() { if (!fitFrame) fitFrame = requestAnimationFrame(fit); }
+
+  function applyVariables() {
+    var ctx = handle && handle.player.getRemoteContext();
+    if (!ctx) return;
+    // Only what differs from the document: a themed colour's reported value is one side of it
+    // (dark), and setting it would pin every look to that side.
+    Object.keys(S.values).forEach(function (n) {
+      if (S.values[n] !== S.docValues[n]) setVariable(ctx, n, C.declared[n], S.values[n]);
+    });
+    if (MONO && S.mono && !ALT) {
+      ctx.setNamedFloatOverride(MONO.variable, 1);
+      var pal = (MONO.palettes || {})[S.mono] || {};
+      Object.keys(pal).forEach(function (n) { setVariable(ctx, n, "color", pal[n]); });
+    }
+  }
+
+  function load() {
+    return handle.loadFromBase64(DATA).then(function () {
+      if (!S.playing) handle.player.pause();
+      fit();
+      showInfo();
+    }).catch(fail);
+  }
+
+  // ── Toolbar ──
+  var wIn = $("w"), hIn = $("h"), preset = $("preset"), fitBtn = $("fit"), dens = $("density");
+  PRESETS.forEach(function (p, i) {
+    var o = document.createElement("option");
+    o.value = i; o.textContent = p[0] + " · " + p[1] + "×" + p[2];
+    preset.appendChild(o);
+  });
+  var custom = document.createElement("option");
+  custom.value = ""; custom.textContent = "Custom"; custom.hidden = true;
+  preset.insertBefore(custom, preset.firstChild);
+  ["device", 1, 1.5, 2, 2.625, 3, 4].concat(typeof S.density === "number" ? [S.density] : [])
+    .filter(function (v, i, a) { return a.indexOf(v) === i; })
+    .forEach(function (v) {
+      var o = document.createElement("option");
+      o.value = v;
+      o.textContent = v === "device" ? "device (" + (window.devicePixelRatio || 1) + "×)" : v + "×";
+      dens.appendChild(o);
+    });
+
+  function showSize() {
+    if (document.activeElement !== wIn) wIn.value = S.w;
+    if (document.activeElement !== hIn) hIn.value = S.h;
+    var i = PRESETS.findIndex(function (p) { return p[1] === S.w && p[2] === S.h; });
+    preset.value = S.fill || i < 0 ? "" : String(i);
+    custom.textContent = S.fill ? "Window" : "Custom";
+    fitBtn.setAttribute("aria-pressed", String(S.fill));
+    var d = density();
+    $("size-tag").textContent = S.w + " × " + S.h + " px  ·  " + d + "×  =  " +
+      Math.round(S.w * d) + " × " + Math.round(S.h * d) + " device px";
+    syncUrl();
+  }
+  function setSize(w, h) { S.fill = false; S.w = clampSize(w); S.h = clampSize(h); fitSoon(); }
+
+  function onSizeInput() {
+    var w = +wIn.value, h = +hIn.value;
+    if (w >= MIN && h >= MIN) setSize(w, h);
+  }
+  wIn.addEventListener("input", onSizeInput);
+  hIn.addEventListener("input", onSizeInput);
+  wIn.addEventListener("blur", showSize);
+  hIn.addEventListener("blur", showSize);
+  $("swap").onclick = function () { setSize(S.h, S.w); };
+  preset.onchange = function () { var p = PRESETS[+preset.value]; if (p) setSize(p[1], p[2]); };
+  fitBtn.onclick = function () { S.fill = !S.fill; fit(); };
+  dens.onchange = function () {
+    S.density = dens.value === "device" ? "device" : +dens.value;
+    handle.player.setDensity(density());
+    fit();
+  };
+  // ── The look control ──
+  var LOOKS = [
+    ["auto", "Auto", "Follow the system's light or dark setting"],
+    ["light", "Light", "The light theme (themed colours take their light value)"],
+    ["dark", "Dark", "The dark theme (themed colours take their dark value)"]
+  ].concat(ALT ? [
+    ["mono-dark", "Mono dark", "Mono dark: light on black, for always-on displays and OLED. The same JSON, its components expanded for mono-dark"],
+    ["mono-light", "Mono light", "Mono light: dark on white, for e-ink and other reflective displays. The same JSON, its components expanded for mono-light"]
+  ] : MONO ? [
+    ["mono-dark", "Mono dark", "Mono dark: light on black, for always-on displays and OLED. The same document: " + MONO.variable + " set to 1 and its colours overridden with the mono-dark palette"],
+    ["mono-light", "Mono light", "Mono light: dark on white, for e-ink and other reflective displays. The same document: " + MONO.variable + " set to 1 and its colours overridden with the mono-light palette"]
+  ] : []).concat(VARIANTS.map(function (v) { return [v.name, v.label || v.name, v.title || ("The " + v.name + " version of the document")]; }));
+  var seg = $("modes");
+  LOOKS.forEach(function (l) {
+    var b = document.createElement("button");
+    b.type = "button"; b.dataset.look = l[0]; b.title = l[2];
+    if (l[0] === "mono-dark" || l[0] === "mono-light") {
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = l[0] === "mono-dark" ? "#000" : "#fff";
+      dot.style.borderColor = l[0] === "mono-dark" ? "#fff" : "#000";
+      dot.style.boxShadow = "0 0 0 1px " + (l[0] === "mono-dark" ? "#000" : "#fff");
+      b.appendChild(dot);
+    }
+    b.appendChild(document.createTextNode(l[1]));
+    b.onclick = function () { setLook(l[0]); };
+    seg.appendChild(b);
+  });
+  function showLook() {
+    var cur = C.variant || S.mono || S.theme;
+    for (var i = 0; i < seg.children.length; i++) {
+      var b = seg.children[i];
+      b.setAttribute("aria-pressed", String(b.dataset.look === cur));
+    }
+  }
+  function setLook(look) {
+    var isTheme = /^(auto|light|dark)$/.test(look);
+    var isMono = MONO && /^(mono-dark|mono-light)$/.test(look);
+    if (isMono || (isTheme && S.mono)) {
+      // In place: mono-dark takes the dark side of colours it has no palette value for, mono-light
+      // the light one; the document is reloaded so every override starts from its defaults.
+      S.mono = isMono ? look : "";
+      if (isTheme) S.theme = look;
+      if (ALT) DATA = isMono ? ALT[look] : MAIN;
+      handle.player.setTheme(isMono ? (look === "mono-dark" ? "dark" : "light") : S.theme);
+      showLook(); syncUrl(); load();
+      return;
+    }
+    if (isTheme && !C.variant) {
+      S.theme = look; handle.player.setTheme(S.theme); showLook(); syncUrl();
+      return;
+    }
+    if (look === C.variant) return;
+    var href = isTheme ? C.mainHref : (variantOf(look) || {}).href;
+    if (!href) return;
+    if (isTheme) S.theme = look;
+    // Another page: carry the view (size, density) and the variables over.
+    var u = currentUrl(), at = u.indexOf("#"), qi = u.indexOf("?");
+    var h = new URLSearchParams(u.slice(at + 1));
+    h.set("t", look);
+    location.href = href + (qi >= 0 && qi < at ? u.slice(qi, at) : "") + "#" + h.toString();
+  }
+  showLook();
+  $("play").onclick = function () {
+    S.playing = !S.playing;
+    if (S.playing) handle.player.play(); else handle.player.pause();
+    this.textContent = S.playing ? "❚❚" : "▶";
+    this.title = S.playing ? "Pause animation" : "Resume animation";
+    this.setAttribute("aria-label", S.playing ? "Pause" : "Play");
+  };
+  $("restart").onclick = function () { load(); };
+  var panel = $("panel");
+  $("toggle").onclick = function () {
+    panel.hidden = !panel.hidden;
+    this.setAttribute("aria-pressed", String(!panel.hidden));
+    if (S.fill) fitSoon();
+  };
+  // The document alone, filling the window: the Window button, or ?fullscreen=true in the link
+  // (in the query or the #hash). The Fullscreen button also asks the browser for real
+  // fullscreen, which needs a click, so a link cannot.
+  var fillBefore = null;
+  function setFull(on, fromClick) {
+    if (!!S.full === on) return;
+    S.full = on;
+    document.body.classList.toggle("fs", on);
+    if (on) { fillBefore = S.fill; S.fill = true; } else if (fillBefore !== null) { S.fill = fillBefore; fillBefore = null; }
+    if (on && fromClick && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+    if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {});
+    fitSoon(); syncUrl();
+  }
+  $("window").onclick = function () { setFull(true, false); };
+  $("fullscreen").onclick = function () { setFull(true, true); };
+  $("fs-exit").onclick = function () { setFull(false); };
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && S.full) setFull(false); });
+  document.addEventListener("fullscreenchange", function () { if (!document.fullscreenElement && S.full) setFull(false); });
+  if (/^(true|1)$/.test(query.get("fullscreen") || hash.get("fullscreen") || "")) setFull(true, false);
+  var toastTimer = 0;
+  function toast(msg) {
+    var t = $("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1600);
+  }
+  // The bytes are already in the page: the download is built from them, no request made.
+  $("download").onclick = function () {
+    var bin = atob(DATA), u8 = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([u8], { type: "application/octet-stream" }));
+    var a = document.createElement("a");
+    a.href = url; a.download = C.fileName || "document.rc";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  };
+  $("copy").onclick = function () {
+    var url = location.href.split(/[?#]/)[0] + currentUrl().slice(location.pathname.length);
+    var done = function () { toast("Link copied"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(done, function () { fallbackCopy(url); });
+    } else fallbackCopy(url);
+  };
+  function fallbackCopy(text, msg) {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast(msg || "Link copied"); } catch (e) { toast(msg ? "Copy failed" : text); }
+    ta.remove();
+  }
+
+  // ── JSON viewer: a button per document (C.json), each fetched once (or given inline),
+  // pretty-printed and highlighted. ──
+  var JSONS = C.json || [], dlg = $("json-dlg"), pre = $("json-pre"), jsonAt = 0;
+  function escH(t) { return t.replace(/[&<>]/g, function (c) { return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;"; }); }
+  function pretty(t) { try { return JSON.stringify(JSON.parse(t), null, 2); } catch (e) { return t; } }
+  function shown(item, t) { return item.raw ? t : pretty(t); }
+  function highlight(t) {
+    if (t.length > 3000000) return escH(t);   // too big to colour quickly: plain
+    var re = /("(?:\\\\.|[^"\\\\])*")(\\s*:)?|\\b(?:true|false|null)\\b|-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?/g;
+    var out = [], last = 0, m;
+    while ((m = re.exec(t))) {
+      out.push(escH(t.slice(last, m.index)));
+      if (m[1]) out.push('<span class="j-' + (m[2] ? "k" : "s") + '">' + escH(m[1]) + "</span>" + (m[2] || ""));
+      else out.push('<span class="j-' + (/^[tfn]/.test(m[0]) ? "l" : "n") + '">' + m[0] + "</span>");
+      last = re.lastIndex;
+    }
+    out.push(escH(t.slice(last)));
+    return out.join("");
+  }
+  function jsonText(item) {
+    if (item._text != null) return Promise.resolve(item._text);
+    if (item.text != null) { item._text = shown(item, typeof item.text === "string" ? item.text : JSON.stringify(item.text)); return Promise.resolve(item._text); }
+    return fetch(item.url).then(function (r) {
+      if (!r.ok) throw new Error(r.status + " " + r.statusText);
+      return r.text();
+    }).then(function (t) { item._text = pretty(t); return item._text; });
+  }
+  function showJson(i) {
+    jsonAt = i;
+    var item = JSONS[i], tabs = $("json-tabs").children;
+    for (var k = 0; k < tabs.length; k++) tabs[k].setAttribute("aria-pressed", String(k === i));
+    pre.textContent = "Loading…"; $("json-meta").textContent = "";
+    jsonText(item).then(function (t) {
+      if (jsonAt !== i) return;
+      pre.innerHTML = highlight(t);
+      pre.scrollTop = 0;
+      $("json-meta").textContent = (item.file || "") + " · " + t.split("\\n").length.toLocaleString("en-US") + " lines";
+    }, function (e) { if (jsonAt === i) pre.textContent = "Could not load " + (item.url || "the JSON") + ": " + (e && e.message ? e.message : e); });
+  }
+  if (JSONS.length) {
+    JSONS.forEach(function (item, i) {
+      var b = document.createElement("button");
+      b.className = "btn"; b.type = "button"; b.textContent = item.label;
+      b.title = item.title || ("Show " + (item.file || "the document's JSON"));
+      b.onclick = function () { if (!dlg.open) dlg.showModal(); showJson(i); };
+      $("json-btns").appendChild(b);
+      var tab = document.createElement("button");
+      tab.type = "button"; tab.textContent = item.label; tab.title = b.title;
+      tab.onclick = function () { showJson(i); };
+      $("json-tabs").appendChild(tab);
+    });
+  } else $("json-btns").hidden = true;
+  $("json-close").onclick = function () { dlg.close(); };
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });   // the backdrop
+  $("json-copy").onclick = function () {
+    var t = JSONS[jsonAt] && JSONS[jsonAt]._text;
+    if (t == null) return;
+    var done = function () { toast("JSON copied"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, function () { fallbackCopy(t, "JSON copied"); });
+    else fallbackCopy(t, "JSON copied");
+  };
+  $("json-dl").onclick = function () {
+    var item = JSONS[jsonAt], t = item && item._text;
+    if (t == null) return;
+    var url = URL.createObjectURL(new Blob([t], { type: "application/json" }));
+    var a = document.createElement("a");
+    a.href = url; a.download = item.file || "document.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  };
+
+  // ── Drag handles. The frame is centred horizontally, so while it is narrower than the
+  // stage both edges move: the width changes by twice the pointer travel to keep the
+  // handle under the pointer. ──
+  ["h-r", "h-b", "h-c"].forEach(function (id) {
+    var el = $(id), axisX = id !== "h-b", axisY = id !== "h-r";
+    el.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      el.classList.add("active");
+      var x0 = e.clientX, y0 = e.clientY, w0 = S.w, h0 = S.h;
+      var centred = S.w < stageBox()[0];
+      var centredY = frame.classList.contains("center");
+      function move(ev) {
+        var w = axisX ? w0 + (ev.clientX - x0) * (centred ? 2 : 1) : S.w;
+        var h = axisY ? h0 + (ev.clientY - y0) * (centredY ? 2 : 1) : S.h;
+        setSize(w, h);
+      }
+      function up() {
+        el.classList.remove("active");
+        el.removeEventListener("pointermove", move);
+        el.removeEventListener("pointerup", up);
+        el.removeEventListener("pointercancel", up);
+      }
+      el.addEventListener("pointermove", move);
+      el.addEventListener("pointerup", up);
+      el.addEventListener("pointercancel", up);
+    });
+  });
+
+  // ── Variables panel ──
+  var vars = $("vars");
+  var editors = {};
+  if (!(C.info || []).length) {
+    var p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = "This document declares no host variables.";
+    vars.appendChild(p);
+  }
+  (C.info || []).forEach(function (v) {
+    if (MONO && v.name === MONO.variable) return;   // the look control sets it
+    var e = document.createElement("rc-variable");
+    e.setAttribute("name", v.name);
+    e.setAttribute("type", v.type);
+    var spec = (C.ranges || {})[v.name] || {};
+    ["min", "max", "step", "meaning"].forEach(function (k) { if (spec[k] !== undefined) e.setAttribute(k, spec[k]); });
+    if (C.declared[v.name]) {
+      e.setAttribute("default", S.defaults[v.name]);
+      e.setAttribute("value", S.values[v.name]);
+      editors[v.name] = e;
+    } else {
+      e.setAttribute("readonly", "");
+      e.setAttribute("value", typeof v.value === "string" ? v.value : JSON.stringify(v.value));
+    }
+    vars.appendChild(e);
+  });
+  var resetAll = $("reset-all");
+  resetAll.hidden = !Object.keys(editors).length;
+  resetAll.onclick = function () {
+    Object.keys(editors).forEach(function (n) { S.values[n] = S.defaults[n]; editors[n].value = S.defaults[n]; });
+    load(); syncUrl();   // a reload: overrides cannot be undone, and applyVariables skips document values
+  };
+  // A changed variable can change the layout (a longer string, a size), not only the
+  // paint: re-run the layout pass, which resize does, on the next frame.
+  var relayoutFrame = 0;
+  function relayout() {
+    if (relayoutFrame) return;
+    relayoutFrame = requestAnimationFrame(function () { relayoutFrame = 0; fit(); });
+  }
+  vars.addEventListener("rc-change", function (ev) {
+    var d = ev.detail;
+    S.values[d.name] = d.value;
+    var ctx = handle && handle.player.getRemoteContext();
+    if (ctx) setVariable(ctx, d.name, d.type, d.value);
+    relayout();
+    syncUrl();
+  });
+
+  function showInfo() {
+    var rows = [
+      ["File", (C.fileName || "document.rc") + " · " + (C.rcBytes || 0).toLocaleString("en-US") + " bytes"],
+      ["Declared size", DOC.width > 0 ? DOC.width + " × " + DOC.height : "none"],
+      ["Host variables", (C.info || []).length + (Object.keys(editors).length !== (C.info || []).length
+        ? " (" + Object.keys(editors).length + " editable here)" : "")],
+      ["Ops / frame", handle ? String(handle.player.getOpsPerFrame() || "–") : "–"],
+      ["Engine", "TypeScript player"]
+    ];
+    var dl = $("info");
+    dl.textContent = "";
+    rows.forEach(function (r) {
+      var dt = document.createElement("dt"), dd = document.createElement("dd");
+      dt.textContent = r[0]; dd.textContent = r[1];
+      dl.appendChild(dt); dl.appendChild(dd);
+    });
+  }
+
+  // ── Host actions: what the document sends the app, newest first ──
+  var actList = $("actions"), actClear = $("actions-clear"), actCount = 0, watchedDoc = null;
+  function fmtValue(v) {
+    if (v === undefined || v === null || v === "") return "";
+    if (typeof v === "number") return String(Math.round(v * 1000) / 1000);
+    if (Array.isArray(v) || (v && typeof v.length === "number" && typeof v !== "string")) return "[" + Array.prototype.slice.call(v, 0, 8).map(fmtValue).join(", ") + (v.length > 8 ? ", …" : "") + "]";
+    return JSON.stringify(String(v));
+  }
+  function logAction(name, value) {
+    if (!actCount) actList.innerHTML = "";
+    actCount++; actClear.hidden = false;
+    var li = document.createElement("li"); li.className = "fresh";
+    var t = document.createElement("span"); t.className = "t"; t.textContent = new Date().toTimeString().slice(0, 8);
+    var n = document.createElement("span"); n.className = "n"; n.textContent = name;
+    var v = document.createElement("span"); v.className = "v"; v.textContent = fmtValue(value);
+    li.appendChild(t); li.appendChild(n); if (v.textContent) li.appendChild(v);
+    actList.insertBefore(li, actList.firstChild);
+    while (actList.children.length > 50) actList.removeChild(actList.lastChild);
+  }
+  function watchActions() {
+    var doc = handle && handle.player.getDocument && handle.player.getDocument();
+    if (!doc || doc === watchedDoc) return;
+    watchedDoc = doc;
+    if (doc.addActionCallback) doc.addActionCallback({ onAction: function (name, value) { logAction(name, value); } });
+    if (doc.addIdActionListener) doc.addIdActionListener({ onAction: function (id, metadata) { logAction("action #" + id, metadata || ""); } });
+  }
+  actClear.onclick = function () { actCount = 0; actClear.hidden = true; actList.innerHTML = '<li class="none">None yet.</li>'; };
+
+  // ── App script: its log and errors, and a switch (?app=off) ──
+  function setupApp() {
+    var log = $("app-log"), state = $("app-state"), toggle = $("app-toggle"), lines = 0;
+    function add(level, text) {
+      var li = document.createElement("li"); li.className = level + " fresh";
+      var t = document.createElement("span"); t.className = "t"; t.textContent = new Date().toTimeString().slice(0, 8);
+      var x = document.createElement("span"); x.className = "x"; x.textContent = text;
+      li.appendChild(t); li.appendChild(x);
+      log.insertBefore(li, log.firstChild);
+      if (++lines > 100) log.removeChild(log.lastChild);
+    }
+    var off = appOff();
+    toggle.textContent = off ? "Turn on" : "Turn off";
+    toggle.title = off ? "Run the app script again" : "Reload without the app script: the document alone, as the panel sets it (adds ?app=off to the link)";
+    toggle.onclick = function () {
+      var q = new URLSearchParams(location.search);
+      if (off) q.delete("app"); else q.set("app", "off");
+      var qs = q.toString();
+      location.href = location.pathname + (qs ? "?" + qs : "") + location.hash;
+    };
+    if (off) { state.textContent = "Off: the document runs without its app script."; return; }
+    state.textContent = "Starting…";
+    startApp(handle, {
+      started: function () { state.textContent = "Running: the app script sets host values and answers the document's actions."; },
+      log: add,
+      error: function (msg) { add("error", msg); state.textContent = "Error: see below."; },
+      set: function (name, value) { if (editors[name]) editors[name].value = Array.isArray(value) ? value.join(", ") : String(value); }
+    });
+  }
+
+  // ── Start ──
+  if (S.fill === null) {
+    // No size asked for: the document's own size when it fits the stage, else fill it.
+    var b = stageBox();
+    S.fill = !(DOC.width > 0 && DOC.width <= b[0] && DOC.height <= b[1]);
+    if (!S.fill) { S.w = DOC.width; S.h = DOC.height; }
+  }
+  dens.value = String(S.density);
+  try {
+    handle = RC.createPlayer(host, {
+      theme: S.mono ? (S.mono === "mono-dark" ? "dark" : "light") : S.theme,
+      onLoad: function () { try { applyVariables(); } catch (e) { fail(e); } try { watchActions(); } catch (e) {} }
+    });
+    handle.player.setDensity(density());
+    fit();   // before loading: the load lays the document out at the canvas size
+    load();
+  } catch (e) {
+    fail(e);
+    return;
+  }
+  if (C.app) setupApp();
+  new ResizeObserver(function () { if (S.fill) fitSoon(); else frame.classList.toggle("center", S.h < stageBox()[1]); })
+    .observe(stage);
+  setInterval(showInfo, 1000);
+})();
+</script>
+</body>
+</html>
+`;
+}

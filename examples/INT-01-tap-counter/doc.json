@@ -1,0 +1,116 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 180,
+  "profiles": 513,
+  "contentDescription": "A counter with a plus-one button and a reset button"
+ },
+ "resources": {
+  "variables": {
+   "count": 0
+  }
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 16
+    }
+   ],
+   "horizontalAlignment": "center",
+   "verticalArrangement": "spaceEvenly",
+   "children": [
+    {
+     "text": {
+      "value": {
+       "type": "textFromFloat",
+       "value": "@count",
+       "whole": 3,
+       "decimal": 0
+      },
+      "fontSize": 48,
+      "color": "@colors.onSurface"
+     }
+    },
+    {
+     "row": {
+      "horizontalArrangement": "center",
+      "children": [
+       {
+        "box": {
+         "modifiers": [
+          {
+           "weight": 1
+          },
+          {
+           "widthIn": [
+            0,
+            120
+           ]
+          }
+         ],
+         "children": [
+          {
+           "Button": {
+            "label": "+1",
+            "fill": true,
+            "onClick": {
+             "type": "valueFloatExpressionChange",
+             "target": "@count",
+             "value": "@count + 1"
+            }
+           }
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "width": 12
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "weight": 1
+          },
+          {
+           "widthIn": [
+            0,
+            120
+           ]
+          }
+         ],
+         "children": [
+          {
+           "Button": {
+            "label": "Reset",
+            "style": "outlined",
+            "fill": true,
+            "onClick": {
+             "type": "valueFloatChange",
+             "target": "@count",
+             "value": 0
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

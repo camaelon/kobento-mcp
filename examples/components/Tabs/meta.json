@@ -1,0 +1,438 @@
+{
+ "id": "Tabs",
+ "name": "tabs",
+ "version": 1,
+ "title": "Tabs",
+ "prompt": "Add a Day / Week / Month tab bar whose selected tab is highlighted with an underline, and the same choice as a segmented control (a pill track with the selected option filled).",
+ "level": 2,
+ "use_cases": [
+  "control"
+ ],
+ "form_factor": "widget-4x1",
+ "keywords": [
+  "tabs",
+  "tab bar",
+  "segmented control",
+  "segments",
+  "period picker",
+  "view switcher",
+  "tab strip",
+  "underline tabs",
+  "segmented button",
+  "day week month",
+  "toggle group",
+  "pill selector"
+ ],
+ "teaches": [
+  "Call {\"Tabs\": {\"labels\": [\"Day\", \"Week\", \"Month\"], \"selected\": \"@tab\"}}: the labels are static, a tap sets tab to the tab's index",
+  "\"style\": \"segmented\" draws a segmented control instead: a pill track, the selected option a filled primary pill that slides (mono: a white pill on a grey-ringed black track)",
+  "Bind a document variable (tab, 0 here) so panels and PagerDots can follow the selection; a tap on a tab sets it to that tab's index",
+  "Each tab announces its label and Selected or Not selected, following the bound variable at run time",
+  "Panels below follow the same variable (graphicsLayer alpha 1 - min(1, abs(@tab - i))); the bar does not switch content itself"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/column/children/0",
+   "shows": "input.tap",
+   "note": "three tabs bound to the document variable tab (the render taps Week)"
+  },
+  {
+   "pointer": "/root/column/children/0",
+   "shows": "layout.weight",
+   "note": "equal-width tabs: each is a weight 1 box"
+  },
+  {
+   "pointer": "/root/column/children/0/Tabs/labels",
+   "shows": "a11y.labels",
+   "note": "each label is also its tab's accessibility label"
+  },
+  {
+   "pointer": "/root/column/children/1",
+   "shows": "a11y.state",
+   "note": "a segmented control bound to view (Month preset): each option announces Selected or Not selected"
+  }
+ ],
+ "inputs": {
+  "variables": {
+   "tab": 0,
+   "view": 2
+  },
+  "clock": null,
+  "touch": true
+ },
+ "check": {
+  "describe": "The render taps Week on the underline bar: it lights up in blue with the underline under it; Day and Month are muted. Below, the segmented control has Month (view = 2) as a filled blue pill with a white label on a light grey pill track, Day and Week in dark text. The tabs share the width by weight and the underline and pill are fractions of componentWidth(): at 234 and 540 dp the middle tap still selects Week and both bars fit. Mono: Month is a white pill with black text on a black track ringed in grey.",
+  "render": {
+   "touch_events": [
+    {
+     "t": 0.1,
+     "type": "tap",
+     "x": 180,
+     "y": 36
+    }
+   ],
+   "duration": 1
+  },
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "narrow",
+    "width": 234,
+    "height": 128,
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "tap",
+      "x": 117,
+      "y": 36
+     }
+    ]
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 128,
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "tap",
+      "x": 270,
+      "y": 36
+     }
+    ]
+   }
+  ]
+ },
+ "related": [
+  "CMP-06"
+ ],
+ "derived": {
+  "components": [
+   "Tabs"
+  ],
+  "component_instances": 2,
+  "component_modes": {
+   "Tabs": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 3865,
+  "header": {
+   "width": 360,
+   "height": 128
+  },
+  "op_count": 236,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 6,
+   "ANIMATED_FLOAT": 21,
+   "COLOR_CONSTANT": 12,
+   "COLOR_EXPRESSIONS": 12,
+   "COMPONENT_VALUE": 3,
+   "CanvasContent": 4,
+   "CoreText": 12,
+   "DATA_FLOAT": 2,
+   "DATA_TEXT": 4,
+   "DRAW_RECT": 1,
+   "DRAW_ROUND_RECT": 1,
+   "GraphicsLayerModifier": 6,
+   "HEADER": 1,
+   "LAYOUT_BOX": 8,
+   "LAYOUT_CANVAS": 4,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 2,
+   "LayoutComponentContent": 27,
+   "LoopOperation": 12,
+   "MODIFIER_BACKGROUND": 2,
+   "MODIFIER_CLICK": 6,
+   "MODIFIER_HEIGHT": 15,
+   "MODIFIER_PADDING": 10,
+   "MODIFIER_WIDTH": 15,
+   "NAMED_VARIABLE": 6,
+   "PAINT_VALUES": 2,
+   "RoundedClipRectModifierOperation": 4,
+   "THEME": 18,
+   "TextSubtext": 6,
+   "TextTransform": 6,
+   "ValueFloatExpressionChangeActionOperation": 6
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onPrimary",
+    "type": "color",
+    "value": "#FF0B1A2E"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "surfaceHigh",
+    "type": "color",
+    "value": "#FF263042"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 0
+  },
+  "audit_findings": [],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 6,
+   "click": 6,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 3319,
+    "component_modes": {
+     "Tabs": "expand"
+    },
+    "op_count": 191,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onPrimary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "surfaceHigh",
+      "type": "color",
+      "value": "#FF000000"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 3319,
+    "component_modes": {
+     "Tabs": "expand"
+    },
+    "op_count": 191,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onPrimary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "surfaceHigh",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     234,
+     128
+    ],
+    "audit_findings": []
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     128
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "Tabs",
+   "alpha",
+   "anim",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "clickable",
+   "clip",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "dark",
+   "drawRect",
+   "drawRoundRect",
+   "fontSize",
+   "global",
+   "graphicsLayer",
+   "header",
+   "height",
+   "horizontalAlignment",
+   "labels",
+   "left",
+   "len",
+   "light",
+   "modifiers",
+   "muted",
+   "name",
+   "onClick",
+   "onPrimary",
+   "onSurface",
+   "operation",
+   "ops",
+   "padding",
+   "paint",
+   "primary",
+   "profiles",
+   "resources",
+   "right",
+   "root",
+   "row",
+   "rx",
+   "ry",
+   "selected",
+   "semantics",
+   "size",
+   "spacedBy",
+   "start",
+   "stateDescription",
+   "style",
+   "surfaceHigh",
+   "tab",
+   "target",
+   "text",
+   "textSubtext",
+   "textTransform",
+   "top",
+   "type",
+   "value",
+   "varName",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "view",
+   "weight",
+   "width"
+  ],
+  "evidence": {
+   "input.tap": [
+    "onClick",
+    "valueFloatChange"
+   ],
+   "layout.weight": [
+    "weight"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ],
+   "a11y.state": [
+    "stateDescription"
+   ]
+  },
+  "built_at": "2026-11-03T01:32:31.476Z"
+ }
+}

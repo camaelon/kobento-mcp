@@ -1,0 +1,365 @@
+{
+ "id": "HST-01",
+ "name": "parameterised-card",
+ "version": 3,
+ "title": "Host-parameterised profile card",
+ "summary": "A profile card whose name, subtitle, accent colour and progress are exported host variables with good defaults, so it renders well with no host and re-renders when the host sets them.",
+ "prompt": "Make a profile card template where the app can set the name, subtitle, accent colour and progress, and it still looks right with no data.",
+ "level": 2,
+ "family": "HST",
+ "capabilities": {
+  "primary": [
+   "host.variables"
+  ],
+  "secondary": [
+   "data.tokens",
+   "text.dynamic",
+   "data.expression",
+   "data.measure",
+   "draw.shapes",
+   "layout.weight",
+   "layout.decoration"
+  ]
+ },
+ "use_cases": [
+  "card",
+  "widget"
+ ],
+ "form_factor": "widget-4x2",
+ "keywords": [
+  "host variable",
+  "named variable",
+  "parameter",
+  "template",
+  "data binding",
+  "profile",
+  "props",
+  "host string",
+  "string from the app",
+  "name from the app",
+  "label from the app",
+  "symbol",
+  "ticker symbol",
+  "exported string"
+ ],
+ "components": [
+  "Card",
+  "ProgressBar"
+ ],
+ "teaches": [
+  "Export a float to the host with resources.variables {\"progress\": {\"value\": 0.65, \"export\": true}} and pass it to a ProgressBar as progress \"clamp(0, 1, @progress)\"",
+  "Export a colour with resources.colors (named colours are exported by default) and use it as \"@colors.accent\": in a background and as a component's color param",
+  "Export a string with a root variable {\"vtype\": \"string\", \"export\": true} and show it with text value \"@name\"",
+  "Give host-supplied strings maxLines 1 and an ellipsis: their length is unknown and the card can be narrower than the header"
+ ],
+ "snippets": [
+  {
+   "pointer": "/resources",
+   "shows": "host.variables",
+   "note": "the exported accent colour and progress float"
+  },
+  {
+   "pointer": "/root/0",
+   "shows": "host.variables",
+   "note": "an exported string variable"
+  },
+  {
+   "pointer": "/root/2/column/children/0/Card/children/0/row/children/2/column/children/2",
+   "shows": "data.expression",
+   "note": "ProgressBar progress clamp(0, 1, @progress) in the host's accent colour, safe for any host value"
+  },
+  {
+   "pointer": "/root/2/column/children/0/Card/children/0/row/children/2/column/children/0",
+   "shows": "text.dynamic",
+   "note": "the host name, one line with an ellipsis"
+  }
+ ],
+ "inputs": {
+  "variables": {
+   "name": {
+    "type": "string",
+    "meaning": "the person's name",
+    "default": "Ada Lovelace"
+   },
+   "subtitle": {
+    "type": "string",
+    "meaning": "a second line (team, role)",
+    "default": "Analytical Engine team"
+   },
+   "accent": {
+    "type": "color",
+    "meaning": "avatar and progress colour",
+    "default": "#FF7C4DFF"
+   },
+   "progress": {
+    "type": "float",
+    "meaning": "completion, 0 to 1",
+    "default": 0.65,
+    "min": 0,
+    "max": 1,
+    "step": 0.01
+   }
+  },
+  "clock": null,
+  "touch": false
+ },
+ "check": {
+  "describe": "Defaults show Ada Lovelace with a purple avatar and a 65% bar; variables {name: Grace Hopper, subtitle: COBOL committee, accent: #FF26A69A, progress: 0.3} change all four. Resized, the card fills the width and the text column takes the remaining width (weight 1): the progress bar stretches, and a name or subtitle too long for a narrow card ends in an ellipsis.",
+  "render": {
+   "variables": {
+    "name": "Grace Hopper",
+    "subtitle": "COBOL committee",
+    "accent": "#FF26A69A",
+    "progress": 0.3
+   }
+  },
+  "renders": [
+   {
+    "name": "narrow",
+    "width": 240,
+    "height": 180
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 180
+   }
+  ]
+ },
+ "related": [
+  "HST-02",
+  "DOC-01"
+ ],
+ "pitfalls": [
+  "clamp takes the value last: clamp(0, 1, @progress). clamp(@progress, 0, 1) always gives 0 (the middle argument is the maximum)",
+  "resources.variables entries are exported only with \"export\": true, while resources.colors entries are exported unless \"export\": false",
+  "A weighted child ignores the row's spacedBy (the row overflows by the gap): space the avatar from the text column with a fixed 16 dp spacer box instead",
+  "textFromFloat pads the number to `whole` digits with leading spaces; flags 4 (no leading pad) keeps \"30% complete\" flush with the bar",
+  "A host string in a narrow card wraps word by word and pushes the rest of the column out of the card unless it is limited to one line"
+ ],
+ "derived": {
+  "components": [
+   "Card",
+   "ProgressBar"
+  ],
+  "component_instances": 2,
+  "component_modes": {
+   "Card": "expand",
+   "ProgressBar": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 1780,
+  "header": {
+   "width": 360,
+   "height": 180
+  },
+  "op_count": 109,
+  "operations": {
+   "ANIMATED_FLOAT": 3,
+   "COLOR_CONSTANT": 11,
+   "COLOR_EXPRESSIONS": 10,
+   "COMPONENT_VALUE": 1,
+   "CanvasContent": 1,
+   "CoreText": 4,
+   "DATA_FLOAT": 1,
+   "DATA_TEXT": 3,
+   "DRAW_ROUND_RECT": 2,
+   "HEADER": 1,
+   "LAYOUT_BOX": 2,
+   "LAYOUT_CANVAS": 1,
+   "LAYOUT_COLUMN": 3,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 2,
+   "LayoutComponentContent": 10,
+   "LoopOperation": 10,
+   "MODIFIER_BACKGROUND": 3,
+   "MODIFIER_HEIGHT": 3,
+   "MODIFIER_PADDING": 2,
+   "MODIFIER_WIDTH": 6,
+   "NAMED_VARIABLE": 9,
+   "PAINT_VALUES": 2,
+   "RoundedClipRectModifierOperation": 2,
+   "THEME": 15,
+   "TextFromFloat": 1
+  },
+  "host_variables": [
+   {
+    "name": "accent",
+    "type": "color",
+    "value": "#FF7C4DFF"
+   },
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "name",
+    "type": "string",
+    "value": "Ada Lovelace"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "progress",
+    "type": "float",
+    "value": 0.649999976
+   },
+   {
+    "name": "subtitle",
+    "type": "string",
+    "value": "Analytical Engine team"
+   },
+   {
+    "name": "surface",
+    "type": "color",
+    "value": "#FF1C2433"
+   },
+   {
+    "name": "track",
+    "type": "color",
+    "value": "#FF2A3342"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 0
+  },
+  "audit_findings": [],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 0,
+   "click": 0,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [
+     "info: text_ellipsized"
+    ],
+    "size": [
+     240,
+     180
+    ],
+    "audit_findings": []
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     180
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "Card",
+   "ProgressBar",
+   "accent",
+   "anim",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "clip",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "dark",
+   "decimal",
+   "drawRoundRect",
+   "export",
+   "flags",
+   "fontSize",
+   "header",
+   "height",
+   "left",
+   "light",
+   "maxLines",
+   "modifiers",
+   "muted",
+   "name",
+   "onSurface",
+   "ops",
+   "overflow",
+   "padding",
+   "paint",
+   "profiles",
+   "progress",
+   "resources",
+   "right",
+   "root",
+   "roundedRect",
+   "row",
+   "rx",
+   "ry",
+   "size",
+   "spacedBy",
+   "style",
+   "surface",
+   "text",
+   "top",
+   "track",
+   "type",
+   "value",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "verticalArrangement",
+   "vtype",
+   "weight",
+   "whole",
+   "width"
+  ],
+  "evidence": {
+   "host.variables": [
+    "export",
+    "colors"
+   ],
+   "data.tokens": [
+    "resources",
+    "variables",
+    "colors"
+   ],
+   "text.dynamic": [
+    "textFromFloat"
+   ],
+   "data.expression": [
+    "<arithmetic>"
+   ],
+   "data.measure": [
+    "componentWidth()"
+   ],
+   "draw.shapes": [
+    "drawRoundRect"
+   ],
+   "layout.weight": [
+    "weight"
+   ],
+   "layout.decoration": [
+    "background",
+    "clip"
+   ]
+  },
+  "built_at": "2026-11-03T01:19:43.491Z"
+ }
+}

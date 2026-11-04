@@ -1,0 +1,116 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 180,
+  "profiles": 513,
+  "contentDescription": "A savings balance that counts up to its new total when a deposit is added"
+ },
+ "resources": {
+  "variables": {
+   "total": 1250
+  }
+ },
+ "root": [
+  {
+   "variable": {
+    "name": "shown",
+    "value": {
+     "value": "@total",
+     "anim": 0.9
+    }
+   }
+  },
+  {
+   "column": {
+    "modifiers": [
+     "fillMaxSize",
+     {
+      "background": "@colors.background"
+     },
+     {
+      "padding": 16
+     },
+     {
+      "spacedBy": 6
+     }
+    ],
+    "children": [
+     {
+      "text": {
+       "value": "Holiday savings",
+       "fontSize": 15,
+       "color": "@colors.muted"
+      }
+     },
+     {
+      "row": {
+       "verticalAlignment": "bottom",
+       "children": [
+        {
+         "text": {
+          "value": "$",
+          "fontSize": 28,
+          "color": "@colors.success"
+         }
+        },
+        {
+         "text": {
+          "value": {
+           "type": "textFromFloat",
+           "value": "round(@shown)",
+           "whole": 5,
+           "decimal": 0,
+           "flags": 5
+          },
+          "fontSize": 44,
+          "color": "@colors.onSurface"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "ProgressBar": {
+       "progress": "@shown / 4000",
+       "color": "@colors.success"
+      }
+     },
+     {
+      "row": {
+       "verticalAlignment": "center",
+       "modifiers": [
+        "fillMaxWidth"
+       ],
+       "children": [
+        {
+         "text": {
+          "value": "Goal $4000",
+          "fontSize": 13,
+          "color": "@colors.muted",
+          "modifiers": [
+           {
+            "weight": 1
+           }
+          ]
+         }
+        },
+        {
+         "Button": {
+          "label": "+ $250",
+          "color": "@colors.success",
+          "onClick": {
+           "type": "valueFloatExpressionChange",
+           "target": "@total",
+           "value": "@total + 250"
+          }
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

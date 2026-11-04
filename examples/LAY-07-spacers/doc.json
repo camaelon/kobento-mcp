@@ -1,0 +1,78 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 64,
+  "profiles": 513,
+  "contentDescription": "A toolbar with a title on the left and two icon buttons pushed to the right"
+ },
+ "root": {
+  "type": "row",
+  "modifiers": [
+   "fillMaxSize",
+   {
+    "background": "@colors.surface"
+   },
+   {
+    "padding": [
+     16,
+     0
+    ]
+   }
+  ],
+  "verticalAlignment": "center",
+  "children": [
+   {
+    "text": {
+     "value": "Inbox",
+     "fontSize": 20,
+     "color": "@colors.onSurface"
+    }
+   },
+   {
+    "type": "spacer",
+    "modifiers": [
+     {
+      "weight": 1
+     }
+    ]
+   },
+   {
+    "IconButton": {
+     "label": "Search",
+     "slots": {
+      "icon": [
+       {
+        "Icon": {
+         "name": "search"
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "type": "spacer",
+    "modifiers": [
+     {
+      "width": 12
+     }
+    ]
+   },
+   {
+    "IconButton": {
+     "label": "More options",
+     "slots": {
+      "icon": [
+       {
+        "Icon": {
+         "name": "more_vert"
+        }
+       }
+      ]
+     }
+    }
+   }
+  ]
+ }
+}

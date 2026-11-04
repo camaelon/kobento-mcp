@@ -1,0 +1,280 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 320,
+  "height": 330,
+  "profiles": 513,
+  "contentDescription": "WeatherIcon component: sun, cloud, rain, snow and storm, a small storm icon, and a morphing icon that changes condition when tapped"
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 16
+    },
+    {
+     "spacedBy": 12
+    }
+   ],
+   "children": [
+    {
+     "text": {
+      "value": "WeatherIcon",
+      "fontSize": 20,
+      "color": "@colors.onSurface"
+     }
+    },
+    {
+     "row": {
+      "modifiers": [
+       "fillMaxWidth"
+      ],
+      "children": [
+       {
+        "column": {
+         "horizontalAlignment": "center",
+         "modifiers": [
+          {
+           "weight": 1
+          }
+         ],
+         "children": [
+          {
+           "WeatherIcon": {
+            "condition": "sun"
+           }
+          },
+          {
+           "text": {
+            "value": "sun",
+            "fontSize": 12,
+            "color": "@colors.muted"
+           }
+          }
+         ]
+        }
+       },
+       {
+        "column": {
+         "horizontalAlignment": "center",
+         "modifiers": [
+          {
+           "weight": 1
+          }
+         ],
+         "children": [
+          {
+           "WeatherIcon": {
+            "condition": "cloud"
+           }
+          },
+          {
+           "text": {
+            "value": "cloud",
+            "fontSize": 12,
+            "color": "@colors.muted"
+           }
+          }
+         ]
+        }
+       },
+       {
+        "column": {
+         "horizontalAlignment": "center",
+         "modifiers": [
+          {
+           "weight": 1
+          }
+         ],
+         "children": [
+          {
+           "WeatherIcon": {
+            "condition": "rain"
+           }
+          },
+          {
+           "text": {
+            "value": "rain",
+            "fontSize": 12,
+            "color": "@colors.muted"
+           }
+          }
+         ]
+        }
+       },
+       {
+        "column": {
+         "horizontalAlignment": "center",
+         "modifiers": [
+          {
+           "weight": 1
+          }
+         ],
+         "children": [
+          {
+           "WeatherIcon": {
+            "condition": "snow"
+           }
+          },
+          {
+           "text": {
+            "value": "snow",
+            "fontSize": 12,
+            "color": "@colors.muted"
+           }
+          }
+         ]
+        }
+       },
+       {
+        "column": {
+         "horizontalAlignment": "center",
+         "modifiers": [
+          {
+           "weight": 1
+          }
+         ],
+         "children": [
+          {
+           "WeatherIcon": {
+            "condition": "storm"
+           }
+          },
+          {
+           "text": {
+            "value": "storm",
+            "fontSize": 12,
+            "color": "@colors.muted"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "row": {
+      "verticalAlignment": "center",
+      "modifiers": [
+       {
+        "spacedBy": 8
+       }
+      ],
+      "children": [
+       {
+        "WeatherIcon": {
+         "condition": "storm",
+         "size": 32,
+         "label": "Storm warning"
+        }
+       },
+       {
+        "text": {
+         "value": "Storm warning, 32 dp",
+         "fontSize": 14,
+         "color": "@colors.onSurface"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "row": {
+      "verticalAlignment": "center",
+      "modifiers": [],
+      "children": [
+       {
+        "box": {
+         "modifiers": [
+          {
+           "size": 96
+          },
+          {
+           "semantics": {
+            "contentDescription": "Next condition",
+            "clickable": true
+           }
+          },
+          {
+           "onClick": {
+            "type": "valueFloatExpressionChange",
+            "target": "@wx",
+            "value": "(@wx + 1) % 5"
+           }
+          }
+         ],
+         "children": [
+          {
+           "WeatherIcon": {
+            "morph": true,
+            "value": "@wx",
+            "size": 96
+           }
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "width": 12
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "size": 96
+          },
+          {
+           "clip": {
+            "roundedRect": 16
+           }
+          },
+          {
+           "background": "@colors.sky"
+          }
+         ],
+         "children": [
+          {
+           "WeatherIcon": {
+            "morph": true,
+            "value": "@wx",
+            "look": "rich",
+            "size": 96
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "resources": {
+  "variables": {
+   "wx": {
+    "value": 0,
+    "export": true
+   }
+  },
+  "colors": {
+   "sky": {
+    "light": "#FF4A90E2",
+    "dark": "#FF2F6DB5",
+    "mono-dark": "#FF000000",
+    "mono-light": "#FFFFFFFF"
+   }
+  }
+ }
+}

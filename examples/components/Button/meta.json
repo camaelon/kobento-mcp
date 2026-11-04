@@ -1,0 +1,432 @@
+{
+ "id": "Button",
+ "name": "button",
+ "version": 3,
+ "title": "Button",
+ "prompt": "A pill-shaped primary Save button next to an outlined and a text button, one with a plus icon, a Submit button the host enables, and a full-width Sign in button.",
+ "level": 1,
+ "use_cases": [
+  "control"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "button",
+  "cta",
+  "call to action",
+  "action button",
+  "push button",
+  "primary button",
+  "secondary button",
+  "outlined button",
+  "text button",
+  "ghost button",
+  "icon button",
+  "pill button",
+  "disabled button",
+  "submit button",
+  "full width button",
+  "form button"
+ ],
+ "teaches": [
+  "Call it by name: {\"Button\": {\"label\": \"Save\", \"onClick\": {...}}}; the label is also the accessibility label",
+  "style picks the variant (filled, outlined, text); enabled: false dims it and drops the click",
+  "enabled can be a runtime 0/1 value (\"@canSubmit\", or an expression of resources variables): the button dims, ignores taps and is announced disabled while it is 0",
+  "fill: true makes it full width with the label centred (a form button)",
+  "A leading icon goes in slots.icon, about 16 dp, painted in the label colour (onPrimary on a filled button)"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/column/children/1/flow/children/0/box/children/0",
+   "shows": "input.tap",
+   "note": "the minimal call: a label and an onClick action"
+  },
+  {
+   "pointer": "/root/column/children/1/flow/children/3/box/children/0",
+   "shows": "layout.decoration",
+   "note": "a filled button with an icon slot"
+  },
+  {
+   "pointer": "/root/column/children/1/flow/children/1/box/children/0",
+   "shows": "a11y.labels",
+   "note": "outlined style; every style is labelled from its label"
+  },
+  {
+   "pointer": "/root/column/children/1/flow/children/4/box/children/0",
+   "shows": "input.tap",
+   "note": "enabled bound to the host variable canSubmit: tapping does nothing while it is 0"
+  },
+  {
+   "pointer": "/root/column/children/2",
+   "shows": "layout.decoration",
+   "note": "fill: true, a full-width button"
+  }
+ ],
+ "inputs": {
+  "variables": {
+   "canSubmit": {
+    "default": 0,
+    "min": 0,
+    "max": 1,
+    "step": 1
+   }
+  },
+  "clock": null,
+  "touch": true
+ },
+ "check": {
+  "describe": "Five buttons in a flow: blue Save, outlined Edit, text Skip, a blue Add with a plus, and Submit, grey while the host variable canSubmit is 0 (a tap does nothing) and blue when it is 1 (a tap sets last to 5 and sends the host action submit); below them a full-width blue Sign in. Tapping Edit sets last to 2. At 234 dp the flow wraps to three lines (264 dp tall to hold it), at 540 dp all five stay on one line.",
+  "render": {},
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "narrow",
+    "width": 234,
+    "height": 264
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 164
+   }
+  ]
+ },
+ "related": [
+  "CMP-01",
+  "CMP-13"
+ ],
+ "derived": {
+  "components": [
+   "Button"
+  ],
+  "component_instances": 6,
+  "component_modes": {
+   "Button": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 3207,
+  "header": {
+   "width": 360,
+   "height": 228
+  },
+  "op_count": 210,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 7,
+   "ANIMATED_FLOAT": 1,
+   "COLOR_CONSTANT": 12,
+   "COLOR_EXPRESSIONS": 12,
+   "CanvasContent": 1,
+   "CoreText": 8,
+   "DATA_FLOAT": 2,
+   "DATA_TEXT": 8,
+   "DRAW_LINE": 2,
+   "HEADER": 1,
+   "HostNamedAction": 1,
+   "LAYOUT_BOX": 14,
+   "LAYOUT_CANVAS": 1,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_FLOW": 1,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 1,
+   "LayoutComponentContent": 26,
+   "LoopOperation": 12,
+   "MODIFIER_BACKGROUND": 8,
+   "MODIFIER_CLICK": 6,
+   "MODIFIER_HEIGHT": 10,
+   "MODIFIER_PADDING": 22,
+   "MODIFIER_RIPPLE": 6,
+   "MODIFIER_VISIBILITY": 2,
+   "MODIFIER_WIDTH": 4,
+   "NAMED_VARIABLE": 7,
+   "PAINT_VALUES": 1,
+   "RoundedClipRectModifierOperation": 8,
+   "THEME": 18,
+   "ValueFloatExpressionChangeActionOperation": 6
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "canSubmit",
+    "type": "float",
+    "value": 0
+   },
+   {
+    "name": "disabled",
+    "type": "color",
+    "value": "#FF3A4556"
+   },
+   {
+    "name": "onDisabled",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onPrimary",
+    "type": "color",
+    "value": "#FF0B1A2E"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 1
+  },
+  "audit_findings": [
+   "info: never_executed"
+  ],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 5,
+   "click": 5,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 3124,
+    "component_modes": {
+     "Button": "expand"
+    },
+    "op_count": 193,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "canSubmit",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "disabled",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onDisabled",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onPrimary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 3124,
+    "component_modes": {
+     "Button": "expand"
+    },
+    "op_count": 193,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "canSubmit",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "disabled",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onDisabled",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onPrimary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FF000000"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     234,
+     264
+    ],
+    "audit_findings": [
+     "info: never_executed"
+    ]
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     164
+    ],
+    "audit_findings": [
+     "info: never_executed"
+    ]
+   }
+  },
+  "json_keys": [
+   "Button",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "button5_enOff",
+   "canSubmit",
+   "canvas",
+   "children",
+   "clickable",
+   "clip",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "dark",
+   "disabled",
+   "drawLine",
+   "enabled",
+   "end",
+   "export",
+   "fill",
+   "flow",
+   "fontSize",
+   "header",
+   "height",
+   "horizontalAlignment",
+   "icon",
+   "label",
+   "last",
+   "light",
+   "maxLines",
+   "modifiers",
+   "name",
+   "onClick",
+   "onDisabled",
+   "onPrimary",
+   "onSurface",
+   "ops",
+   "overflow",
+   "padding",
+   "paint",
+   "primary",
+   "profiles",
+   "resources",
+   "root",
+   "row",
+   "semantics",
+   "slots",
+   "spacedBy",
+   "start",
+   "strokeCap",
+   "strokeWidth",
+   "style",
+   "target",
+   "text",
+   "top",
+   "type",
+   "value",
+   "variables",
+   "verticalAlignment",
+   "visibility",
+   "width",
+   "x1",
+   "x2",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "input.tap": [
+    "onClick",
+    "valueFloatChange"
+   ],
+   "layout.decoration": [
+    "background",
+    "clip"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ]
+  },
+  "built_at": "2026-11-01T22:50:32.808Z"
+ }
+}

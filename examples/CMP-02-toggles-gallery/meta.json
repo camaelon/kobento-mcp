@@ -1,0 +1,469 @@
+{
+ "id": "CMP-02",
+ "name": "toggles-gallery",
+ "version": 2,
+ "kind": "gallery",
+ "title": "Switch and Checkbox gallery",
+ "summary": "The library Switch bound to document variables (one off, one on in green) with a live On/Off status beside it, and two Checkboxes: one that keeps its own state, one bound to a variable that starts checked.",
+ "prompt": "Add Wi-Fi and Bluetooth toggle switches with an On/Off label that follows each one, plus a couple of checkboxes, like a settings screen.",
+ "level": 2,
+ "family": "CMP",
+ "components": [
+  "Switch",
+  "Checkbox"
+ ],
+ "capabilities": {
+  "primary": [
+   "input.toggle"
+  ],
+  "secondary": [
+   "a11y.labels",
+   "draw.shapes",
+   "layout.weight",
+   "text.basic"
+  ]
+ },
+ "use_cases": [
+  "control"
+ ],
+ "form_factor": "square",
+ "keywords": [
+  "toggle",
+  "switch",
+  "checkbox",
+  "on off",
+  "settings",
+  "tick box",
+  "component library",
+  "on/off status",
+  "toggle switch",
+  "preferences"
+ ],
+ "teaches": [
+  "Bind a Switch or Checkbox to a document variable (checked: \"@wifi\") so other parts of the document can read and preset it",
+  "Leave `checked` out and the component keeps its own state in a variable of its own (Remember me)",
+  "Show state-dependent text without string variables: two anchored texts whose paint alpha is @wifi and 1 - @wifi"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/column/children/1/row/children/4",
+   "shows": "input.toggle",
+   "note": "a Switch bound to a document variable"
+  },
+  {
+   "pointer": "/root/column/children/1/row/children/2",
+   "shows": "text.basic",
+   "note": "the On/Off status: two texts faded by the 0/1 state"
+  },
+  {
+   "pointer": "/root/column/children/6",
+   "shows": "a11y.labels",
+   "note": "a Checkbox: its label is both the visible text and the accessibility label"
+  },
+  {
+   "pointer": "/root/column/children/5",
+   "shows": "input.toggle",
+   "note": "unbound: the checkbox keeps its own state"
+  }
+ ],
+ "pitfalls": [
+  "JSON has no colour or text interpolation: the On/Off status is two drawTextAnchored calls whose paint alpha is the 0/1 state and its complement",
+  "The status canvas and the switch are separated by fixed spacer boxes, not spacedBy: the row holds a weight, and weights ignore spacedBy",
+  "An unbound component gets a fresh per-call variable (checkbox1_checked): nothing else in the document can read it, so bind a variable as soon as anything depends on the state"
+ ],
+ "inputs": {
+  "variables": {
+   "wifi": 0,
+   "bluetooth": 1,
+   "remember": 0,
+   "terms": 1
+  },
+  "clock": null,
+  "touch": true
+ },
+ "check": {
+  "describe": "Tapping the Wi-Fi switch sets wifi to 1 and its status to On; Bluetooth and Accept the terms start on; Remember me toggles on its own. Resized, each switch row keeps its label at the start and its status and switch at the end, at 234 and at 540 wide.",
+  "render": {},
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "narrow",
+    "width": 234,
+    "height": 280
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 280
+   }
+  ]
+ },
+ "related": [
+  "INT-02",
+  "A11Y-02",
+  "CMP-01"
+ ],
+ "derived": {
+  "components": [
+   "Checkbox",
+   "Switch"
+  ],
+  "component_instances": 4,
+  "component_modes": {
+   "Switch": "expand",
+   "Checkbox": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 4080,
+  "header": {
+   "width": 360,
+   "height": 280
+  },
+  "op_count": 268,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 4,
+   "ANIMATED_FLOAT": 18,
+   "COLOR_CONSTANT": 16,
+   "COLOR_EXPRESSIONS": 16,
+   "CanvasContent": 8,
+   "CoreText": 6,
+   "DATA_FLOAT": 4,
+   "DATA_TEXT": 10,
+   "DRAW_CIRCLE": 2,
+   "DRAW_LINE": 4,
+   "DRAW_ROUND_RECT": 8,
+   "DRAW_TEXT_ANCHOR": 4,
+   "HEADER": 1,
+   "LAYOUT_BOX": 11,
+   "LAYOUT_CANVAS": 8,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 4,
+   "LayoutComponentContent": 23,
+   "LoopOperation": 16,
+   "MODIFIER_BACKGROUND": 1,
+   "MODIFIER_CLICK": 4,
+   "MODIFIER_HEIGHT": 14,
+   "MODIFIER_HEIGHT_IN": 2,
+   "MODIFIER_PADDING": 3,
+   "MODIFIER_WIDTH": 19,
+   "NAMED_VARIABLE": 8,
+   "PAINT_VALUES": 16,
+   "THEME": 24,
+   "TextSubtext": 4,
+   "TextTransform": 4,
+   "ValueFloatExpressionChangeActionOperation": 4
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onPrimary",
+    "type": "color",
+    "value": "#FF0B1A2E"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "outline",
+    "type": "color",
+    "value": "#FF3A4556"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "success",
+    "type": "color",
+    "value": "#FF66BB6A"
+   },
+   {
+    "name": "track",
+    "type": "color",
+    "value": "#FF2A3342"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 1
+  },
+  "audit_findings": [
+   "info: layout_touch_target"
+  ],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 4,
+   "click": 4,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 3194,
+    "component_modes": {
+     "Switch": "expand",
+     "Checkbox": "expand"
+    },
+    "op_count": 204,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "success",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 3194,
+    "component_modes": {
+     "Switch": "expand",
+     "Checkbox": "expand"
+    },
+    "op_count": 204,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "success",
+      "type": "color",
+      "value": "#FF000000"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     234,
+     280
+    ],
+    "audit_findings": [
+     "info: layout_touch_target"
+    ]
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     280
+    ],
+    "audit_findings": [
+     "info: layout_touch_target"
+    ]
+   }
+  },
+  "json_keys": [
+   "Checkbox",
+   "Switch",
+   "alpha",
+   "anim",
+   "apiLevel",
+   "background",
+   "bluetooth",
+   "bottom",
+   "box",
+   "canvas",
+   "checkbox1_checked",
+   "checked",
+   "children",
+   "clickable",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "cx",
+   "cy",
+   "dark",
+   "drawCircle",
+   "drawLine",
+   "drawRoundRect",
+   "drawTextAnchored",
+   "fontSize",
+   "global",
+   "header",
+   "height",
+   "heightIn",
+   "label",
+   "left",
+   "len",
+   "light",
+   "modifiers",
+   "muted",
+   "name",
+   "onClick",
+   "onPrimary",
+   "onSurface",
+   "operation",
+   "ops",
+   "outline",
+   "padding",
+   "paint",
+   "panX",
+   "panY",
+   "primary",
+   "profiles",
+   "radius",
+   "resources",
+   "right",
+   "root",
+   "row",
+   "rx",
+   "ry",
+   "semantics",
+   "size",
+   "start",
+   "stateDescription",
+   "strokeCap",
+   "strokeWidth",
+   "style",
+   "success",
+   "target",
+   "terms",
+   "text",
+   "textSize",
+   "textSubtext",
+   "textTransform",
+   "top",
+   "track",
+   "type",
+   "value",
+   "varName",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "weight",
+   "width",
+   "wifi",
+   "x",
+   "x1",
+   "x2",
+   "y",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "input.toggle": [
+    "valueFloatExpressionChange",
+    "onClick"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ],
+   "draw.shapes": [
+    "drawRoundRect",
+    "drawCircle",
+    "drawLine"
+   ],
+   "layout.weight": [
+    "weight"
+   ],
+   "text.basic": [
+    "text",
+    "drawTextAnchored"
+   ]
+  },
+  "built_at": "2026-11-02T02:07:34.622Z"
+ }
+}

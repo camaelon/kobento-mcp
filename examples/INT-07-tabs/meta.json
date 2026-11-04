@@ -1,0 +1,352 @@
+{
+ "id": "INT-07",
+ "name": "tabs",
+ "version": 3,
+ "title": "Tabs with panels",
+ "summary": "Three tabs (Songs, Albums, Artists): tapping one shows its panel through visibility modifiers and slides the underline under it.",
+ "prompt": "Make a tab bar with three tabs (Songs, Albums, Artists); tapping a tab shows its panel and slides an underline under it.",
+ "level": 3,
+ "family": "INT",
+ "capabilities": {
+  "primary": [
+   "input.tap",
+   "layout.state"
+  ],
+  "secondary": [
+   "data.expression",
+   "layout.weight",
+   "layout.decoration",
+   "a11y.labels",
+   "draw.shapes"
+  ]
+ },
+ "use_cases": [
+  "media-player",
+  "control"
+ ],
+ "form_factor": "widget-4x2",
+ "keywords": [
+  "tabs",
+  "tab bar",
+  "segmented control",
+  "panels",
+  "show hide",
+  "switch view",
+  "navigation",
+  "underline indicator"
+ ],
+ "components": [
+  "Tabs",
+  "Card"
+ ],
+ "teaches": [
+  "Bind the Tabs component's selected index to a document variable (\"selected\": \"@tab\"): a tap sets it and the underline slides by itself",
+  "Show one panel at a time with a visibility modifier bound to a variable that is exactly 0 or 1, computed from the index in resources.variables: show1 = 1 - min(1, abs(@tab - 1))",
+  "Stack the panels in one box so the gone ones take no space"
+ ],
+ "snippets": [
+  {
+   "pointer": "/resources/variables",
+   "shows": "layout.state",
+   "note": "tab, and show0..show2: 1 for the selected panel, 0 for the others, derived from @tab"
+  },
+  {
+   "pointer": "/root/column/children/0",
+   "shows": "input.tap",
+   "note": "Tabs bound to @tab: a tap sets the index"
+  },
+  {
+   "pointer": "/root/column/children/1/box/children/2/box/modifiers/0",
+   "shows": "layout.state",
+   "note": "visibility: @show2"
+  },
+  {
+   "pointer": "/resources/variables/show2",
+   "shows": "data.expression",
+   "note": "1 - min(1, abs(@tab - 2)): 1 only on the third tab"
+  }
+ ],
+ "inputs": {
+  "variables": {},
+  "clock": null,
+  "touch": true
+ },
+ "check": {
+  "describe": "Starts on Songs (the Songs card); a tap on Artists shows the Artists card and slides the underline under the third tab. Resized, the three tabs share the width: tapping the third tab moves the underline under Artists at 234 and at 540 wide.",
+  "render": {
+   "touch_events": [
+    {
+     "t": 0.1,
+     "type": "tap",
+     "x": 300,
+     "y": 24
+    }
+   ],
+   "duration": 1
+  },
+  "interact": [
+   {
+    "target": 2
+   }
+  ],
+  "expect": {
+   "layout_changes": "the Artists panel becomes visible and Songs goes"
+  },
+  "renders": [
+   {
+    "name": "narrow",
+    "width": 234,
+    "height": 240,
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "tap",
+      "x": 195,
+      "y": 24
+     }
+    ],
+    "duration": 1
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 240,
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "tap",
+      "x": 450,
+      "y": 24
+     }
+    ],
+    "duration": 1
+   }
+  ]
+ },
+ "related": [
+  "INT-01",
+  "INT-02"
+ ],
+ "pitfalls": [
+  "visibility takes a DECLARED variable that is exactly 0 or 1: a resources.variables expression of the tab index works (1 - min(1, abs(@tab - i))); a number literal is a variable id, and an inline function call in the modifier is not",
+  "Tabs only sets the index: the panels are yours to switch, by visibility (they take no space when gone) or by graphicsLayer alpha (CMP-06)",
+  "Stack the panels in one box: gone panels take no space, so the visible one fills it",
+  "Accessibility inspectors may still list the hidden panels (the inspector does not yet drop GONE components)"
+ ],
+ "derived": {
+  "components": [
+   "Card",
+   "Tabs"
+  ],
+  "component_instances": 4,
+  "component_modes": {
+   "Tabs": "expand",
+   "Card": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 3104,
+  "header": {
+   "width": 360,
+   "height": 240
+  },
+  "op_count": 193,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 3,
+   "ANIMATED_FLOAT": 12,
+   "COLOR_CONSTANT": 10,
+   "COLOR_EXPRESSIONS": 10,
+   "COMPONENT_VALUE": 1,
+   "CanvasContent": 2,
+   "CoreText": 12,
+   "DATA_FLOAT": 1,
+   "DATA_TEXT": 7,
+   "DRAW_RECT": 1,
+   "GraphicsLayerModifier": 3,
+   "HEADER": 1,
+   "LAYOUT_BOX": 8,
+   "LAYOUT_CANVAS": 2,
+   "LAYOUT_COLUMN": 4,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 1,
+   "LayoutComponentContent": 27,
+   "LoopOperation": 10,
+   "MODIFIER_BACKGROUND": 4,
+   "MODIFIER_CLICK": 3,
+   "MODIFIER_HEIGHT": 9,
+   "MODIFIER_PADDING": 10,
+   "MODIFIER_VISIBILITY": 3,
+   "MODIFIER_WIDTH": 15,
+   "NAMED_VARIABLE": 5,
+   "PAINT_VALUES": 1,
+   "RoundedClipRectModifierOperation": 3,
+   "THEME": 15,
+   "TextSubtext": 3,
+   "TextTransform": 3,
+   "ValueFloatExpressionChangeActionOperation": 3
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "surface",
+    "type": "color",
+    "value": "#FF1C2433"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 0
+  },
+  "audit_findings": [],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 3,
+   "click": 3,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     234,
+     240
+    ],
+    "audit_findings": []
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     240
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "Card",
+   "Tabs",
+   "alpha",
+   "anim",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "clickable",
+   "clip",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "dark",
+   "drawRect",
+   "fontSize",
+   "global",
+   "graphicsLayer",
+   "header",
+   "height",
+   "horizontalAlignment",
+   "labels",
+   "left",
+   "len",
+   "light",
+   "modifiers",
+   "muted",
+   "name",
+   "onClick",
+   "onSurface",
+   "operation",
+   "ops",
+   "padding",
+   "paint",
+   "primary",
+   "profiles",
+   "resources",
+   "right",
+   "root",
+   "roundedRect",
+   "row",
+   "selected",
+   "semantics",
+   "show0",
+   "show1",
+   "show2",
+   "size",
+   "spacedBy",
+   "start",
+   "stateDescription",
+   "style",
+   "subtitle",
+   "surface",
+   "tab",
+   "target",
+   "text",
+   "textSubtext",
+   "textTransform",
+   "title",
+   "top",
+   "type",
+   "value",
+   "varName",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "visibility",
+   "weight",
+   "width"
+  ],
+  "evidence": {
+   "input.tap": [
+    "onClick",
+    "valueFloatChange"
+   ],
+   "layout.state": [
+    "visibility"
+   ],
+   "data.expression": [
+    "<arithmetic>"
+   ],
+   "layout.weight": [
+    "weight"
+   ],
+   "layout.decoration": [
+    "background",
+    "clip"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ],
+   "draw.shapes": [
+    "drawRect"
+   ]
+  },
+  "built_at": "2026-11-03T01:19:58.400Z"
+ }
+}

@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+
+# Node
+node_modules/
+
+# Converted Material Symbols: regenerated from assets/icons/source by
+# `python3 ../kobento-tools/avd/convert_icons.py` (~10 s; mcp/deploy/setup.sh runs it). The catalog, README,
+# LICENSE and the gallery page are committed; the per-icon files and gallery data are not.
+assets/icons/converted/material-symbols/*/
+assets/icons/converted/material-symbols/.stamp
+assets/icons/converted/gallery/
+
+# Python caches
+__pycache__/
+
+# MCP servers' render output (regenerated per call)
+out/
+
+# Natural Earth 1:10m admin-1 source (40 MB): download to rebuild assets/maps/maps.json
+assets/maps/source/ne_10m_admin_1_states_provinces.geojson

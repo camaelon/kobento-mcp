@@ -1,0 +1,419 @@
+{
+ "id": "A11Y-03",
+ "name": "document-description",
+ "version": 3,
+ "title": "Chart with a document description",
+ "summary": "A weekly steps bar chart (the library BarChart) whose header contentDescription summarises it for screen readers, since the bars themselves carry no numbers a screen reader could read.",
+ "prompt": "Draw a weekly steps bar chart and give it a spoken summary for screen readers.",
+ "level": 1,
+ "family": "A11Y",
+ "capabilities": {
+  "primary": [
+   "a11y.document"
+  ],
+  "secondary": [
+   "doc.header",
+   "draw.shapes",
+   "text.anchor"
+  ]
+ },
+ "use_cases": [
+  "chart",
+  "fitness"
+ ],
+ "form_factor": "widget-4x2",
+ "keywords": [
+  "accessibility",
+  "a11y",
+  "screen reader",
+  "alt text",
+  "chart description",
+  "summary",
+  "bar chart",
+  "content description",
+  "talkback"
+ ],
+ "components": [
+  "BarChart"
+ ],
+ "teaches": [
+  "Summarise a drawn-only document for screen readers with header.contentDescription",
+  "Describe what the chart says (start, peak, end, with numbers), not what it looks like",
+  "BarChart gives its canvas a short label (\"Steps per day this week\"); the numbers a listener needs go in the document summary"
+ ],
+ "snippets": [
+  {
+   "pointer": "/header/contentDescription",
+   "shows": "a11y.document",
+   "note": "the whole document's spoken summary"
+  },
+  {
+   "pointer": "/root/column/children/1/box/children/0",
+   "shows": "draw.shapes",
+   "note": "BarChart over the steps array, filling the space under the title"
+  }
+ ],
+ "inputs": {
+  "variables": {},
+  "clock": null,
+  "touch": false
+ },
+ "check": {
+  "describe": "Seven bars (3k, 5k, 4k, 7k, 6k, 9k, 8k) peaking on Saturday, day letters under them; validate's header shows the contentDescription (DOC_CONTENT_DESCRIPTION tag). Resized (240×180, 540×120) BarChart fills the space under the title and the day letters follow the bars.",
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "narrow",
+    "width": 240,
+    "height": 180
+   },
+   {
+    "name": "wide",
+    "width": 540,
+    "height": 120
+   }
+  ]
+ },
+ "related": [
+  "A11Y-01",
+  "DOC-01"
+ ],
+ "pitfalls": [
+  "At apiLevel 7 the description is only a header tag (DOC_CONTENT_DESCRIPTION); the RootContentDescription operation is written only for apiLevel 6 with profiles 0, so a player or tool that reads only that operation sees no description",
+  "Keep the description in step with the data: a canvas has no text a screen reader could read instead, so a stale or vague summary is all the user gets",
+  "A chart drawn in literal coordinates sits in the top-left corner of a larger host and is cut in a smaller one: BarChart with fill: true scales its bars to the box it is given"
+ ],
+ "derived": {
+  "components": [
+   "BarChart"
+  ],
+  "component_instances": 1,
+  "component_modes": {
+   "BarChart": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 2050,
+  "header": {
+   "width": 360,
+   "height": 180
+  },
+  "op_count": 113,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 1,
+   "ANIMATED_FLOAT": 14,
+   "CLIP_RECT": 1,
+   "COLOR_CONSTANT": 10,
+   "COLOR_EXPRESSIONS": 10,
+   "COMPONENT_VALUE": 2,
+   "CanvasContent": 1,
+   "CoreText": 1,
+   "DATA_TEXT": 8,
+   "DRAW_LINE": 1,
+   "DRAW_ROUND_RECT": 1,
+   "DRAW_TEXT_ANCHOR": 7,
+   "DataListFloat": 1,
+   "HEADER": 1,
+   "LAYOUT_BOX": 1,
+   "LAYOUT_CANVAS": 1,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_ROOT": 1,
+   "LayoutComponentContent": 4,
+   "LoopOperation": 11,
+   "MATRIX_RESTORE": 1,
+   "MATRIX_SAVE": 1,
+   "MATRIX_TRANSLATE": 1,
+   "MODIFIER_BACKGROUND": 1,
+   "MODIFIER_HEIGHT": 3,
+   "MODIFIER_PADDING": 1,
+   "MODIFIER_WIDTH": 3,
+   "NAMED_VARIABLE": 6,
+   "PAINT_VALUES": 3,
+   "THEME": 15
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "outline",
+    "type": "color",
+    "value": "#FF3A4556"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "steps",
+    "type": "float_array",
+    "value": [
+     3000,
+     5000,
+     4000,
+     7000,
+     6000,
+     9000,
+     8000
+    ]
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 1
+  },
+  "audit_findings": [
+   "info: spaced_by_with_weight"
+  ],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 0,
+   "click": 0,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 1523,
+    "component_modes": {
+     "BarChart": "expand"
+    },
+    "op_count": 71,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "steps",
+      "type": "float_array",
+      "value": [
+       3000,
+       5000,
+       4000,
+       7000,
+       6000,
+       9000,
+       8000
+      ]
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 1523,
+    "component_modes": {
+     "BarChart": "expand"
+    },
+    "op_count": 71,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "steps",
+      "type": "float_array",
+      "value": [
+       3000,
+       5000,
+       4000,
+       7000,
+       6000,
+       9000,
+       8000
+      ]
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     240,
+     180
+    ],
+    "audit_findings": []
+   },
+   "wide": {
+    "render": "render-wide.png",
+    "render_findings": [],
+    "size": [
+     540,
+     120
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "BarChart",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "clipRect",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "dark",
+   "drawLine",
+   "drawRoundRect",
+   "drawTextAnchored",
+   "dx",
+   "dy",
+   "fill",
+   "floatArrays",
+   "fontSize",
+   "from",
+   "header",
+   "height",
+   "index",
+   "label",
+   "labels",
+   "left",
+   "light",
+   "loop",
+   "modifiers",
+   "muted",
+   "name",
+   "onSurface",
+   "ops",
+   "outline",
+   "padding",
+   "paint",
+   "panX",
+   "panY",
+   "primary",
+   "profiles",
+   "resources",
+   "right",
+   "root",
+   "rx",
+   "ry",
+   "save",
+   "semantics",
+   "spacedBy",
+   "steps",
+   "strokeWidth",
+   "style",
+   "text",
+   "textSize",
+   "top",
+   "translate",
+   "until",
+   "value",
+   "values",
+   "variable",
+   "verticalWeight",
+   "width",
+   "x",
+   "x1",
+   "x2",
+   "y",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "a11y.document": [
+    "/header/contentDescription"
+   ],
+   "doc.header": [
+    "header"
+   ],
+   "draw.shapes": [
+    "drawRoundRect",
+    "drawLine"
+   ],
+   "text.anchor": [
+    "drawTextAnchored"
+   ]
+  },
+  "built_at": "2026-11-02T08:48:40.227Z"
+ }
+}

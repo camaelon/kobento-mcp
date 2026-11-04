@@ -1,0 +1,1779 @@
+{
+ "id": "SHW-30",
+ "name": "morphing-weather",
+ "version": 1,
+ "title": "Morphing weather: one icon path that morphs between sun, cloud, rain, snow and storm",
+ "summary": "A weather screen whose big icon is a single path morphing pairwise between five outlines (sun disc, cloud, rain cloud, snow cloud, storm anvil) with an eased blend, whether the host changes the condition or a day is tapped in the forecast strip. Spinning sun rays, falling rain, drifting snow and a flickering bolt fade in with their condition, the sky gradient and the icon's colours blend along, and the temperature, high/low, wind, humidity and rain chance count to the new day's values. One canvas lays out a phone screen or, when wide or short, a 4x2 widget.",
+ "prompt": "A weather screen whose big icon morphs smoothly between sun, cloud, rain, snow and storm when the condition changes or when I tap a day in the forecast strip, with animated details (spinning sun rays, falling drops), the temperature counting to the new value and the background gradient shifting. It should also work as a 4x2 widget.",
+ "level": 5,
+ "family": "SHW",
+ "hand_built": "The sky, text and forecast strip are one canvas laid out by expressions (phone or widget arrangement) and blended by the same eased weights as the icon; the icons themselves are WeatherIcon in morph mode",
+ "components": [
+  "WeatherIcon"
+ ],
+ "capabilities": {
+  "primary": [
+   "anim.morph",
+   "draw.morph",
+   "host.variables"
+  ],
+  "secondary": [
+   "anim.value",
+   "draw.gradient",
+   "time.animation",
+   "data.loop",
+   "data.array",
+   "text.dynamic",
+   "time.date",
+   "input.tap",
+   "expr.trig",
+   "a11y.labels"
+  ]
+ },
+ "use_cases": [
+  "weather",
+  "widget",
+  "generative-art"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "weather",
+  "weather app",
+  "forecast",
+  "morph",
+  "morphing icon",
+  "animated weather icon",
+  "shape morph",
+  "path morph",
+  "sun",
+  "cloud",
+  "rain",
+  "snow",
+  "thunderstorm",
+  "lightning",
+  "sky gradient",
+  "counting number",
+  "temperature",
+  "forecast strip",
+  "5-day forecast",
+  "weather widget",
+  "4x2 widget",
+  "showcase"
+ ],
+ "teaches": [
+  "The big icon is {\"WeatherIcon\": {\"morph\": true, \"value\": \"@dc\", \"look\": \"rich\", \"animate\": true}}: one outline that morphs pairwise between sun, cloud, rain, snow and storm whenever @dc changes (a host condition or a tapped day), with turning rays, falling rain, drifting snow and a flickering bolt",
+  "The strip's mini icons are the same component in the flat look, one per day, value = that day's condition and colours from the document's themed mini0..mini4, drop, flake and bolt: a host update of the forecast arrays morphs them too",
+  "Size the icon from an expression: the call sits in a box whose width and height are @isz (a resources variable from windowWidth()/windowHeight()), with a large size; the component scales its drawing to the box it gets. Spacer boxes of @ixl and @iyt place it",
+  "The sky blends with the icon: five eased weights w_i = anim(1 - |dc - i|, 0.8 s), the same as WeatherIcon's, turned into chain alphas k_i = w_i / (w_0 + ... + w_i) over five gradient rectangles, so sky and icon change together",
+  "The temperature, high/low and stats are anim'd values ({value, anim: 0.9}) printed with textFromFloat: the number counts to the new value",
+  "Four looks: the skies are themed colours (light: pale daylight skies under dark ink text; dark: deep dusk skies under white text); text uses the theme tokens onSurface/muted/track, overridden with the art's own light/dark values, so the mono palettes remap them. In mono ({\"$if\": \"theme.mono\"} forks) there is no sky and no fill: the same morphing path is stroked in onSurface, rays, drops and flakes are onSurface strokes and dots, the strip and its selection are outlines, and t = 0 holds every ambient motion still (repaint idle); the morph switches",
+  "One canvas does both layouts: wide = max(step(W / heroHeight, 1.6), step(400, heroHeight)) picks the widget arrangement (icon left, text right) over the phone one, and the two text blocks are scaled by wide and 1 - wide",
+  "The forecast strip is drawn in the canvas; its tap targets are five transparent weighted boxes over it in a column, each with semantics and valueFloatChange sel = i"
+ ],
+ "pitfalls": [
+  "Six morph calls (the hero and five minis) cost about 1.7 KB each beyond the shared outlines (about 5 KB once): the document grew from 18.8 KB (hand-drawn) to 28.3 KB with the component",
+  "Mono has no motion (the expansion removes every anim): the icons and the sky switch instead of morphing",
+  "Paint alpha is reset by a following color op in the same paint: set alpha in every paint that sets a colour",
+  "Expressions are capped at 32 entries on Android: the chain weights are split into ws, k1..k4",
+  "A paint's alpha op overrides the alpha of its colour: a translucent themed colour (#33FFFFFF) drawn with alpha 1 in the same paint comes out opaque. Set the alpha in an earlier paint, then the colour",
+  "The clickable boxes get the player's press feedback (a light disc at the tap point for a few frames, in both players), drawn over the canvas",
+  "The TS harness in players/typescript/render.mjs pins the clock without advancing it; to see the morph frames in TS use the inspector (interact) or advance the clock per frame"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/1/box/children/1/column/children/1/row/children/1/box/children/0",
+   "shows": "anim.morph",
+   "note": "the big icon: WeatherIcon morph mode, rich look, animated details"
+  },
+  {
+   "pointer": "/root/1/box/children/2/column/children/1/row/children/0/box/children/0/column/children/1",
+   "shows": "draw.morph",
+   "note": "a mini icon: the flat look in the document's colours"
+  },
+  {
+   "pointer": "/root/1/box/children/0/canvas/commands/3",
+   "shows": "anim.value",
+   "note": "w0: the sky's eased weight, as the icon's"
+  },
+  {
+   "pointer": "/root/1/box/children/0/canvas/commands/2",
+   "shows": "anim.value",
+   "note": "the temperature counts to the selected day's value"
+  },
+  {
+   "pointer": "/resources/variables/condition",
+   "shows": "host.variables",
+   "note": "the host sets the current condition (0..4); arrays fc/hi/lo/wind/hum/rain carry the forecast"
+  }
+ ],
+ "inputs": {
+  "variables": {
+   "condition": {
+    "type": "float",
+    "meaning": "the current condition: 0 sun, 1 cloud, 2 rain, 3 snow, 4 storm",
+    "default": 0,
+    "min": 0,
+    "max": 4
+   },
+   "temp": {
+    "type": "float",
+    "meaning": "the current temperature, degrees",
+    "default": 12,
+    "min": -30,
+    "max": 45
+   },
+   "sel": {
+    "type": "float",
+    "meaning": "the selected day, 0 (now) to 4; taps set it",
+    "default": 0,
+    "min": 0,
+    "max": 4
+   },
+   "city": {
+    "type": "string",
+    "meaning": "the place name",
+    "default": "Lyon"
+   },
+   "fc": {
+    "type": "float_array",
+    "meaning": "condition of the next four days (0..4)",
+    "default": [
+     1,
+     2,
+     4,
+     3
+    ]
+   },
+   "hi": {
+    "type": "float_array",
+    "meaning": "high temperature, today and the next four days",
+    "default": [
+     14,
+     11,
+     9,
+     10,
+     2
+    ]
+   },
+   "lo": {
+    "type": "float_array",
+    "meaning": "low temperature, five days",
+    "default": [
+     4,
+     6,
+     5,
+     3,
+     -2
+    ]
+   },
+   "wind": {
+    "type": "float_array",
+    "meaning": "wind km/h, five days",
+    "default": [
+     8,
+     14,
+     22,
+     31,
+     12
+    ]
+   },
+   "hum": {
+    "type": "float_array",
+    "meaning": "humidity %, five days",
+    "default": [
+     58,
+     71,
+     88,
+     84,
+     79
+    ]
+   },
+   "rain": {
+    "type": "float_array",
+    "meaning": "chance of rain %, five days",
+    "default": [
+     0,
+     10,
+     90,
+     70,
+     60
+    ]
+   }
+  },
+  "clock": "the date line and the weekday names of the strip",
+  "touch": true
+ },
+ "check": {
+  "describe": "Looks: light = pale skies with dark text (rain shown), dark = deep skies with white text (storm shown), mono-dark = white line drawing of the rain cloud on black with outlined strip, mono-light = black line drawing on white caught mid-morph to the storm after tapping Thu. Clock pinned to Monday 2 November 2026. 360x640: Lyon, Monday · 2 November, a sun with 12 rays on a blue sky, 12°, Sunny, H 14° L 4°, wind/humidity/rain, and a strip Now Tue Wed Thu Fri with mini icons and highs. condition 2/3/4: the same screen with a rain cloud and falling drops on a dark slate sky, a snow cloud with flakes, a dark anvil with a yellow bolt on a near-black sky. morph: 0.3 s after tapping Wed the disc is half-way to the rain cloud, rays shrinking, drops appearing, sky darkening, the number counting down. tapped-storm: Thursday selected, storm icon, 10°. Widgets 360x180 and 400x200: icon left, big temperature and condition, city/day/high-low right, the strip below. 300x300 uses the widget arrangement; 412x915 the phone one.",
+  "render": {
+   "clock": "2026-11-02T10:00:00",
+   "duration": 1
+  },
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light",
+    "variables": {
+     "condition": 2
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "dark",
+    "theme": "dark",
+    "variables": {
+     "condition": 4
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark",
+    "variables": {
+     "condition": 2
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light",
+    "touch_events": [
+     {
+      "t": 0.3,
+      "type": "tap",
+      "x": 252,
+      "y": 600
+     }
+    ],
+    "duration": 0.62
+   },
+   {
+    "name": "cloud",
+    "variables": {
+     "condition": 1
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "rain",
+    "variables": {
+     "condition": 2
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "snow",
+    "variables": {
+     "condition": 3
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "storm",
+    "variables": {
+     "condition": 4
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "morph",
+    "touch_events": [
+     {
+      "t": 0.3,
+      "type": "tap",
+      "x": 180,
+      "y": 600
+     }
+    ],
+    "duration": 0.6
+   },
+   {
+    "name": "morph-late",
+    "touch_events": [
+     {
+      "t": 0.3,
+      "type": "tap",
+      "x": 180,
+      "y": 600
+     }
+    ],
+    "duration": 0.85
+   },
+   {
+    "name": "tapped-storm",
+    "touch_events": [
+     {
+      "t": 0.3,
+      "type": "tap",
+      "x": 252,
+      "y": 600
+     }
+    ],
+    "duration": 1.6
+   },
+   {
+    "name": "rays-later",
+    "clock": "2026-11-02T10:00:03",
+    "duration": 1
+   },
+   {
+    "name": "widget",
+    "width": 360,
+    "height": 180,
+    "duration": 1
+   },
+   {
+    "name": "widget-rain",
+    "width": 400,
+    "height": 200,
+    "variables": {
+     "condition": 2
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "widget-storm",
+    "width": 320,
+    "height": 160,
+    "variables": {
+     "condition": 4
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "square",
+    "width": 300,
+    "height": 300,
+    "variables": {
+     "condition": 3
+    },
+    "duration": 1.5
+   },
+   {
+    "name": "tall",
+    "width": 412,
+    "height": 915,
+    "variables": {
+     "condition": 1
+    },
+    "duration": 1.5
+   }
+  ]
+ },
+ "related": [
+  "ANM-09",
+  "ANM-11",
+  "DRW-13",
+  "WeatherIcon"
+ ],
+ "derived": {
+  "components": [
+   "WeatherIcon"
+  ],
+  "component_instances": 6,
+  "component_modes": {
+   "WeatherIcon": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 28292,
+  "header": {
+   "width": 360,
+   "height": 640
+  },
+  "op_count": 1094,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 13,
+   "ANIMATED_FLOAT": 302,
+   "COLOR_CONSTANT": 50,
+   "COLOR_EXPRESSIONS": 50,
+   "COMPONENT_VALUE": 12,
+   "CanvasContent": 7,
+   "DATA_FLOAT": 3,
+   "DATA_TEXT": 29,
+   "DRAW_CIRCLE": 7,
+   "DRAW_LINE": 13,
+   "DRAW_PATH": 27,
+   "DRAW_RECT": 6,
+   "DRAW_ROUND_RECT": 2,
+   "DRAW_TEXT_ANCHOR": 26,
+   "DataListFloat": 14,
+   "HEADER": 1,
+   "LAYOUT_BOX": 15,
+   "LAYOUT_CANVAS": 7,
+   "LAYOUT_COLUMN": 7,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 2,
+   "LayoutComponentContent": 23,
+   "LoopOperation": 68,
+   "MATRIX_RESTORE": 8,
+   "MATRIX_ROTATE": 6,
+   "MATRIX_SAVE": 8,
+   "MATRIX_SCALE": 8,
+   "MATRIX_TRANSLATE": 7,
+   "MODIFIER_BACKGROUND": 1,
+   "MODIFIER_CLICK": 5,
+   "MODIFIER_HEIGHT": 25,
+   "MODIFIER_PADDING": 1,
+   "MODIFIER_WIDTH": 20,
+   "NAMED_VARIABLE": 43,
+   "PAINT_VALUES": 109,
+   "PATH_DATA": 6,
+   "PATH_TWEEN": 24,
+   "THEME": 75,
+   "TextFromFloat": 15,
+   "TextMerge": 34,
+   "TextSubtext": 9,
+   "ValueFloatExpressionChangeActionOperation": 5
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF123E7A"
+   },
+   {
+    "name": "bolt",
+    "type": "color",
+    "value": "#FFFFE066"
+   },
+   {
+    "name": "chip",
+    "type": "color",
+    "value": "#1FFFFFFF"
+   },
+   {
+    "name": "chipSel",
+    "type": "color",
+    "value": "#40FFFFFF"
+   },
+   {
+    "name": "city",
+    "type": "string",
+    "value": "Lyon"
+   },
+   {
+    "name": "cname_n",
+    "type": "float_array",
+    "value": [
+     5,
+     6,
+     4,
+     4,
+     12
+    ]
+   },
+   {
+    "name": "cname_s",
+    "type": "float_array",
+    "value": [
+     0,
+     5,
+     11,
+     15,
+     19
+    ]
+   },
+   {
+    "name": "condition",
+    "type": "float",
+    "value": 0
+   },
+   {
+    "name": "dname_n",
+    "type": "float_array",
+    "value": [
+     6,
+     7,
+     9,
+     8,
+     6,
+     8,
+     6
+    ]
+   },
+   {
+    "name": "dname_s",
+    "type": "float_array",
+    "value": [
+     0,
+     6,
+     13,
+     22,
+     30,
+     36,
+     44
+    ]
+   },
+   {
+    "name": "drop",
+    "type": "color",
+    "value": "#FF9AD0FF"
+   },
+   {
+    "name": "edge",
+    "type": "color",
+    "value": "#2EFFFFFF"
+   },
+   {
+    "name": "fc",
+    "type": "float_array",
+    "value": [
+     1,
+     2,
+     4,
+     3
+    ]
+   },
+   {
+    "name": "flake",
+    "type": "color",
+    "value": "#FFFFFFFF"
+   },
+   {
+    "name": "hi",
+    "type": "float_array",
+    "value": [
+     14,
+     11,
+     9,
+     10,
+     2
+    ]
+   },
+   {
+    "name": "hum",
+    "type": "float_array",
+    "value": [
+     58,
+     71,
+     88,
+     84,
+     79
+    ]
+   },
+   {
+    "name": "lo",
+    "type": "float_array",
+    "value": [
+     4,
+     6,
+     5,
+     3,
+     -2
+    ]
+   },
+   {
+    "name": "mini0",
+    "type": "color",
+    "value": "#FFFFD54F"
+   },
+   {
+    "name": "mini1",
+    "type": "color",
+    "value": "#FFFFFFFF"
+   },
+   {
+    "name": "mini2",
+    "type": "color",
+    "value": "#FFC4CFDB"
+   },
+   {
+    "name": "mini3",
+    "type": "color",
+    "value": "#FFFFFFFF"
+   },
+   {
+    "name": "mini4",
+    "type": "color",
+    "value": "#FF8A86A3"
+   },
+   {
+    "name": "mname_n",
+    "type": "float_array",
+    "value": [
+     7,
+     8,
+     5,
+     5,
+     3,
+     4,
+     4,
+     6,
+     9,
+     7,
+     8,
+     8
+    ]
+   },
+   {
+    "name": "mname_s",
+    "type": "float_array",
+    "value": [
+     0,
+     7,
+     15,
+     20,
+     25,
+     28,
+     32,
+     36,
+     42,
+     51,
+     58,
+     66
+    ]
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#CCFFFFFF"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFFFFFFF"
+   },
+   {
+    "name": "rain",
+    "type": "float_array",
+    "value": [
+     0,
+     10,
+     90,
+     70,
+     60
+    ]
+   },
+   {
+    "name": "sel",
+    "type": "float",
+    "value": 0
+   },
+   {
+    "name": "sky0a",
+    "type": "color",
+    "value": "#FF123E7A"
+   },
+   {
+    "name": "sky0b",
+    "type": "color",
+    "value": "#FF3F7DC0"
+   },
+   {
+    "name": "sky1a",
+    "type": "color",
+    "value": "#FF263546"
+   },
+   {
+    "name": "sky1b",
+    "type": "color",
+    "value": "#FF4E6278"
+   },
+   {
+    "name": "sky2a",
+    "type": "color",
+    "value": "#FF0E1824"
+   },
+   {
+    "name": "sky2b",
+    "type": "color",
+    "value": "#FF2E4256"
+   },
+   {
+    "name": "sky3a",
+    "type": "color",
+    "value": "#FF243448"
+   },
+   {
+    "name": "sky3b",
+    "type": "color",
+    "value": "#FF5B7290"
+   },
+   {
+    "name": "sky4a",
+    "type": "color",
+    "value": "#FF07080F"
+   },
+   {
+    "name": "sky4b",
+    "type": "color",
+    "value": "#FF2A2540"
+   },
+   {
+    "name": "temp",
+    "type": "float",
+    "value": 12
+   },
+   {
+    "name": "tname_n",
+    "type": "float_array",
+    "value": [
+     6,
+     7,
+     9,
+     8,
+     6,
+     8,
+     6
+    ]
+   },
+   {
+    "name": "tname_s",
+    "type": "float_array",
+    "value": [
+     0,
+     6,
+     13,
+     22,
+     30,
+     36,
+     44
+    ]
+   },
+   {
+    "name": "track",
+    "type": "color",
+    "value": "#33FFFFFF"
+   },
+   {
+    "name": "wind",
+    "type": "float_array",
+    "value": [
+     8,
+     14,
+     22,
+     31,
+     12
+    ]
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 1,
+   "info": 2
+  },
+  "audit_findings": [
+   "warning: text_in_canvas",
+   "info: repaint_continuous",
+   "info: expression_entries"
+  ],
+  "repaint": "continuous",
+  "interaction_targets": {
+   "total": 5,
+   "click": 5,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 24100,
+    "component_modes": {
+     "WeatherIcon": "expand"
+    },
+    "motion_removed": 42,
+    "op_count": 828,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "bolt",
+      "type": "color",
+      "value": "#FFFFE066"
+     },
+     {
+      "name": "chip",
+      "type": "color",
+      "value": "#1FFFFFFF"
+     },
+     {
+      "name": "chipSel",
+      "type": "color",
+      "value": "#40FFFFFF"
+     },
+     {
+      "name": "city",
+      "type": "string",
+      "value": "Lyon"
+     },
+     {
+      "name": "cname_n",
+      "type": "float_array",
+      "value": [
+       5,
+       6,
+       4,
+       4,
+       12
+      ]
+     },
+     {
+      "name": "cname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       5,
+       11,
+       15,
+       19
+      ]
+     },
+     {
+      "name": "condition",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "dname_n",
+      "type": "float_array",
+      "value": [
+       6,
+       7,
+       9,
+       8,
+       6,
+       8,
+       6
+      ]
+     },
+     {
+      "name": "dname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       6,
+       13,
+       22,
+       30,
+       36,
+       44
+      ]
+     },
+     {
+      "name": "drop",
+      "type": "color",
+      "value": "#FF9AD0FF"
+     },
+     {
+      "name": "edge",
+      "type": "color",
+      "value": "#2EFFFFFF"
+     },
+     {
+      "name": "fc",
+      "type": "float_array",
+      "value": [
+       1,
+       2,
+       4,
+       3
+      ]
+     },
+     {
+      "name": "flake",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "hi",
+      "type": "float_array",
+      "value": [
+       14,
+       11,
+       9,
+       10,
+       2
+      ]
+     },
+     {
+      "name": "hum",
+      "type": "float_array",
+      "value": [
+       58,
+       71,
+       88,
+       84,
+       79
+      ]
+     },
+     {
+      "name": "lo",
+      "type": "float_array",
+      "value": [
+       4,
+       6,
+       5,
+       3,
+       -2
+      ]
+     },
+     {
+      "name": "mini0",
+      "type": "color",
+      "value": "#FFFFD54F"
+     },
+     {
+      "name": "mini1",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "mini2",
+      "type": "color",
+      "value": "#FFC4CFDB"
+     },
+     {
+      "name": "mini3",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "mini4",
+      "type": "color",
+      "value": "#FF8A86A3"
+     },
+     {
+      "name": "mname_n",
+      "type": "float_array",
+      "value": [
+       7,
+       8,
+       5,
+       5,
+       3,
+       4,
+       4,
+       6,
+       9,
+       7,
+       8,
+       8
+      ]
+     },
+     {
+      "name": "mname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       7,
+       15,
+       20,
+       25,
+       28,
+       32,
+       36,
+       42,
+       51,
+       58,
+       66
+      ]
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "rain",
+      "type": "float_array",
+      "value": [
+       0,
+       10,
+       90,
+       70,
+       60
+      ]
+     },
+     {
+      "name": "sel",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "sky0a",
+      "type": "color",
+      "value": "#FF123E7A"
+     },
+     {
+      "name": "sky0b",
+      "type": "color",
+      "value": "#FF3F7DC0"
+     },
+     {
+      "name": "sky1a",
+      "type": "color",
+      "value": "#FF263546"
+     },
+     {
+      "name": "sky1b",
+      "type": "color",
+      "value": "#FF4E6278"
+     },
+     {
+      "name": "sky2a",
+      "type": "color",
+      "value": "#FF0E1824"
+     },
+     {
+      "name": "sky2b",
+      "type": "color",
+      "value": "#FF2E4256"
+     },
+     {
+      "name": "sky3a",
+      "type": "color",
+      "value": "#FF243448"
+     },
+     {
+      "name": "sky3b",
+      "type": "color",
+      "value": "#FF5B7290"
+     },
+     {
+      "name": "sky4a",
+      "type": "color",
+      "value": "#FF07080F"
+     },
+     {
+      "name": "sky4b",
+      "type": "color",
+      "value": "#FF2A2540"
+     },
+     {
+      "name": "temp",
+      "type": "float",
+      "value": 12
+     },
+     {
+      "name": "tname_n",
+      "type": "float_array",
+      "value": [
+       6,
+       7,
+       9,
+       8,
+       6,
+       8,
+       6
+      ]
+     },
+     {
+      "name": "tname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       6,
+       13,
+       22,
+       30,
+       36,
+       44
+      ]
+     },
+     {
+      "name": "track",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "wind",
+      "type": "float_array",
+      "value": [
+       8,
+       14,
+       22,
+       31,
+       12
+      ]
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 24100,
+    "component_modes": {
+     "WeatherIcon": "expand"
+    },
+    "motion_removed": 42,
+    "op_count": 828,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "bolt",
+      "type": "color",
+      "value": "#FFFFC107"
+     },
+     {
+      "name": "chip",
+      "type": "color",
+      "value": "#9EFFFFFF"
+     },
+     {
+      "name": "chipSel",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "city",
+      "type": "string",
+      "value": "Lyon"
+     },
+     {
+      "name": "cname_n",
+      "type": "float_array",
+      "value": [
+       5,
+       6,
+       4,
+       4,
+       12
+      ]
+     },
+     {
+      "name": "cname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       5,
+       11,
+       15,
+       19
+      ]
+     },
+     {
+      "name": "condition",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "dname_n",
+      "type": "float_array",
+      "value": [
+       6,
+       7,
+       9,
+       8,
+       6,
+       8,
+       6
+      ]
+     },
+     {
+      "name": "dname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       6,
+       13,
+       22,
+       30,
+       36,
+       44
+      ]
+     },
+     {
+      "name": "drop",
+      "type": "color",
+      "value": "#FF3D7FCC"
+     },
+     {
+      "name": "edge",
+      "type": "color",
+      "value": "#4016202C"
+     },
+     {
+      "name": "fc",
+      "type": "float_array",
+      "value": [
+       1,
+       2,
+       4,
+       3
+      ]
+     },
+     {
+      "name": "flake",
+      "type": "color",
+      "value": "#FF7F98B5"
+     },
+     {
+      "name": "hi",
+      "type": "float_array",
+      "value": [
+       14,
+       11,
+       9,
+       10,
+       2
+      ]
+     },
+     {
+      "name": "hum",
+      "type": "float_array",
+      "value": [
+       58,
+       71,
+       88,
+       84,
+       79
+      ]
+     },
+     {
+      "name": "lo",
+      "type": "float_array",
+      "value": [
+       4,
+       6,
+       5,
+       3,
+       -2
+      ]
+     },
+     {
+      "name": "mini0",
+      "type": "color",
+      "value": "#FFFFB300"
+     },
+     {
+      "name": "mini1",
+      "type": "color",
+      "value": "#FF98A8BA"
+     },
+     {
+      "name": "mini2",
+      "type": "color",
+      "value": "#FF6E8299"
+     },
+     {
+      "name": "mini3",
+      "type": "color",
+      "value": "#FFAFC3D8"
+     },
+     {
+      "name": "mini4",
+      "type": "color",
+      "value": "#FF6E6A85"
+     },
+     {
+      "name": "mname_n",
+      "type": "float_array",
+      "value": [
+       7,
+       8,
+       5,
+       5,
+       3,
+       4,
+       4,
+       6,
+       9,
+       7,
+       8,
+       8
+      ]
+     },
+     {
+      "name": "mname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       7,
+       15,
+       20,
+       25,
+       28,
+       32,
+       36,
+       42,
+       51,
+       58,
+       66
+      ]
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "rain",
+      "type": "float_array",
+      "value": [
+       0,
+       10,
+       90,
+       70,
+       60
+      ]
+     },
+     {
+      "name": "sel",
+      "type": "float",
+      "value": 0
+     },
+     {
+      "name": "sky0a",
+      "type": "color",
+      "value": "#FF7DBDF7"
+     },
+     {
+      "name": "sky0b",
+      "type": "color",
+      "value": "#FFE6F3FF"
+     },
+     {
+      "name": "sky1a",
+      "type": "color",
+      "value": "#FFA9B8C9"
+     },
+     {
+      "name": "sky1b",
+      "type": "color",
+      "value": "#FFEDF1F5"
+     },
+     {
+      "name": "sky2a",
+      "type": "color",
+      "value": "#FF8296AE"
+     },
+     {
+      "name": "sky2b",
+      "type": "color",
+      "value": "#FFD8E1EA"
+     },
+     {
+      "name": "sky3a",
+      "type": "color",
+      "value": "#FFB3C6DA"
+     },
+     {
+      "name": "sky3b",
+      "type": "color",
+      "value": "#FFF4F8FC"
+     },
+     {
+      "name": "sky4a",
+      "type": "color",
+      "value": "#FF7F7A99"
+     },
+     {
+      "name": "sky4b",
+      "type": "color",
+      "value": "#FFC9C5D6"
+     },
+     {
+      "name": "temp",
+      "type": "float",
+      "value": 12
+     },
+     {
+      "name": "tname_n",
+      "type": "float_array",
+      "value": [
+       6,
+       7,
+       9,
+       8,
+       6,
+       8,
+       6
+      ]
+     },
+     {
+      "name": "tname_s",
+      "type": "float_array",
+      "value": [
+       0,
+       6,
+       13,
+       22,
+       30,
+       36,
+       44
+      ]
+     },
+     {
+      "name": "track",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "wind",
+      "type": "float_array",
+      "value": [
+       8,
+       14,
+       22,
+       31,
+       12
+      ]
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "cloud": {
+    "render": "render-cloud.png",
+    "render_findings": []
+   },
+   "rain": {
+    "render": "render-rain.png",
+    "render_findings": []
+   },
+   "snow": {
+    "render": "render-snow.png",
+    "render_findings": []
+   },
+   "storm": {
+    "render": "render-storm.png",
+    "render_findings": []
+   },
+   "morph": {
+    "render": "render-morph.png",
+    "render_findings": []
+   },
+   "morph-late": {
+    "render": "render-morph-late.png",
+    "render_findings": []
+   },
+   "tapped-storm": {
+    "render": "render-tapped-storm.png",
+    "render_findings": []
+   },
+   "rays-later": {
+    "render": "render-rays-later.png",
+    "render_findings": []
+   },
+   "widget": {
+    "render": "render-widget.png",
+    "render_findings": [],
+    "size": [
+     360,
+     180
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   },
+   "widget-rain": {
+    "render": "render-widget-rain.png",
+    "render_findings": [],
+    "size": [
+     400,
+     200
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   },
+   "widget-storm": {
+    "render": "render-widget-storm.png",
+    "render_findings": [],
+    "size": [
+     320,
+     160
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   },
+   "square": {
+    "render": "render-square.png",
+    "render_findings": [],
+    "size": [
+     300,
+     300
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   },
+   "tall": {
+    "render": "render-tall.png",
+    "render_findings": [],
+    "size": [
+     412,
+     915
+    ],
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ]
+   }
+  },
+  "json_keys": [
+   "$if",
+   "H",
+   "W",
+   "WeatherIcon",
+   "alpha",
+   "angle",
+   "anim",
+   "animate",
+   "apiLevel",
+   "background",
+   "bolt",
+   "boltColor",
+   "bottom",
+   "box",
+   "c0",
+   "c1",
+   "c2",
+   "c3",
+   "c4",
+   "canvas",
+   "centerX",
+   "centerY",
+   "children",
+   "chip",
+   "chipSel",
+   "clickable",
+   "cloudColor",
+   "cname_n",
+   "cname_s",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "condition",
+   "contentDescription",
+   "cx",
+   "cy",
+   "dark",
+   "dc",
+   "decimal",
+   "dname_n",
+   "dname_s",
+   "drawCircle",
+   "drawLine",
+   "drawPath",
+   "drawRect",
+   "drawRoundRect",
+   "drawTextAnchored",
+   "drop",
+   "dropColor",
+   "dx",
+   "dy",
+   "edge",
+   "else",
+   "export",
+   "fc",
+   "flags",
+   "flake",
+   "flakeColor",
+   "floatArrays",
+   "from",
+   "gen_wx_bolt_1",
+   "gen_wx_cloud_1",
+   "gen_wx_rain_1",
+   "gen_wx_snow_1",
+   "gen_wx_storm_1",
+   "gen_wx_sun_1",
+   "header",
+   "height",
+   "hh",
+   "hi",
+   "horizontalAlignment",
+   "hum",
+   "icx",
+   "icy",
+   "id",
+   "id1",
+   "id2",
+   "index",
+   "isz",
+   "ixl",
+   "iyt",
+   "label",
+   "left",
+   "len",
+   "light",
+   "linearGradient",
+   "lo",
+   "look",
+   "loop",
+   "mini0",
+   "mini1",
+   "mini2",
+   "mini3",
+   "mini4",
+   "mname_n",
+   "mname_s",
+   "modifiers",
+   "morph",
+   "muted",
+   "name",
+   "onClick",
+   "onSurface",
+   "ops",
+   "padding",
+   "paint",
+   "panX",
+   "panY",
+   "path",
+   "path1",
+   "path2",
+   "pathTween",
+   "paths",
+   "pivotX",
+   "pivotY",
+   "profiles",
+   "radialGradient",
+   "radius",
+   "rain",
+   "resources",
+   "right",
+   "root",
+   "rotate",
+   "row",
+   "rx",
+   "ry",
+   "save",
+   "scale",
+   "sel",
+   "semantics",
+   "shader",
+   "size",
+   "sky0a",
+   "sky0b",
+   "sky1a",
+   "sky1b",
+   "sky2a",
+   "sky2b",
+   "sky3a",
+   "sky3b",
+   "sky4a",
+   "sky4b",
+   "start",
+   "stormColor",
+   "strokeCap",
+   "strokeWidth",
+   "style",
+   "sunColor",
+   "sx",
+   "sy",
+   "target",
+   "temp",
+   "text",
+   "textSize",
+   "textSubtext",
+   "then",
+   "tname_n",
+   "tname_s",
+   "top",
+   "track",
+   "translate",
+   "tween",
+   "type",
+   "until",
+   "value",
+   "varName",
+   "variable",
+   "variables",
+   "verticalWeight",
+   "vtype",
+   "weight",
+   "whole",
+   "wide",
+   "width",
+   "wind",
+   "x",
+   "x1",
+   "x2",
+   "x3",
+   "y",
+   "y1",
+   "y2",
+   "y3"
+  ],
+  "evidence": {
+   "anim.morph": [
+    "pathTween"
+   ],
+   "draw.morph": [
+    "pathTween"
+   ],
+   "host.variables": [
+    "export",
+    "colors"
+   ],
+   "anim.value": [
+    "anim"
+   ],
+   "draw.gradient": [
+    "linearGradient",
+    "radialGradient"
+   ],
+   "time.animation": [
+    "continuousSec"
+   ],
+   "data.loop": [
+    "loop"
+   ],
+   "data.array": [
+    "floatArrays",
+    "arrayGet"
+   ],
+   "text.dynamic": [
+    "textFromFloat",
+    "textMerge"
+   ],
+   "time.date": [
+    "weekDay",
+    "dayOfMonth",
+    "calendarMonth"
+   ],
+   "input.tap": [
+    "onClick",
+    "valueFloatChange"
+   ],
+   "expr.trig": [
+    "sin("
+   ],
+   "a11y.labels": [
+    "semantics"
+   ]
+  },
+  "built_at": "2026-11-02T22:51:09.733Z"
+ }
+}

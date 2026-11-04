@@ -1,0 +1,120 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 360,
+  "profiles": 513,
+  "contentDescription": "Where we deliver: a map of Europe with France, Germany, Spain, Italy and the Netherlands highlighted"
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 16
+    }
+   ],
+   "children": [
+    {
+     "text": {
+      "value": "Where we deliver",
+      "fontSize": 18,
+      "fontWeight": 600,
+      "color": "@colors.onSurface"
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "height": 10
+       }
+      ]
+     }
+    },
+    {
+     "WorldMap": {
+      "region": "Europe",
+      "fill": true,
+      "borders": true,
+      "highlight": [
+       "FRA",
+       "DEU",
+       "ESP",
+       "ITA",
+       "NLD"
+      ],
+      "cities": [
+       "Paris",
+       "Berlin",
+       "Madrid",
+       "Rome",
+       "Amsterdam"
+      ],
+      "label": "Europe: France, Germany, Spain, Italy and the Netherlands highlighted, their capitals marked"
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "height": 10
+       }
+      ]
+     }
+    },
+    {
+     "row": {
+      "verticalAlignment": "center",
+      "modifiers": [
+       "fillMaxWidth"
+      ],
+      "children": [
+       {
+        "box": {
+         "modifiers": [
+          {
+           "size": 12
+          },
+          {
+           "clip": {
+            "roundedRect": 3
+           }
+          },
+          {
+           "background": "@colors.primary"
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "width": 8
+          }
+         ]
+        }
+       },
+       {
+        "text": {
+         "value": "Next-day delivery",
+         "fontSize": 13,
+         "color": "@colors.muted",
+         "modifiers": [
+          {
+           "weight": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

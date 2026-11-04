@@ -1,0 +1,81 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 180,
+  "profiles": 513,
+  "contentDescription": "A sparkline of a host-provided series of values"
+ },
+ "resources": {
+  "floatArrays": {
+   "data": {
+    "value": [
+     12,
+     15,
+     14,
+     18,
+     17,
+     21,
+     19,
+     24,
+     23,
+     27,
+     26,
+     31
+    ],
+    "export": true
+   }
+  }
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 20
+    }
+   ],
+   "children": [
+    {
+     "text": {
+      "value": "Weekly revenue",
+      "fontSize": 14,
+      "color": "@colors.onSurface"
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       {
+        "height": 12
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "modifiers": [
+       "fillMaxWidth",
+       {
+        "verticalWeight": 1
+       }
+      ],
+      "children": [
+       {
+        "Sparkline": {
+         "values": "@data",
+         "fill": true,
+         "thickness": 3,
+         "label": "Weekly revenue"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

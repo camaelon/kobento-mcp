@@ -1,0 +1,1286 @@
+{
+ "id": "SHW-16",
+ "name": "solar-system",
+ "version": 1,
+ "title": "A 3D solar system that runs on the clock",
+ "summary": "The Sun and eight planets in 3D on a twinkling starfield: the Sun is a point light, so every planet shows a lit day side; the planets start where they really are today (mean longitudes from J2000 and the date) and run faster than real time at a chosen speed (a day, a week, a month or a year a second). A drag tilts and turns the camera from edge-on to straight down; tapping a planet's chip highlights its orbit and rings and names it in 3D; the panel fills a phone's width and sits in the corner of a wide window. Each orbit lies in its real plane (J2000 inclination and ascending node), with a Tilt ×5 checkbox to make the planes visibly different; a Zoom checkbox eases the camera in on the selected planet and follows it, gliding to a newly chosen one.",
+ "prompt": "Make a 3D solar system: the Sun and planets on their orbits moving with the clock but sped up, with a speed control, orbit rings, a starry background, drag to tilt the view, and tap a planet's name to see where it is.",
+ "level": 5,
+ "family": "SHW",
+ "hand_built": "Scene3D has no clock-driven orbits, point light or projected labels: the camera orbit, the sun-as-light, the date-anchored simulated time and the 2D highlight projected from 3D are written by hand.",
+ "capabilities": {
+  "primary": [
+   "3d.scene",
+   "3d.mesh",
+   "time.clock",
+   "input.drag"
+  ],
+  "secondary": [
+   "input.tap",
+   "time.animation",
+   "time.date",
+   "anim.value",
+   "data.array",
+   "data.loop",
+   "expr.trig",
+   "draw.gradient",
+   "text.dynamic",
+   "a11y.labels",
+   "input.toggle"
+  ]
+ },
+ "use_cases": [
+  "generative-art",
+  "onboarding"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "3d",
+  "solar system",
+  "planets",
+  "orbits",
+  "orrery",
+  "sun",
+  "starfield",
+  "space",
+  "astronomy",
+  "planetarium",
+  "time lapse",
+  "speed control",
+  "drag to tilt",
+  "orbit camera",
+  "showcase"
+ ],
+ "teaches": [
+  "Light a scene from inside: a single point light at the origin makes the Sun sphere fully lit (two-sided |N.L| is 1 everywhere) and gives each planet a day and a night side",
+  "Start the orbits at today's real positions: simT = year() - 2000 + dayOfYear() / 365.25 (years since J2000) and angle = simT * 2 pi / period + the planet's mean longitude at J2000",
+  "Change speed without the planets jumping: keep t0 and c0, and on a speed tap set t0 = @simT - @today and c0 = animationTime() before the new speed, so simT = today + t0 + (animationTime() - c0) * rate stays continuous",
+  "Draw every orbit ring with one unit torus scaled (r, 1, r) in a loop over a float array; draw the selected one first, thicker and in the accent colour, because the depth test keeps the first of two equal depths",
+  "Project the selected planet to 2D with the same spin, tilt, distance and focal length as the camera and draw a pulsing ring, a leader and its name after the meshes",
+  "Scatter 140 stars without random state on an R2 low-discrepancy sequence: x = fract(0.5 + i * 0.7549) * W, y = fract(0.5 + i * 0.5698) * H, each twinkling at its own rate",
+  "Give a dark art piece a designed light look: the same scene as a paper star chart (warm paper, grey dots for stars, darker orbit lines) from themed colours in resources.colors, the panel on @colors.surface",
+  "Fork the art for mono with {\"$if\": \"theme.mono\"}: no stars, glow or motion (the planets stand at today's positions), saturating axis lights so planets and rings come out flat onSurface, the Sun as a hidden-line wireframe, the chosen chip shown by a heavier ring",
+  "Use the library's ChoiceChips (segmented) for the speed, with extra onClick actions: t0 += (animationTime() - c0) * rateHeld, c0 = animationTime(), rateHeld = the new rate, so the simulated date never jumps",
+  "Use one overlay for every size: the panel is fillMaxWidth then widthIn max 340 inside a row arranged at the end, so it is full width on a phone and a corner card on a wide window",
+  "Put each circular orbit in its real plane: the planet at Ry(node) Rx(inclination) (r cos u, 0, -r sin u) with u = mean longitude - node; draw the ring as the unit torus rotated by the same two angles and scaled (r, 1, r), in the same loop over float arrays",
+  "Follow a chosen body with eased weights: w_k = {value: 1 - min(abs(@sel - k), 1), anim: 0.9} for each planet; the camera target is 0.7 * zoom * sum(w_k * position_k), so a new choice glides from the old planet's live position to the new one's",
+  "Zoom by easing the framed extent: ext = 6.15 + (sum(w_k * (0.65 r_k + 0.6)) - 6.15) * zA, and the camera distance is computed from ext and the window, so one formula frames both the whole system and a planet's neighbourhood",
+  "Project with the camera target: the label and the Sun's glow subtract (tx, ty, tz) before the spin and tilt, so they stay on their bodies when zoomed"
+ ],
+ "pitfalls": [
+  "3D support has not landed in androidx yet (coming): this plays in the C++ and TypeScript players only",
+  "Mean longitudes on circular orbits: positions are right to a few degrees, not an ephemeris; sizes and distances are stylised (order kept)",
+  "A thin ring torus scaled by its orbit radius gets thicker with the radius; keep the minor radius small (0.005)",
+  "animationTime() is seconds since the document loaded: the simulated date restarts from today on every load",
+  "Continuous repaint in light and dark (stars, orbits, pulse); mono reads only the date and repaints on input",
+  "A custom themed colour (resources.colors) is not remapped by the mono palettes: everything drawn in mono uses theme tokens (onSurface, muted, primary, background, outline)",
+  "Real inclinations are small (Mercury 7°, the rest under 3.4°): from the default view the planes look alike; the Tilt ×5 checkbox scales every inclination (eased) to show them separate"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/5/box/children/1/canvas/commands/72",
+   "shows": "3d.scene",
+   "note": "the camera orbits a target that glides to the followed planet when zoomed"
+  },
+  {
+   "pointer": "/root/5/box/children/1/canvas/commands/73",
+   "shows": "3d.scene",
+   "note": "colour: the Sun as a point light; mono: saturating axis lights"
+  },
+  {
+   "pointer": "/root/5/box/children/1/canvas/commands/89",
+   "shows": "3d.mesh",
+   "note": "every orbit from one unit torus, turned to its node and inclination"
+  },
+  {
+   "pointer": "/root/5/box/children/1/canvas/commands/14",
+   "shows": "3d.mesh",
+   "note": "Mercury on its inclined orbit: node and inclination applied to the circle"
+  },
+  {
+   "pointer": "/root/3",
+   "shows": "time.clock",
+   "note": "simulated years since J2000 (mono: today)"
+  },
+  {
+   "pointer": "/root/5/box/children/1/canvas/commands/0",
+   "shows": "input.drag",
+   "note": "drag spins the camera"
+  },
+  {
+   "pointer": "/root/5/box/children/1/canvas/commands/50",
+   "shows": "input.toggle",
+   "note": "the followed point: eased selection weights times the planets' positions"
+  },
+  {
+   "pointer": "/root/5/box/children/1/canvas/commands/60",
+   "shows": "data.loop",
+   "note": "the starfield (colour looks only)"
+  }
+ ],
+ "check": {
+  "describe": "Black space with faint twinkling stars; a glowing yellow Sun in the middle, eight thin blue-grey orbit ellipses, Earth's orbit in light blue, small lit planets (Saturn with its ring), 'Earth' labelled with a pulsing ring; 'Solar System' and 'Year 2026.8' at the top; a dark panel below with Earth's facts, eight planet chips (Earth selected) and four speed chips (Week/s selected). Later the planets have moved round their orbits; a drag changes the tilt; tapping Saturn moves the highlight and the label; Year/s makes the year count up fast. Light: the same chart on warm paper with grey star dots, darker orbit lines and a white panel. Mono: black (or white) page, the Sun as a wireframe globe, planets and Saturn's ring as solid onSurface discs, grey orbit lines, the chosen orbit and planet ring in onSurface, outlined chips (the chosen one heavier), no speed control; the year is today's. Zoomed on Earth: the Sun large at the lower left, Earth ringed and labelled, the inner orbits around them. Zoomed on Jupiter: Jupiter large at the left with its accent orbit, the Sun at the right edge. Edge-on with Tilt ×5: the orbit rings separate into differently tilted ellipses.",
+  "render": {
+   "clock": "2026-11-02T10:00:00"
+  },
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light",
+    "clock": "2026-11-02T10:00:00"
+   },
+   {
+    "name": "dark",
+    "theme": "dark",
+    "clock": "2026-11-02T10:00:00"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark",
+    "clock": "2026-11-02T10:00:00"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light",
+    "clock": "2026-11-02T10:00:00"
+   },
+   {
+    "name": "later",
+    "clock": "2026-11-02T10:00:00",
+    "duration": 6
+   },
+   {
+    "name": "saturn-fast",
+    "clock": "2026-11-02T10:00:00",
+    "touch_events": [
+     {
+      "t": 0.2,
+      "type": "tap",
+      "x": 137,
+      "y": 612
+     },
+     {
+      "t": 0.3,
+      "type": "tap",
+      "x": 288,
+      "y": 731
+     }
+    ],
+    "duration": 4
+   },
+   {
+    "name": "tilted",
+    "clock": "2026-11-02T10:00:00",
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "down",
+      "x": 180,
+      "y": 200
+     },
+     {
+      "t": 0.2,
+      "type": "move",
+      "x": 220,
+      "y": 280
+     },
+     {
+      "t": 0.3,
+      "type": "move",
+      "x": 260,
+      "y": 360
+     },
+     {
+      "t": 0.4,
+      "type": "up",
+      "x": 260,
+      "y": 360
+     }
+    ],
+    "duration": 2
+   },
+   {
+    "name": "edge-on",
+    "clock": "2026-11-02T10:00:00",
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "down",
+      "x": 180,
+      "y": 420
+     },
+     {
+      "t": 0.2,
+      "type": "move",
+      "x": 180,
+      "y": 330
+     },
+     {
+      "t": 0.3,
+      "type": "move",
+      "x": 180,
+      "y": 240
+     },
+     {
+      "t": 0.4,
+      "type": "up",
+      "x": 180,
+      "y": 240
+     }
+    ],
+    "duration": 2
+   },
+   {
+    "name": "tablet",
+    "width": 1180,
+    "height": 820,
+    "clock": "2026-11-02T10:00:00"
+   },
+   {
+    "name": "tablet-portrait",
+    "width": 800,
+    "height": 1280,
+    "clock": "2026-11-02T10:00:00"
+   },
+   {
+    "name": "square",
+    "width": 480,
+    "height": 480,
+    "clock": "2026-11-02T10:00:00"
+   },
+   {
+    "name": "zoom-earth",
+    "theme": "dark",
+    "clock": "2026-11-02T10:00:00",
+    "touch_events": [
+     {
+      "t": 0.2,
+      "type": "tap",
+      "x": 40,
+      "y": 657
+     }
+    ],
+    "duration": 1.8
+   },
+   {
+    "name": "zoom-jupiter",
+    "theme": "light",
+    "clock": "2026-11-02T10:00:00",
+    "touch_events": [
+     {
+      "t": 0.2,
+      "type": "tap",
+      "x": 40,
+      "y": 657
+     },
+     {
+      "t": 0.4,
+      "type": "tap",
+      "x": 77,
+      "y": 612
+     }
+    ],
+    "duration": 2
+   },
+   {
+    "name": "edge-tilted",
+    "theme": "dark",
+    "clock": "2026-11-02T10:00:00",
+    "touch_events": [
+     {
+      "t": 0.1,
+      "type": "tap",
+      "x": 190,
+      "y": 657
+     },
+     {
+      "t": 0.3,
+      "type": "down",
+      "x": 180,
+      "y": 300
+     },
+     {
+      "t": 0.4,
+      "type": "move",
+      "x": 180,
+      "y": 220
+     },
+     {
+      "t": 0.5,
+      "type": "move",
+      "x": 180,
+      "y": 150
+     },
+     {
+      "t": 0.6,
+      "type": "up",
+      "x": 180,
+      "y": 150,
+      "vx": 0,
+      "vy": 0
+     }
+    ],
+    "duration": 2
+   }
+  ]
+ },
+ "related": [
+  "DRW-17",
+  "CMP-35",
+  "Scene3D",
+  "TIM-14"
+ ],
+ "java_difference": "3D support has not landed in androidx yet (coming): the Java JSON parser does not know camera3D, lights3D, matrix3D, meshPrimitive3D or drawMesh3D; plays in the C++ and TypeScript players. Also json2rc-only: Java's addDataList drops the list id, so textLookup can't reach it (EXAMPLES_FINDINGS U4)",
+ "components": [
+  "ChoiceChips",
+  "Checkbox"
+ ],
+ "derived": {
+  "components": [
+   "Checkbox",
+   "ChoiceChips",
+   "Tabs"
+  ],
+  "component_instances": 4,
+  "component_modes": {
+   "Checkbox": "expand",
+   "ChoiceChips": "expand",
+   "Tabs": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 16306,
+  "header": {
+   "width": 360,
+   "height": 780
+  },
+  "op_count": 818,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 15,
+   "ANIMATED_FLOAT": 163,
+   "COLOR_CONSTANT": 29,
+   "COLOR_EXPRESSIONS": 28,
+   "COMPONENT_VALUE": 5,
+   "CanvasContent": 10,
+   "CoreText": 25,
+   "DATA_FLOAT": 7,
+   "DATA_TEXT": 32,
+   "DRAW_CIRCLE": 3,
+   "DRAW_LINE": 5,
+   "DRAW_MESH_3D": 13,
+   "DRAW_RECT": 1,
+   "DRAW_ROUND_RECT": 8,
+   "DRAW_TEXT_ANCHOR": 1,
+   "DataListFloat": 7,
+   "DataListIds": 2,
+   "GraphicsLayerModifier": 4,
+   "HEADER": 1,
+   "LAYOUT_BOX": 20,
+   "LAYOUT_CANVAS": 10,
+   "LAYOUT_COLUMN": 7,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 8,
+   "LayoutComponentContent": 69,
+   "LoopOperation": 31,
+   "MATRIX_3D_OP": 39,
+   "MATRIX_TRANSLATE": 1,
+   "MESH_PRIMITIVE_3D": 4,
+   "MODIFIER_BACKGROUND": 4,
+   "MODIFIER_CLICK": 14,
+   "MODIFIER_HEIGHT": 31,
+   "MODIFIER_HEIGHT_IN": 2,
+   "MODIFIER_PADDING": 20,
+   "MODIFIER_WIDTH": 39,
+   "MODIFIER_WIDTH_IN": 1,
+   "NAMED_VARIABLE": 22,
+   "PAINT_3D_STATE": 1,
+   "PAINT_VALUES": 33,
+   "RoundedClipRectModifierOperation": 15,
+   "SET_CAMERA_3D": 1,
+   "SET_LIGHTS_3D": 1,
+   "TEXT_LOOKUP": 2,
+   "THEME": 42,
+   "TextFromFloat": 1,
+   "TextSubtext": 6,
+   "TextTransform": 6,
+   "TouchExpression": 2,
+   "ValueFloatExpressionChangeActionOperation": 26
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "glow1",
+    "type": "color",
+    "value": "#99FFB347"
+   },
+   {
+    "name": "glow2",
+    "type": "color",
+    "value": "#33FF8A2A"
+   },
+   {
+    "name": "glow3",
+    "type": "color",
+    "value": "#00FF6A00"
+   },
+   {
+    "name": "incl",
+    "type": "float_array",
+    "value": [
+     0.122199997,
+     0.0592,
+     0,
+     0.0322999991,
+     0.0227000006,
+     0.0434999987,
+     0.0133999996,
+     0.0308999997
+    ]
+   },
+   {
+    "name": "lon0",
+    "type": "float_array",
+    "value": [
+     4.40259981,
+     3.17619991,
+     1.75339997,
+     6.2038002,
+     0.600399971,
+     0.871599972,
+     5.46689987,
+     5.32119989
+    ]
+   },
+   {
+    "name": "monoOutline",
+    "type": "color",
+    "value": "#00000000"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "node",
+    "type": "float_array",
+    "value": [
+     0.843500018,
+     1.33829999,
+     0,
+     0.86500001,
+     1.75339997,
+     1.98389995,
+     1.29170001,
+     2.29999995
+    ]
+   },
+   {
+    "name": "onPrimary",
+    "type": "color",
+    "value": "#FF0B1A2E"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "orb",
+    "type": "float_array",
+    "value": [
+     1,
+     1.41999996,
+     1.89999998,
+     2.4000001,
+     3.45000005,
+     4.44999981,
+     5.3499999,
+     6.1500001
+    ]
+   },
+   {
+    "name": "orbit",
+    "type": "color",
+    "value": "#FF2A3550"
+   },
+   {
+    "name": "outline",
+    "type": "color",
+    "value": "#FF3A4556"
+   },
+   {
+    "name": "prad",
+    "type": "float_array",
+    "value": [
+     0.0700000003,
+     0.109999999,
+     0.119999997,
+     0.0900000036,
+     0.319999993,
+     0.270000011,
+     0.189999998,
+     0.180000007
+    ]
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "rate",
+    "type": "float_array",
+    "value": [
+     26.0930004,
+     10.2131996,
+     6.28319979,
+     3.34069991,
+     0.529699981,
+     0.213300005,
+     0.0747999996,
+     0.0381000005
+    ]
+   },
+   {
+    "name": "space",
+    "type": "color",
+    "value": "#FF04060C"
+   },
+   {
+    "name": "spd",
+    "type": "float_array",
+    "value": [
+     0.00270000007,
+     0.0192000009,
+     0.0833000019,
+     1
+    ]
+   },
+   {
+    "name": "star",
+    "type": "color",
+    "value": "#FFFFFFFF"
+   },
+   {
+    "name": "surface",
+    "type": "color",
+    "value": "#FF1C2433"
+   },
+   {
+    "name": "surfaceHigh",
+    "type": "color",
+    "value": "#FF263042"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 1,
+   "info": 7
+  },
+  "audit_findings": [
+   "warning: layout_zero_size",
+   "info: layout_touch_target",
+   "info: layout_deep_nesting",
+   "info: unused_variables",
+   "info: repaint_continuous",
+   "info: deep_expressions",
+   "info: repeated_subtree",
+   "info: expression_entries"
+  ],
+  "repaint": "continuous",
+  "interaction_targets": {
+   "total": 16,
+   "click": 14,
+   "area": 0,
+   "touch": 2
+  },
+  "java_identical": false,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 11488,
+    "component_modes": {
+     "Checkbox": "expand"
+    },
+    "op_count": 531,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "glow1",
+      "type": "color",
+      "value": "#99FFB347"
+     },
+     {
+      "name": "glow2",
+      "type": "color",
+      "value": "#33FF8A2A"
+     },
+     {
+      "name": "glow3",
+      "type": "color",
+      "value": "#00FF6A00"
+     },
+     {
+      "name": "incl",
+      "type": "float_array",
+      "value": [
+       0.122199997,
+       0.0592,
+       0,
+       0.0322999991,
+       0.0227000006,
+       0.0434999987,
+       0.0133999996,
+       0.0308999997
+      ]
+     },
+     {
+      "name": "lon0",
+      "type": "float_array",
+      "value": [
+       4.40259981,
+       3.17619991,
+       1.75339997,
+       6.2038002,
+       0.600399971,
+       0.871599972,
+       5.46689987,
+       5.32119989
+      ]
+     },
+     {
+      "name": "monoOutline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "node",
+      "type": "float_array",
+      "value": [
+       0.843500018,
+       1.33829999,
+       0,
+       0.86500001,
+       1.75339997,
+       1.98389995,
+       1.29170001,
+       2.29999995
+      ]
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "orb",
+      "type": "float_array",
+      "value": [
+       1,
+       1.41999996,
+       1.89999998,
+       2.4000001,
+       3.45000005,
+       4.44999981,
+       5.3499999,
+       6.1500001
+      ]
+     },
+     {
+      "name": "orbit",
+      "type": "color",
+      "value": "#FF2A3550"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "prad",
+      "type": "float_array",
+      "value": [
+       0.0700000003,
+       0.109999999,
+       0.119999997,
+       0.0900000036,
+       0.319999993,
+       0.270000011,
+       0.189999998,
+       0.180000007
+      ]
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "rate",
+      "type": "float_array",
+      "value": [
+       26.0930004,
+       10.2131996,
+       6.28319979,
+       3.34069991,
+       0.529699981,
+       0.213300005,
+       0.0747999996,
+       0.0381000005
+      ]
+     },
+     {
+      "name": "space",
+      "type": "color",
+      "value": "#FF04060C"
+     },
+     {
+      "name": "spd",
+      "type": "float_array",
+      "value": [
+       0.00270000007,
+       0.0192000009,
+       0.0833000019,
+       1
+      ]
+     },
+     {
+      "name": "star",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "surface",
+      "type": "color",
+      "value": "#FF000000"
+     }
+    ],
+    "java_identical": false,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 11488,
+    "component_modes": {
+     "Checkbox": "expand"
+    },
+    "op_count": 531,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "glow1",
+      "type": "color",
+      "value": "#88FFB347"
+     },
+     {
+      "name": "glow2",
+      "type": "color",
+      "value": "#22FF8A2A"
+     },
+     {
+      "name": "glow3",
+      "type": "color",
+      "value": "#00FF8A2A"
+     },
+     {
+      "name": "incl",
+      "type": "float_array",
+      "value": [
+       0.122199997,
+       0.0592,
+       0,
+       0.0322999991,
+       0.0227000006,
+       0.0434999987,
+       0.0133999996,
+       0.0308999997
+      ]
+     },
+     {
+      "name": "lon0",
+      "type": "float_array",
+      "value": [
+       4.40259981,
+       3.17619991,
+       1.75339997,
+       6.2038002,
+       0.600399971,
+       0.871599972,
+       5.46689987,
+       5.32119989
+      ]
+     },
+     {
+      "name": "monoOutline",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "node",
+      "type": "float_array",
+      "value": [
+       0.843500018,
+       1.33829999,
+       0,
+       0.86500001,
+       1.75339997,
+       1.98389995,
+       1.29170001,
+       2.29999995
+      ]
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "orb",
+      "type": "float_array",
+      "value": [
+       1,
+       1.41999996,
+       1.89999998,
+       2.4000001,
+       3.45000005,
+       4.44999981,
+       5.3499999,
+       6.1500001
+      ]
+     },
+     {
+      "name": "orbit",
+      "type": "color",
+      "value": "#FFA3ACBC"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "prad",
+      "type": "float_array",
+      "value": [
+       0.0700000003,
+       0.109999999,
+       0.119999997,
+       0.0900000036,
+       0.319999993,
+       0.270000011,
+       0.189999998,
+       0.180000007
+      ]
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "rate",
+      "type": "float_array",
+      "value": [
+       26.0930004,
+       10.2131996,
+       6.28319979,
+       3.34069991,
+       0.529699981,
+       0.213300005,
+       0.0747999996,
+       0.0381000005
+      ]
+     },
+     {
+      "name": "space",
+      "type": "color",
+      "value": "#FFF4F1EA"
+     },
+     {
+      "name": "spd",
+      "type": "float_array",
+      "value": [
+       0.00270000007,
+       0.0192000009,
+       0.0833000019,
+       1
+      ]
+     },
+     {
+      "name": "star",
+      "type": "color",
+      "value": "#FF8E97A8"
+     },
+     {
+      "name": "surface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     }
+    ],
+    "java_identical": false,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "later": {
+    "render": "render-later.png",
+    "render_findings": []
+   },
+   "saturn-fast": {
+    "render": "render-saturn-fast.png",
+    "render_findings": []
+   },
+   "tilted": {
+    "render": "render-tilted.png",
+    "render_findings": []
+   },
+   "edge-on": {
+    "render": "render-edge-on.png",
+    "render_findings": []
+   },
+   "tablet": {
+    "render": "render-tablet.png",
+    "render_findings": [],
+    "size": [
+     1180,
+     820
+    ],
+    "audit_findings": [
+     "warning: layout_zero_size",
+     "info: layout_touch_target",
+     "info: layout_deep_nesting",
+     "info: unused_variables",
+     "info: repaint_continuous",
+     "info: deep_expressions",
+     "info: expression_entries"
+    ]
+   },
+   "tablet-portrait": {
+    "render": "render-tablet-portrait.png",
+    "render_findings": [],
+    "size": [
+     800,
+     1280
+    ],
+    "audit_findings": [
+     "warning: layout_zero_size",
+     "info: layout_touch_target",
+     "info: layout_deep_nesting",
+     "info: unused_variables",
+     "info: repaint_continuous",
+     "info: deep_expressions",
+     "info: expression_entries"
+    ]
+   },
+   "square": {
+    "render": "render-square.png",
+    "render_findings": [],
+    "size": [
+     480,
+     480
+    ],
+    "audit_findings": [
+     "warning: layout_zero_size",
+     "info: layout_touch_target",
+     "info: layout_deep_nesting",
+     "info: unused_variables",
+     "info: repaint_continuous",
+     "info: deep_expressions",
+     "info: expression_entries"
+    ]
+   },
+   "zoom-earth": {
+    "theme": "dark",
+    "render": "render-zoom-earth.png",
+    "render_findings": []
+   },
+   "zoom-jupiter": {
+    "theme": "light",
+    "render": "render-zoom-jupiter.png",
+    "render_findings": []
+   },
+   "edge-tilted": {
+    "theme": "dark",
+    "render": "render-edge-tilted.png",
+    "render_findings": []
+   }
+  },
+  "json_keys": [
+   "$if",
+   "Checkbox",
+   "ChoiceChips",
+   "addDataList",
+   "alpha",
+   "angle",
+   "anim",
+   "apiLevel",
+   "array",
+   "aspect",
+   "axis",
+   "background",
+   "bottom",
+   "box",
+   "c0",
+   "camera3D",
+   "canvas",
+   "center",
+   "centerX",
+   "centerY",
+   "checked",
+   "children",
+   "clearDepth3D",
+   "clickable",
+   "clip",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "constant",
+   "contentDescription",
+   "cx",
+   "cy",
+   "dark",
+   "decimal",
+   "defaultValue",
+   "depthBias3D",
+   "dir",
+   "drawCircle",
+   "drawLine",
+   "drawMesh3D",
+   "drawRect",
+   "drawRoundRect",
+   "drawTextAnchored",
+   "dx",
+   "dy",
+   "edges",
+   "else",
+   "expression",
+   "eye",
+   "far",
+   "flags",
+   "floatArrays",
+   "fontSize",
+   "fontWeight",
+   "fovY",
+   "from",
+   "global",
+   "glow1",
+   "glow2",
+   "glow3",
+   "graphicsLayer",
+   "header",
+   "height",
+   "heightIn",
+   "horizontalAlignment",
+   "horizontalArrangement",
+   "id",
+   "incl",
+   "index",
+   "intensity",
+   "items",
+   "label",
+   "left",
+   "len",
+   "light",
+   "lights",
+   "lights3D",
+   "list",
+   "lon0",
+   "loop",
+   "majorRadius",
+   "matrix3D",
+   "max",
+   "mesh",
+   "meshPrimitive3D",
+   "min",
+   "minorRadius",
+   "mode",
+   "modifiers",
+   "monoOutline",
+   "muted",
+   "name",
+   "near",
+   "node",
+   "onClick",
+   "onPrimary",
+   "onSurface",
+   "op",
+   "operation",
+   "ops",
+   "orb",
+   "orbit",
+   "outline",
+   "padding",
+   "paint",
+   "panX",
+   "panY",
+   "pos",
+   "prad",
+   "primary",
+   "primitive",
+   "profiles",
+   "projection",
+   "radialGradient",
+   "radius",
+   "rate",
+   "rateHeld",
+   "resources",
+   "right",
+   "role",
+   "root",
+   "roundedRect",
+   "row",
+   "rx",
+   "ry",
+   "segments",
+   "sel",
+   "selected",
+   "semantics",
+   "shader",
+   "size",
+   "slope",
+   "space",
+   "spd",
+   "speed",
+   "star",
+   "start",
+   "stateDescription",
+   "stopMode",
+   "stops",
+   "strokeCap",
+   "strokeWidth",
+   "style",
+   "surface",
+   "surfaceHigh",
+   "t0",
+   "target",
+   "text",
+   "textLookup",
+   "textSize",
+   "textSubtext",
+   "textTransform",
+   "then",
+   "tilt5",
+   "top",
+   "touchExpression",
+   "translate",
+   "type",
+   "until",
+   "up",
+   "value",
+   "varName",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "verticalWeight",
+   "weight",
+   "whole",
+   "width",
+   "widthIn",
+   "wireframe",
+   "x",
+   "x1",
+   "x2",
+   "y",
+   "y1",
+   "y2",
+   "z",
+   "zoom"
+  ],
+  "evidence": {
+   "3d.scene": [
+    "camera3D",
+    "lights3D"
+   ],
+   "3d.mesh": [
+    "meshPrimitive3D",
+    "drawMesh3D"
+   ],
+   "time.clock": [
+    "continuousSec"
+   ],
+   "input.drag": [
+    "touchExpression"
+   ],
+   "input.tap": [
+    "onClick",
+    "valueFloatChange"
+   ],
+   "time.animation": [
+    "animationTime()",
+    "animationTime",
+    "continuousSec"
+   ],
+   "time.date": [
+    "year",
+    "dayOfYear"
+   ],
+   "anim.value": [
+    "anim"
+   ],
+   "data.array": [
+    "floatArrays",
+    "arrayGet",
+    "addDataList"
+   ],
+   "data.loop": [
+    "loop"
+   ],
+   "expr.trig": [
+    "sin(",
+    "cos("
+   ],
+   "draw.gradient": [
+    "radialGradient"
+   ],
+   "text.dynamic": [
+    "textFromFloat",
+    "textLookup"
+   ],
+   "a11y.labels": [
+    "semantics"
+   ],
+   "input.toggle": [
+    "valueFloatExpressionChange",
+    "onClick"
+   ]
+  },
+  "built_at": "2026-11-03T01:22:53.498Z"
+ }
+}

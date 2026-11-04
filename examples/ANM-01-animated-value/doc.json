@@ -1,0 +1,28 @@
+{
+ "header": {"apiLevel": 7, "width": 360, "height": 180, "profiles": 513,
+  "contentDescription": "Screen brightness: a level bar that glides to Low, Medium or High when one is tapped"},
+ "resources": {
+  "floatArrays": {"levels": [0.25, 0.6, 1]},
+  "variables": {"sel": 0}
+ },
+ "root": 
+  {"column": {
+   "modifiers": ["fillMaxSize", {"background": "@colors.background"}, {"padding": 20}, {"spacedBy": 16}],
+   "children": [
+    {"text": {"value": "Brightness", "fontSize": 18, "color": "@colors.onSurface"}},
+    {"canvas": {
+     "modifiers": ["fillMaxWidth", {"height": 28}],
+     "commands": [
+      {"variable": {"name": "fill", "value": {"value": "8 + arrayGet(@levels, @sel) * (componentWidth() - 8)", "anim": 0.6}}},
+      {"paint": {"color": "@colors.track"}},
+      {"drawRoundRect": {"left": 0, "top": 4, "right": "componentWidth()", "bottom": 24, "rx": 10, "ry": 10}},
+      {"paint": {"color": "@colors.primary"}},
+      {"drawRoundRect": {"left": 0, "top": 4, "right": "@fill", "bottom": 24, "rx": 10, "ry": 10}},
+      {"paint": {"color": "@colors.onSurface"}},
+      {"drawCircle": {"cx": "@fill - 10", "cy": 14, "radius": 14}},
+      {"paint": {"color": "@colors.surface"}},
+      {"drawCircle": {"cx": "@fill - 10", "cy": 14, "radius": 12}}
+     ]}},
+    {"Tabs": {"labels": ["Low", "Medium", "High"], "style": "segmented", "selected": "@sel"}}
+   ]}}
+}

@@ -1,0 +1,420 @@
+{
+ "id": "AnalogClock",
+ "name": "analog-clock",
+ "version": 2,
+ "title": "Analog clock",
+ "prompt": "A round analog clock face showing the current time with hour, minute and second hands, and one with a date window at 3 o'clock.",
+ "level": 1,
+ "use_cases": [
+  "watch-face",
+  "widget"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "analog clock",
+  "clock face",
+  "watch hands",
+  "clock",
+  "watch face",
+  "wall clock",
+  "current time",
+  "second hand",
+  "date window",
+  "day of month"
+ ],
+ "teaches": [
+  "{\"AnalogClock\": {\"size\": 160}} draws the face from the host clock; every length scales with size",
+  "showSeconds: false drops the red second hand and repaints once a minute instead of every second",
+  "showDate: true adds a date window at 3 o'clock reading dayOfMonth(); the window scales with the dial and is a ring in mono"
+ ],
+ "snippets": [
+  {
+   "pointer": "/root/column/children/1/row/children/0",
+   "shows": "time.clock",
+   "note": "with the second hand"
+  },
+  {
+   "pointer": "/root/column/children/1/row/children/1",
+   "shows": "draw.transform",
+   "note": "no second hand: hands are rotated lines"
+  },
+  {
+   "pointer": "/root/column/children/1/row/children/0",
+   "shows": "data.loop",
+   "note": "the twelve ticks are one loop"
+  },
+  {
+   "pointer": "/root/column/children/1/row/children/2",
+   "shows": "time.clock",
+   "note": "showDate: the day of the month in a window at 3 o'clock"
+  }
+ ],
+ "inputs": {
+  "variables": {},
+  "clock": "2026-10-29T22:10:05",
+  "touch": false
+ },
+ "check": {
+  "describe": "At 22:10:05 on 29 October all three faces read 10:10; the first has a red second hand at 5 s, the small middle one has no second hand, and the third has a date window at 3 o'clock reading 29. All calls use fill: true in weighted boxes (3:2:3), so the faces scale with the space: at 234 dp wide they shrink to fit, at 360×320 they grow to the taller row; on a wide host they stay centred in their boxes.",
+  "render": {
+   "clock": "2026-10-29T22:10:05"
+  },
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "narrow",
+    "width": 234,
+    "height": 210
+   },
+   {
+    "name": "tall",
+    "width": 360,
+    "height": 320
+   }
+  ]
+ },
+ "related": [
+  "CMP-10"
+ ],
+ "derived": {
+  "components": [
+   "AnalogClock"
+  ],
+  "component_instances": 3,
+  "component_modes": {
+   "AnalogClock": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 3371,
+  "header": {
+   "width": 360,
+   "height": 210
+  },
+  "op_count": 215,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 3,
+   "ANIMATED_FLOAT": 23,
+   "COLOR_CONSTANT": 12,
+   "COLOR_EXPRESSIONS": 12,
+   "COMPONENT_VALUE": 6,
+   "CanvasContent": 3,
+   "CoreText": 1,
+   "DATA_TEXT": 3,
+   "DRAW_CIRCLE": 6,
+   "DRAW_LINE": 11,
+   "DRAW_ROUND_RECT": 2,
+   "DRAW_TEXT_ANCHOR": 1,
+   "HEADER": 1,
+   "LAYOUT_BOX": 3,
+   "LAYOUT_CANVAS": 3,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 1,
+   "LayoutComponentContent": 9,
+   "LoopOperation": 15,
+   "MATRIX_RESTORE": 8,
+   "MATRIX_ROTATE": 11,
+   "MATRIX_SAVE": 8,
+   "MATRIX_SCALE": 3,
+   "MATRIX_TRANSLATE": 3,
+   "MODIFIER_BACKGROUND": 1,
+   "MODIFIER_HEIGHT": 8,
+   "MODIFIER_PADDING": 3,
+   "MODIFIER_WIDTH": 8,
+   "NAMED_VARIABLE": 6,
+   "PAINT_VALUES": 20,
+   "THEME": 18,
+   "TextFromFloat": 1
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "error",
+    "type": "color",
+    "value": "#FFEF5350"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "outline",
+    "type": "color",
+    "value": "#FF3A4556"
+   },
+   {
+    "name": "surface",
+    "type": "color",
+    "value": "#FF1C2433"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 1
+  },
+  "audit_findings": [
+   "info: spaced_by_with_weight"
+  ],
+  "repaint": "scheduled",
+  "interaction_targets": {
+   "total": 0,
+   "click": 0,
+   "area": 0,
+   "touch": 0
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 2579,
+    "component_modes": {
+     "AnalogClock": "expand"
+    },
+    "op_count": 159,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "error",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "surface",
+      "type": "color",
+      "value": "#FF000000"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "scheduled",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 2579,
+    "component_modes": {
+     "AnalogClock": "expand"
+    },
+    "op_count": 159,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "error",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "outline",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "surface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "scheduled",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "narrow": {
+    "render": "render-narrow.png",
+    "render_findings": [],
+    "size": [
+     234,
+     210
+    ],
+    "audit_findings": []
+   },
+   "tall": {
+    "render": "render-tall.png",
+    "render_findings": [],
+    "size": [
+     360,
+     320
+    ],
+    "audit_findings": []
+   }
+  },
+  "json_keys": [
+   "AnalogClock",
+   "angle",
+   "apiLevel",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "contentDescription",
+   "cx",
+   "cy",
+   "dark",
+   "decimal",
+   "drawCircle",
+   "drawLine",
+   "drawRoundRect",
+   "drawTextAnchored",
+   "dx",
+   "dy",
+   "error",
+   "fill",
+   "flags",
+   "fontSize",
+   "from",
+   "header",
+   "height",
+   "index",
+   "left",
+   "light",
+   "loop",
+   "modifiers",
+   "muted",
+   "name",
+   "onSurface",
+   "ops",
+   "outline",
+   "padding",
+   "paint",
+   "panX",
+   "panY",
+   "pivotX",
+   "pivotY",
+   "profiles",
+   "radius",
+   "resources",
+   "right",
+   "root",
+   "rotate",
+   "row",
+   "rx",
+   "ry",
+   "save",
+   "scale",
+   "semantics",
+   "showDate",
+   "showSeconds",
+   "size",
+   "spacedBy",
+   "start",
+   "step",
+   "strokeCap",
+   "strokeWidth",
+   "style",
+   "surface",
+   "sx",
+   "sy",
+   "text",
+   "textSize",
+   "top",
+   "translate",
+   "type",
+   "until",
+   "value",
+   "variable",
+   "verticalAlignment",
+   "verticalWeight",
+   "weight",
+   "whole",
+   "width",
+   "x",
+   "x1",
+   "x2",
+   "y",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "time.clock": [
+    "timeInMin",
+    "timeInSec"
+   ],
+   "draw.transform": [
+    "save",
+    "rotate",
+    "scale",
+    "translate"
+   ],
+   "data.loop": [
+    "loop"
+   ]
+  },
+  "built_at": "2026-11-02T18:50:01.015Z"
+ }
+}

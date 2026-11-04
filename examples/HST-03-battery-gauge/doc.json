@@ -1,0 +1,63 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 200,
+  "height": 200,
+  "profiles": 513,
+  "contentDescription": "A battery icon filled to the battery level, red below 20 percent"
+ },
+ "resources": {
+  "variables": {
+   "battery": {
+    "value": 76,
+    "export": true
+   }
+  }
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 12
+    },
+    {
+     "spacedBy": 12
+    }
+   ],
+   "horizontalAlignment": "center",
+   "verticalArrangement": "center",
+   "children": [
+    {
+     "BatteryIndicator": {
+      "level": "@battery",
+      "size": 110,
+      "showPercent": false,
+      "warnAt": 20,
+      "lowAt": 20
+     }
+    },
+    {
+     "text": {
+      "value": {
+       "type": "textMerge",
+       "id1": {
+        "type": "textFromFloat",
+        "value": "clamp(0, 100, @battery)",
+        "whole": 3,
+        "decimal": 0,
+        "flags": 4
+       },
+       "id2": "%"
+      },
+      "fontSize": 24,
+      "color": "@colors.onSurface"
+     }
+    }
+   ]
+  }
+ }
+}

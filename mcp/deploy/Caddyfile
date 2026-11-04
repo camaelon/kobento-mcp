@@ -1,0 +1,68 @@
+# Caddy fetches and renews the TLS certificate for the domain by itself; the domain's DNS
+# A/AAAA record must point at this machine and ports 80/443 must be open.
+#
+#   https://DOMAIN/mcp             ->  remotecompose, the single front door (127.0.0.1:8814),
+#   https://DOMAIN/                     which also serves the example gallery (/, /components/,
+#                                      /play/<id>/), published pages (/pages/, /pages/<id>/)
+#                                      and rendered images (/images/<id>) at the root
+#   https://DOMAIN/json2rc/mcp     ->  json2rc   (127.0.0.1:8808)
+#   https://DOMAIN/rc-render/mcp   ->  rc-render (127.0.0.1:8809)
+#   https://DOMAIN/guide/mcp       ->  rc-guide  (127.0.0.1:8810)
+#   https://DOMAIN/deploy/mcp      ->  rc-deploy (127.0.0.1:8811), and its published pages,
+#   https://DOMAIN/deploy/pages/<id>/   which are public (no token) by design
+#   (the front door's /pages/ index lists pages published through it or through rc-deploy:
+#    they share the workspace; off with MCP_PAGE_INDEX=0)
+#   https://DOMAIN/inspect/mcp     ->  rc-inspect (127.0.0.1:8812)
+#   https://DOMAIN/examples/mcp    ->  rc-examples (127.0.0.1:8813), and its public pages:
+#   https://DOMAIN/examples/            the component grid, then /examples/layouts/,
+#                                      /examples/structures/, /examples/showcases/ and
+#                                      /examples/demos/; /examples/play/<id>/ a playground for each
+#   https://DOMAIN/examples/account/    accounts: register, tokens, usage, own pages (also
+#                                      /account/ through the front door). The session cookie is
+#                                      on Path=/, so the /pages/ indexes (root and /deploy/) see it;
+#                                      Caddy passes Host and sets X-Forwarded-Proto/-For, which the
+#                                      CSRF check, the Secure flag and the rate limit rely on.
+#   https://DOMAIN/.well-known/oauth-protected-resource[/<mount>/mcp]   OAuth discovery (lib/oauth.mjs):
+#   https://DOMAIN/.well-known/oauth-authorization-server               the front door answers for every
+#   https://DOMAIN/.well-known/openid-configuration                     server (RC_PUBLIC_ORIGIN and the
+#                                      mounts make the URLs); a 401 from any MCP endpoint points a client
+#                                      here. The authorization server's own endpoints are the account
+#                                      site's: /examples/oauth/{authorize,token,register,revoke}.
+#
+# No `log` directive on purpose: an access log would record the token for clients that pass
+# it in the URL.
+DOMAIN {
+	# Compress what the servers don't already (they compress pages and the player script
+	# themselves; an encoded response passes through as it is).
+	encode zstd gzip
+	# OAuth discovery documents live at the root whatever the MCP path (RFC 8414, RFC 9728):
+	# said explicitly so a later catch-all can't take them.
+	handle /.well-known/oauth-* {
+		reverse_proxy 127.0.0.1:8814
+	}
+	handle /.well-known/openid-configuration* {
+		reverse_proxy 127.0.0.1:8814
+	}
+	handle_path /json2rc/* {
+		reverse_proxy 127.0.0.1:8808
+	}
+	handle_path /rc-render/* {
+		reverse_proxy 127.0.0.1:8809
+	}
+	handle_path /guide/* {
+		reverse_proxy 127.0.0.1:8810
+	}
+	handle_path /deploy/* {
+		reverse_proxy 127.0.0.1:8811
+	}
+	handle_path /inspect/* {
+		reverse_proxy 127.0.0.1:8812
+	}
+	handle_path /examples/* {
+		reverse_proxy 127.0.0.1:8813
+	}
+	# Everything else: the front door (its MCP endpoint at /mcp and its public pages).
+	handle {
+		reverse_proxy 127.0.0.1:8814
+	}
+}

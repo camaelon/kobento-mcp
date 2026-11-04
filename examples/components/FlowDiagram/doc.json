@@ -1,0 +1,65 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 420,
+  "profiles": 513
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    }
+   ],
+   "children": [
+    {
+     "FlowDiagram": {
+      "nodes": [
+       {
+        "id": "draft",
+        "label": "Draft"
+       },
+       {
+        "id": "review",
+        "label": "Editor review"
+       },
+       {
+        "id": "legal",
+        "label": "Legal check"
+       },
+       {
+        "id": "pub",
+        "label": "Publish"
+       }
+      ],
+      "edges": [
+       "draft > review",
+       [
+        "review",
+        "legal",
+        "approved"
+       ],
+       [
+        "review",
+        "draft",
+        "changes"
+       ],
+       "legal > pub"
+      ],
+      "current": "@currentStep"
+     }
+    }
+   ]
+  }
+ },
+ "resources": {
+  "variables": {
+   "currentStep": {
+    "value": 1,
+    "export": true
+   }
+  }
+ }
+}

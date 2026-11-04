@@ -1,0 +1,291 @@
+{
+ "component": "Stepper",
+ "version": 4,
+ "summary": "A minus / value / plus control that changes a number by `step`, clamped to [min, max], then runs `onDecrement` or `onIncrement` (and any `onClick`). Each button is a 36 dp circle in a 48 dp touch target.",
+ "params": {
+  "value": {
+   "type": "variable",
+   "initial": 0,
+   "doc": "The number. Bind a document variable to read it (\"@guests\"); omitted, the stepper keeps its own, starting at `initial` 0"
+  },
+  "min": {
+   "type": "float",
+   "default": 0,
+   "doc": "Lowest value (a number or a \"@variable\")"
+  },
+  "max": {
+   "type": "float",
+   "default": 10,
+   "doc": "Highest value"
+  },
+  "step": {
+   "type": "float",
+   "default": 1,
+   "doc": "Change per tap"
+  },
+  "decimals": {
+   "type": "float",
+   "default": 0,
+   "static": true,
+   "doc": "Digits after the point in the value (use with a fractional step)"
+  },
+  "label": {
+   "type": "string",
+   "default": "",
+   "doc": "What is counted, in lower case (\"guests\"): the buttons are announced as \"Decrease guests\" and \"Increase guests\"; empty, just Decrease and Increase"
+  },
+  "onIncrement": {
+   "type": "action",
+   "doc": "Actions run on every tap of plus, after the step (hostNamedAction, valueFloatChange, ...), e.g. [{\"type\": \"hostNamedAction\", \"name\": \"more\"}]"
+  },
+  "onDecrement": {
+   "type": "action",
+   "doc": "Actions run on every tap of minus, after the step, e.g. [{\"type\": \"hostNamedAction\", \"name\": \"less\"}]"
+  },
+  "onClick": {
+   "type": "action",
+   "doc": "Actions run on every tap of minus AND plus, after the step and after onDecrement/onIncrement. Only for actions without a hostNamedAction name (valueFloatChange, ...): a named action used by both buttons reaches the host with no name from one of them; tell the host with onIncrement/onDecrement instead. Omitted (with the other two): a tap only changes `value`"
+  }
+ },
+ "capabilities": [
+  "input.tap",
+  "text.dynamic",
+  "data.expression"
+ ],
+ "call": {
+  "Stepper": {
+   "value": "@guests",
+   "min": 1,
+   "max": 8,
+   "label": "guests",
+   "onIncrement": [
+    {
+     "type": "hostNamedAction",
+     "name": "guestsUp"
+    }
+   ],
+   "onDecrement": [
+    {
+     "type": "hostNamedAction",
+     "name": "guestsDown"
+    }
+   ]
+  }
+ },
+ "body": {
+  "row": {
+   "verticalAlignment": "center",
+   "children": [
+    {
+     "box": {
+      "horizontalAlignment": "center",
+      "verticalAlignment": "center",
+      "modifiers": [
+       {
+        "padding": 6
+       },
+       {
+        "size": 36
+       },
+       {
+        "clip": 18
+       },
+       {
+        "$if": "theme.mono",
+        "then": {
+         "background": "@colors.outline"
+        },
+        "auto": [
+         {
+          "background": "@colors.surfaceHigh"
+         },
+         {
+          "background": "@colors.monoOutline"
+         }
+        ]
+       },
+       {
+        "$if": "theme.mono",
+        "then": {
+         "padding": 1
+        },
+        "auto": {
+         "padding": 1
+        }
+       },
+       {
+        "$if": "theme.mono",
+        "then": {
+         "clip": 17
+        },
+        "auto": {
+         "clip": 17
+        }
+       },
+       {
+        "background": "@colors.surfaceHigh"
+       },
+       {
+        "semantics": {
+         "contentDescription": {
+          "$if": "label",
+          "then": "Decrease @label",
+          "else": "Decrease"
+         },
+         "clickable": true
+        }
+       },
+       {
+        "onClick": [
+         {
+          "type": "valueFloatExpressionChange",
+          "target": "@value",
+          "value": "max(@min, @value - @step)"
+         },
+         {
+          "$if": "onDecrement",
+          "then": "@onDecrement"
+         },
+         {
+          "$if": "onClick",
+          "then": "@onClick"
+         }
+        ]
+       }
+      ],
+      "children": [
+       {
+        "text": {
+         "value": "−",
+         "fontSize": 20,
+         "color": "@colors.onSurface"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "horizontalAlignment": "center",
+      "modifiers": [
+       {
+        "width": 52
+       }
+      ],
+      "children": [
+       {
+        "text": {
+         "value": {
+          "type": "textFromFloat",
+          "value": "@value",
+          "whole": 3,
+          "decimal": "@decimals",
+          "flags": { "$if": "decimals == '0'", "then": 5, "else": 7 }
+         },
+         "fontSize": "@theme.text_lg",
+         "color": "@colors.onSurface"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "box": {
+      "horizontalAlignment": "center",
+      "verticalAlignment": "center",
+      "modifiers": [
+       {
+        "padding": 6
+       },
+       {
+        "size": 36
+       },
+       {
+        "clip": 18
+       },
+       {
+        "$if": "theme.mono",
+        "then": {
+         "background": "@colors.outline"
+        },
+        "auto": [
+         {
+          "background": "@colors.surfaceHigh"
+         },
+         {
+          "background": "@colors.monoOutline"
+         }
+        ]
+       },
+       {
+        "$if": "theme.mono",
+        "then": {
+         "padding": 1
+        },
+        "auto": {
+         "padding": 1
+        }
+       },
+       {
+        "$if": "theme.mono",
+        "then": {
+         "clip": 17
+        },
+        "auto": {
+         "clip": 17
+        }
+       },
+       {
+        "background": "@colors.surfaceHigh"
+       },
+       {
+        "semantics": {
+         "contentDescription": {
+          "$if": "label",
+          "then": "Increase @label",
+          "else": "Increase"
+         },
+         "clickable": true
+        }
+       },
+       {
+        "onClick": [
+         {
+          "type": "valueFloatExpressionChange",
+          "target": "@value",
+          "value": "min(@max, @value + @step)"
+         },
+         {
+          "$if": "onIncrement",
+          "then": "@onIncrement"
+         },
+         {
+          "$if": "onClick",
+          "then": "@onClick"
+         }
+        ]
+       }
+      ],
+      "children": [
+       {
+        "text": {
+         "value": "+",
+         "fontSize": 20,
+         "color": "@colors.onSurface"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "pitfalls": [
+  "textFromFloat `whole` is the number of integer digits kept, not a minimum: whole 1 prints 10 as 0. The value uses whole 3 with flags 5 (no padding), so it stays centred",
+  "The buttons clamp with max(@min, @value - @step) and min(@max, @value + @step): a value outside [min, max] set by the host is pulled back on the next tap",
+  "The buttons are announced as Decrease and Increase, followed by `label` when given (\"Decrease guests\"); put the stepper next to a KeyValueRow key that names the quantity",
+  "`onDecrement` / `onIncrement` run after the clamped step of their own button, `onClick` after both: an app reading the exported `value` on a hostNamedAction sees the new number (and is told even when a tap at min or max changed nothing)",
+  "Give a hostNamedAction to onIncrement / onDecrement, never to onClick: a named action written in two click lists is registered with the first list only, so the other button sends it with no name",
+  "Each button is a 36 dp circle inside 6 dp of padding, so its click target is 48 × 48 dp; the whole stepper is 148 × 48 dp, with 12 dp of visible space between a circle and the number"
+ ]
+}

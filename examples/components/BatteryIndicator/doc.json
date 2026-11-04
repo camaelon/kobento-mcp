@@ -1,0 +1,175 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 300,
+  "height": 240,
+  "profiles": 513,
+  "contentDescription": "BatteryIndicator component: the host battery level and charging state, then 95, 40 and 18 percent, 54 and 5 percent charging, and a large icon without the percentage"
+ },
+ "resources": {
+  "variables": {
+   "battery": {
+    "value": 76,
+    "export": true
+   },
+   "charging": {
+    "value": 0,
+    "export": true
+   }
+  }
+ },
+ "root": {
+  "column": {
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "padding": 16
+    },
+    {
+     "spacedBy": 12
+    }
+   ],
+   "children": [
+    {
+     "text": {
+      "value": "BatteryIndicator",
+      "fontSize": 20,
+      "color": "@colors.onSurface"
+     }
+    },
+    {
+     "BatteryIndicator": {
+      "level": "@battery",
+      "charging": "@charging"
+     }
+    },
+    {
+     "flow": {
+      "modifiers": [
+       "fillMaxWidth"
+      ],
+      "children": [
+       {
+        "box": {
+         "modifiers": [
+          {
+           "padding": {
+            "end": 12,
+            "bottom": 4
+           }
+          }
+         ],
+         "children": [
+          {
+           "BatteryIndicator": {
+            "level": 95
+           }
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "padding": {
+            "end": 12,
+            "bottom": 4
+           }
+          }
+         ],
+         "children": [
+          {
+           "BatteryIndicator": {
+            "level": 40
+           }
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "padding": {
+            "end": 12,
+            "bottom": 4
+           }
+          }
+         ],
+         "children": [
+          {
+           "BatteryIndicator": {
+            "level": 18
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "flow": {
+      "modifiers": [
+       "fillMaxWidth"
+      ],
+      "children": [
+       {
+        "box": {
+         "modifiers": [
+          {
+           "padding": {
+            "end": 12,
+            "bottom": 4
+           }
+          }
+         ],
+         "children": [
+          {
+           "BatteryIndicator": {
+            "level": 54,
+            "charging": 1
+           }
+          }
+         ]
+        }
+       },
+       {
+        "box": {
+         "modifiers": [
+          {
+           "padding": {
+            "end": 12,
+            "bottom": 4
+           }
+          }
+         ],
+         "children": [
+          {
+           "BatteryIndicator": {
+            "level": 5,
+            "charging": 1
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "BatteryIndicator": {
+      "level": "@battery",
+      "charging": "@charging",
+      "size": 72,
+      "showPercent": false
+     }
+    }
+   ]
+  }
+ }
+}

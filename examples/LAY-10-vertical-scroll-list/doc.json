@@ -1,0 +1,224 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 360,
+  "height": 400,
+  "profiles": 513,
+  "contentDescription": "A scrollable list of 12 contacts"
+ },
+ "root": [
+  {
+   "resources": {
+    "variables": {
+     "scroll": 0
+    }
+   }
+  },
+  {
+   "type": "column",
+   "modifiers": [
+    "fillMaxSize",
+    {
+     "background": "@colors.background"
+    },
+    {
+     "verticalScroll": "@scroll"
+    }
+   ],
+   "children": [
+    {
+     "ListItem": {
+      "title": "1. Ada",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "A",
+          "color": "@colors.primary"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "2. Ben",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "B",
+          "color": "@colors.secondary"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "3. Cleo",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "C",
+          "color": "@colors.success"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "4. Dev",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "D",
+          "color": "@colors.warning"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "5. Eli",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "E",
+          "color": "@colors.error"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "6. Fay",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "F",
+          "color": "@colors.primary"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "7. Gus",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "G",
+          "color": "@colors.secondary"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "8. Hana",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "H",
+          "color": "@colors.success"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "9. Ivo",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "I",
+          "color": "@colors.warning"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "10. Jun",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "J",
+          "color": "@colors.error"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "11. Kai",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "K",
+          "color": "@colors.primary"
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "ListItem": {
+      "title": "12. Lea",
+      "subtitle": "Last message preview",
+      "slots": {
+       "leading": [
+        {
+         "Avatar": {
+          "initials": "L",
+          "color": "@colors.secondary"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

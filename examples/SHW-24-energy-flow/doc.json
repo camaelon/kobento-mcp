@@ -1,0 +1,259 @@
+{
+ "header": {
+  "apiLevel": 7,
+  "width": 800,
+  "height": 500,
+  "profiles": 513,
+  "contentDescription": "Home energy flow: solar, grid and battery feeding the house, the car, the heat pump and the export to the grid, as a Sankey diagram whose ribbon widths follow the live flows"
+ },
+ "resources": {
+  "colors": {
+   "solar": {
+    "light": "#FFE39A0B",
+    "dark": "#FFF6B73C"
+   },
+   "grid": {
+    "light": "#FF6A7B96",
+    "dark": "#FF8C9DB5"
+   },
+   "battery": {
+    "light": "#FF14A372",
+    "dark": "#FF35D49A"
+   },
+   "house": {
+    "light": "#FFF0703C",
+    "dark": "#FFFF8A5B"
+   },
+   "car": {
+    "light": "#FF2F7FE0",
+    "dark": "#FF5AA9FF"
+   },
+   "heat": {
+    "light": "#FFA457E6",
+    "dark": "#FFC77DFF"
+   },
+   "export": {
+    "light": "#FFD4B21C",
+    "dark": "#FFF6E05C"
+   }
+  },
+  "floatArrays": {
+   "flows": {
+    "value": [
+     1.2,
+     2.4,
+     0.8,
+     1.1,
+     0.3,
+     0.0,
+     0.6,
+     0.0,
+     0.9,
+     0.0,
+     0.2,
+     0.0
+    ],
+    "export": true
+   }
+  }
+ },
+ "root": [
+  {
+   "variable": {
+    "name": "sum",
+    "value": "arraySum(@flows)"
+   }
+  },
+  {
+   "variable": {
+    "name": "ttot",
+    "value": {
+     "value": "@sum",
+     "anim": 1.2
+    }
+   }
+  },
+  {
+   "variable": {
+    "name": "sh",
+    "value": "arrayGet(@flows, 0) + arrayGet(@flows, 1) + arrayGet(@flows, 2)"
+   }
+  },
+  {
+   "variable": {
+    "name": "selfuse",
+    "value": {
+     "value": "round(100 * @sh / max(0.01, @sh + arrayGet(@flows, 3)))",
+     "anim": 1.2
+    }
+   }
+  },
+  {
+   "column": {
+    "modifiers": [
+     "fillMaxSize",
+     {
+      "background": "@colors.background"
+     },
+     {
+      "padding": [
+       20,
+       16,
+       20,
+       12
+      ]
+     }
+    ],
+    "children": [
+     {
+      "row": {
+       "modifiers": [
+        "fillMaxWidth"
+       ],
+       "verticalAlignment": "bottom",
+       "children": [
+        {
+         "text": {
+          "value": "Energy flow",
+          "fontSize": 22,
+          "fontWeight": 650,
+          "color": "@colors.onSurface",
+          "modifiers": [
+           {
+            "weight": 1
+           }
+          ],
+          "maxLines": 1
+         }
+        },
+        {
+         "text": {
+          "value": {
+           "type": "textFromFloat",
+           "value": "@ttot",
+           "whole": 2,
+           "decimal": 1,
+           "flags": 5
+          },
+          "fontSize": 22,
+          "fontWeight": 650,
+          "color": "@colors.onSurface"
+         }
+        },
+        {
+         "text": {
+          "value": " kW",
+          "fontSize": 15,
+          "color": "@colors.muted"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "row": {
+       "modifiers": [
+        "fillMaxWidth"
+       ],
+       "children": [
+        {
+         "text": {
+          "value": "Sources to uses, live",
+          "fontSize": 13,
+          "color": "@colors.muted",
+          "modifiers": [
+           {
+            "weight": 1
+           }
+          ],
+          "maxLines": 1
+         }
+        },
+        {
+         "text": {
+          "value": {
+           "type": "textFromFloat",
+           "value": "@selfuse",
+           "whole": 3,
+           "decimal": 0,
+           "flags": 5
+          },
+          "fontSize": 13,
+          "color": "@colors.muted"
+         }
+        },
+        {
+         "text": {
+          "value": "% of solar used at home",
+          "fontSize": 13,
+          "color": "@colors.muted",
+          "maxLines": 1
+         }
+        }
+       ]
+      }
+     },
+     {
+      "box": {
+       "modifiers": [
+        {
+         "height": 10
+        }
+       ]
+      }
+     },
+     {
+      "box": {
+       "modifiers": [
+        "fillMaxWidth",
+        {
+         "verticalWeight": 1
+        }
+       ],
+       "children": [
+        {
+         "Sankey": {
+          "flows": "@flows",
+          "sources": [
+           [
+            "Solar",
+            "@colors.solar"
+           ],
+           [
+            "Grid",
+            "@colors.grid"
+           ],
+           [
+            "Battery",
+            "@colors.battery"
+           ]
+          ],
+          "uses": [
+           [
+            "House",
+            "@colors.house"
+           ],
+           [
+            "Car",
+            "@colors.car"
+           ],
+           [
+            "Heat pump",
+            "@colors.heat"
+           ],
+           [
+            "Export",
+            "@colors.export"
+           ]
+          ],
+          "label": "Energy flow diagram"
+         }
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

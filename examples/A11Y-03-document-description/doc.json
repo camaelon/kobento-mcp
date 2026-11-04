@@ -1,0 +1,14 @@
+{
+ "header": {"apiLevel": 7, "width": 360, "height": 180, "profiles": 513,
+  "contentDescription": "Weekly steps bar chart: 3,000 on Monday, climbing unevenly to a peak of 9,000 on Saturday, then 8,000 on Sunday"},
+ "resources": {
+  "floatArrays": {"steps": [3000, 5000, 4000, 7000, 6000, 9000, 8000]}
+ },
+ "root": {"column": {
+  "modifiers": ["fillMaxSize", {"background": "@colors.background"}, {"padding": [16, 8, 16, 8]}, {"spacedBy": 6}],
+  "children": [
+   {"text": {"value": "Steps this week", "fontSize": 14, "color": "@colors.onSurface"}},
+   {"box": {"modifiers": ["fillMaxWidth", {"verticalWeight": 1}], "children": [
+    {"BarChart": {"values": "@steps", "labels": ["M", "T", "W", "T", "F", "S", "S"], "fill": true, "label": "Steps per day this week"}}]}}
+  ]}}
+}
