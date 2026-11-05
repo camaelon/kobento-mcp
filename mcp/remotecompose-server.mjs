@@ -385,6 +385,12 @@ Structure
   whose visibility is 0, a stateLayout child not on show), its expression is not re-evaluated while hidden (Android
   does the same), so every other reader sees it frozen: a 3D engine whose crank angle was first read by a hidden
   diagram never moved. Time-driven and host-driven values alike. The design warning hidden_first_read names them.
+- Particles: createParticles re-creates its particles every time it paints (in every player, as on Android), so a
+  system that moves lives in an impulse: {"impulse": {"duration": 1000000000, "start": 0, "commands":
+  [{"createParticles": {...}}, {"impulseProcess": {"commands": [{"particlesLoop": {...}}]}}]}} — the impulse creates it
+  once, its impulseProcess runs the loops every frame from the second frame on (SHW-23). Draw in the loop's commands or
+  with particlesComparison after the impulse. A short burst takes a short duration (the loops stop with it). Render
+  particles with a duration. The design warning particles_outside_impulse flags a plain createParticles.
 - Smaller sizes: a widget is resized by its host. Drop content by priority with a collapsibleColumn inside a padded
   box: {"box": {"modifiers": ["fillMaxSize", {"padding": 16}], "children": [{"collapsibleColumn": {"modifiers":
   ["fillMaxSize"], "horizontalAlignment": "start", "verticalArrangement": "top", "children": [...]}}]}}, with

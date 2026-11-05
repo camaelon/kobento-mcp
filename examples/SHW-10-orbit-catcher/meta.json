@@ -58,7 +58,7 @@
   "Difficulty ramps with the score inside the equations: orbit speed 1.8 + 0.045 * min(score, 24) rad/s, the star's time max(1.6, 3.6 - 0.08 * score) s, the comet speed up with it"
  ],
  "pitfalls": [
-  "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the game started over every frame and was over at once",
+  "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, every player (Android's, the C++ renderer, the web player) re-creates the particles on every frame, so the game started over every frame and was over at once",
   "Never write ifElse(then, else, cond): the order is ifElse(else, then, cond). ifElse(0, dT + dt, alive) froze the death timer and made restart impossible",
   "createParticles initialValues may use only literals and the particle index u: the C++ player evaluates them against an empty context, so a global (@taps) there reads 0. Do resets in the equations instead",
   "A colour op in a paint bundle resets the alpha to the colour's own: set the alpha after the colour, in every bundle that needs it",

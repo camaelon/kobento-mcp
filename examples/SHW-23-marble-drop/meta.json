@@ -60,7 +60,7 @@
   "Colour per marble without colour expressions: five particlesComparison passes over index ranges [0, 6), [6, 12)… each paint the marbles of one colour; the peg they last hit flashes as a fading ring in that colour"
  ],
  "pitfalls": [
-  "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the marbles stayed where they were spawned",
+  "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, every player (Android's, the C++ renderer, the web player) re-creates the particles on every frame, so the marbles stayed where they were spawned",
   "There are no marble-to-marble collisions. The format can express them (ParticlesCompare with two equation sets compares every pair, reading particle1/particle2 values through the CMD1/CMD2 tokens), but json2rc has no infix syntax for those tokens, so pairwise equations cannot be written in JSON today. Marbles pass through each other: visible when a tilt piles them against a wall",
   "Every equation must fit in 32 RPN entries (Android): split long formulas into helper variables, and remember each helper adds a step of lag",
   "createParticles initialValues are evaluated without the document's variables in the C++ player: use literals and the index u only; put spawns in the equations",

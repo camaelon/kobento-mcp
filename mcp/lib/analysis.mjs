@@ -77,8 +77,8 @@ export function analyze(report, { simulated = false, tapped = false, log = "" } 
         add("warning", "needs_frames",
             "The document uses particles/impulses, whose per-frame work starts on the second " +
             "frame; a single-frame render can be legitimately empty. Pass `duration` (e.g. 1). " +
-            "(Create particle systems inside an impulse and move them in its impulseProcess: the Android " +
-            "player re-creates them every frame otherwise.)");
+            "(Create particle systems inside an impulse and move them in its impulseProcess: the players " +
+            "re-create them every frame otherwise.)");
     }
     if (f.touch || f.clickAreas) {
         add("info", "interactive",

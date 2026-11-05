@@ -160,7 +160,8 @@ export const definition = {
             "and design problems, each naming the fix: symbols/emoji drawn as text icons (glyph_icon), " +
             "the same subtree written out many times instead of an inline component (repeated_subtree, " +
             "JSON input only), dates typed in instead of read from the clock (hardcoded_date), and " +
-            "literal colours that cannot follow light/dark/mono (hardcoded_colors, JSON input only). " +
+            "literal colours that cannot follow light/dark/mono (hardcoded_colors, JSON input only), " +
+            "particle systems created outside an impulse, which every player resets each frame (particles_outside_impulse, JSON input only). " +
             "Also float expressions longer than Android accepts (expression_too_long: over 32 entries, the document fails to load on a device although it renders here). " +
             "Re-run at other sizes (width/height) to find size-dependent problems.",
             "audit", { frames: { type: "integer", description: "Frames simulated for execution coverage and the repaint verdict (default 120)." } },
