@@ -212,3 +212,20 @@ test("hidden_first_read: a tree variable first read inside a hideable component,
     // The visibility itself is read outside the component it hides.
     assert.deepEqual(hit({ resources: {}, root: { column: { children: [decl("shown", "step(continuousSec() % 2, 1)"), hidden(1), visible("@shown")] } } }), []);
 });
+
+test("particles_outside_impulse: a system created as a plain command, not one in an impulse", () => {
+    const create = { createParticles: { id: "p", count: 4, variables: ["x"], initialValues: ["rand()"] } };
+    const loop = { particlesLoop: { system: "@p", equations: ["x + 1"], commands: [] } };
+    const hit = (root) => designAudit({ header, root }).filter((f) => f.code === "particles_outside_impulse");
+    const plain = hit({ canvas: { commands: [create, loop] } });
+    assert.equal(plain.length, 1);
+    assert.equal(plain[0].severity, "warning");
+    assert.match(plain[0].message, /impulseProcess/);
+    // Inside a theme $if it is still a plain command.
+    assert.equal(hit({ canvas: { commands: [{ $if: "theme.mono", then: [create], else: [create] }] } })[0].count, 2);
+    // The "type" spelling too.
+    assert.equal(hit({ canvas: { commands: [{ type: "createParticles", id: "p", count: 4, variables: ["x"], initialValues: ["0"] }] } }).length, 1);
+    const wrapped = { impulse: { duration: 1e9, start: 0, commands: [create, { impulseProcess: { commands: [loop] } }] } };
+    assert.deepEqual(hit({ canvas: { commands: [wrapped] } }), []);
+    assert.deepEqual(hit({ canvas: { commands: [{ type: "impulse", duration: 1e9, start: 0, commands: [create] }] } }), []);
+});

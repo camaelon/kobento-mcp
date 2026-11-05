@@ -65,6 +65,7 @@
   "Four looks. Dark is the nebula with pastel lines. Light lays a themed cream wash (@colors.wash: 84% cream in light, transparent in dark) over the same shader, so it reads as tinted paper, and the lines, sparks, beads and caption switch to deep inks through themed colours: the sweep gradient takes @colors refs. Mono ({\"$if\": \"theme.mono\"}) drops the shader, particles and glow: the figure is one hairline in onSurface with six dots, its phases from the minute (p1m = m·0.9), so an always-on screen repaints once a minute"
  ],
  "pitfalls": [
+  "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the fireflies would be re-seeded every frame",
   "Shader support: the AGSL nebula plays on Android 13+ (AGSL), in the C++/Skia player (SkRuntimeEffect) and in the TypeScript web player in a browser (transpiled to WebGL2). The headless TypeScript render (players/typescript/render.mjs) has no WebGL, so it stops at the shader with 'document is not defined'. Check the TypeScript side in a browser page instead (package_web)",
   "A particle document needs frames: render with duration (and a seed) or the fireflies are still where they were seeded",
   "Particle initialValues cannot read another particle variable (\"rand() * @life\" is refused: unknown token): give each its own expression",
@@ -81,12 +82,12 @@
    "note": "AGSL nebula: three domain warps, two cosine palettes, vignette; uniforms iResolution, iTime = @T, uHue"
   },
   {
-   "pointer": "/root/commands/8/else/14",
+   "pointer": "/root/commands/8/else/13/impulse/commands/1/impulseProcess/commands/0",
    "shows": "fx.particles",
    "note": "180 fireflies: per-particle life and age, a divergence-free vortex field, wrap round and respawn at alpha 0"
   },
   {
-   "pointer": "/root/commands/8/else/15",
+   "pointer": "/root/commands/8/else/14",
    "shows": "draw.path",
    "note": "the harmonograph of the current minute, 900 points"
   },
@@ -201,12 +202,12 @@
   "component_modes": {},
   "component_patterns": [],
   "converter": "json2rc",
-  "bytes": 5338,
+  "bytes": 5350,
   "header": {
    "width": 360,
    "height": 360
   },
-  "op_count": 179,
+  "op_count": 181,
   "operations": {
    "ANIMATED_FLOAT": 33,
    "COLOR_CONSTANT": 18,
@@ -221,6 +222,8 @@
    "DRAW_RECT": 2,
    "DRAW_TEXT_ANCHOR": 1,
    "HEADER": 1,
+   "ImpulseOperation": 1,
+   "ImpulseProcess": 1,
    "LAYOUT_CANVAS": 1,
    "LAYOUT_ROOT": 1,
    "LayoutComponentContent": 1,
@@ -528,6 +531,7 @@
    "drawPath",
    "drawRect",
    "drawTextAnchored",
+   "duration",
    "else",
    "end",
    "equations",
@@ -542,6 +546,8 @@
    "id",
    "id1",
    "id2",
+   "impulse",
+   "impulseProcess",
    "index",
    "initialValues",
    "ink",
@@ -646,7 +652,7 @@
     "textMerge"
    ]
   },
-  "built_at": "2026-11-02T20:19:03.142Z"
+  "built_at": "2026-11-05T20:52:55.679Z"
  },
  "java_difference": "json2rc writes 8 bytes fewer: after a paint with an AGSL runtime shader, {\"shader\": 0} becomes one PaintBundle SHADER 0 in json2rc and two in Java's parser (a minimal case: Java 249 B, json2rc 241 B). Both clear the shader, so the documents behave the same"
 }

@@ -118,7 +118,7 @@ claims for evidence it finds. Tags therefore can't drift from what the example d
 | `host.custom` | native view, embed, map, video | `custom` |
 | `a11y.labels` | accessibility, screen reader, talkback | `semantics`, `contentDescription` |
 | `a11y.state` | announce state | `stateDescription` |
-| `fx.particles` | confetti, snow, sparks, particles | `createParticles`, `particlesLoop` |
+| `fx.particles` | confetti, snow, sparks, particles | `createParticles` in an `impulse`, `particlesLoop` in its `impulseProcess` |
 | `fx.physics` | bounce, collide, gravity | `particlesComparison`, `impulse` with velocity |
 | `3d.scene` | 3d, camera, light | `camera3D`, `lights3D` |
 | `3d.mesh` | cube, sphere, model, primitive | `meshPrimitive3D`, `defineMesh3D`, `drawMesh3D` |

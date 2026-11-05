@@ -40248,17 +40248,17 @@
    ],
    "teaches": [
     "Recognise needs_frames: particle and impulse documents do their per-frame work from the second frame, so render them with duration (and a seed) to see them",
-    "Emit a burst with createParticles (x, y at the centre, random vx, vy) and move it with particlesLoop equations",
+    "Emit a burst with createParticles (x, y at the centre, random vx, vy) inside an impulse, and move it with particlesLoop equations in the impulse's impulseProcess",
     "Start the particles at componentWidth() / 2, componentHeight() / 2 so the burst is centred in any box"
    ],
    "snippets": [
     {
-     "pointer": "/root/commands/4",
+     "pointer": "/root/commands/5/impulse/commands/0",
      "shows": "fx.particles",
      "note": "40 particles at (150, 100) with random velocities"
     },
     {
-     "pointer": "/root/commands/6",
+     "pointer": "/root/commands/5/impulse/commands/1/impulseProcess/commands/0",
      "shows": "fx.particles",
      "note": "each frame: move, damp by 0.98, add a little gravity"
     }
@@ -40297,22 +40297,44 @@
    ],
    "folder": "DX-06-single-frame-particles",
    "derived": {
-    "bytes": 482,
-    "op_count": 18,
+    "converter": "json2rc",
+    "bytes": 494,
     "header": {
      "width": 300,
      "height": 200
     },
-    "host_variables": [],
-    "java_identical": true,
-    "renders": {
-     "narrow": {
-      "render": "render-narrow.png"
-     },
-     "wide": {
-      "render": "render-wide.png"
-     }
+    "op_count": 20,
+    "operations": {
+     "COMPONENT_VALUE": 2,
+     "CanvasContent": 1,
+     "DATA_TEXT": 1,
+     "DRAW_CIRCLE": 1,
+     "DRAW_RECT": 1,
+     "DRAW_TEXT_ANCHOR": 1,
+     "HEADER": 1,
+     "ImpulseOperation": 1,
+     "ImpulseProcess": 1,
+     "LAYOUT_CANVAS": 1,
+     "LAYOUT_ROOT": 1,
+     "LayoutComponentContent": 1,
+     "MODIFIER_HEIGHT": 1,
+     "MODIFIER_WIDTH": 1,
+     "PAINT_VALUES": 3,
+     "ParticlesCreate": 1,
+     "ParticlesLoop": 1
     },
+    "host_variables": [],
+    "render_findings": [
+     "warning: needs_frames"
+    ],
+    "audit": {
+     "error": 0,
+     "warning": 0,
+     "info": 1
+    },
+    "audit_findings": [
+     "info: repaint_continuous"
+    ],
     "repaint": "continuous",
     "interaction_targets": {
      "total": 0,
@@ -40320,11 +40342,78 @@
      "area": 0,
      "touch": 0
     },
-    "audit": {
-     "error": 0,
-     "warning": 0,
-     "info": 1
+    "java_identical": true,
+    "renders": {
+     "narrow": {
+      "render": "render-narrow.png",
+      "render_findings": [
+       "warning: needs_frames"
+      ],
+      "size": [
+       200,
+       200
+      ],
+      "audit_findings": [
+       "info: repaint_continuous"
+      ]
+     },
+     "wide": {
+      "render": "render-wide.png",
+      "render_findings": [
+       "warning: needs_frames"
+      ],
+      "size": [
+       450,
+       200
+      ],
+      "audit_findings": [
+       "info: repaint_continuous"
+      ]
+     }
     },
+    "json_keys": [
+     "apiLevel",
+     "bottom",
+     "color",
+     "commands",
+     "contentDescription",
+     "count",
+     "createParticles",
+     "cx",
+     "cy",
+     "drawCircle",
+     "drawRect",
+     "drawTextAnchored",
+     "duration",
+     "equations",
+     "header",
+     "height",
+     "id",
+     "impulse",
+     "impulseProcess",
+     "initialValues",
+     "left",
+     "modifiers",
+     "ops",
+     "paint",
+     "panX",
+     "panY",
+     "particlesLoop",
+     "profiles",
+     "radius",
+     "right",
+     "root",
+     "start",
+     "system",
+     "text",
+     "textSize",
+     "top",
+     "type",
+     "variables",
+     "width",
+     "x",
+     "y"
+    ],
     "evidence": {
      "fx.particles": [
       "createParticles",
@@ -40341,45 +40430,7 @@
       "drawTextAnchored"
      ]
     },
-    "json_keys": [
-     "apiLevel",
-     "bottom",
-     "color",
-     "commands",
-     "contentDescription",
-     "count",
-     "createParticles",
-     "cx",
-     "cy",
-     "drawCircle",
-     "drawRect",
-     "drawTextAnchored",
-     "equations",
-     "header",
-     "height",
-     "id",
-     "initialValues",
-     "left",
-     "modifiers",
-     "ops",
-     "paint",
-     "panX",
-     "panY",
-     "particlesLoop",
-     "profiles",
-     "radius",
-     "right",
-     "root",
-     "system",
-     "text",
-     "textSize",
-     "top",
-     "type",
-     "variables",
-     "width",
-     "x",
-     "y"
-    ]
+    "built_at": "2026-11-05T20:52:10.705Z"
    }
   },
   {
@@ -56561,7 +56612,7 @@
     "casual game"
    ],
    "teaches": [
-    "Persistent per-frame state: a createParticles system with count 1 is a set of variables the player integrates every frame (th, score, lf, alive, ...). Each particlesLoop equation is the next value of one variable, computed from the previous frame's values",
+    "Persistent per-frame state: a createParticles system with count 1, created once inside an impulse, is a set of variables the player integrates every frame (th, score, lf, alive, ...). Each particlesLoop equation, in the impulse's impulseProcess, is the next value of one variable, computed from the previous frame's values",
     "The equations update simultaneously: every equation reads last frame's values, so a flag such as the catch c is seen by score, sa and lf on the frame after it is set. Guard one-frame events against firing twice: c = alive * step(cos(th - sa), 0.988) * (1 - c)",
     "Game rules as branchless expressions: ifElse(else, then, cond) and step(a, b) (a > b ? 1 : 0) for the catch, the comet hit, the countdown, game over (alive), the cool-down after death (dT) and the restart (rs)",
     "Tap input: onTouchDown on the canvas runs two valueFloatExpressionChange actions, @dir = 0 - @dir and @taps = @taps + 1. The game compares @taps with the count it last saw to detect a restart tap, so no action needs to know the game's state",
@@ -56570,6 +56621,7 @@
     "Difficulty ramps with the score inside the equations: orbit speed 1.8 + 0.045 * min(score, 24) rad/s, the star's time max(1.6, 3.6 - 0.08 * score) s, the comet speed up with it"
    ],
    "pitfalls": [
+    "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the game started over every frame and was over at once",
     "Never write ifElse(then, else, cond): the order is ifElse(else, then, cond). ifElse(0, dT + dt, alive) froze the death timer and made restart impossible",
     "createParticles initialValues may use only literals and the particle index u: the C++ player evaluates them against an empty context, so a global (@taps) there reads 0. Do resets in the equations instead",
     "A colour op in a paint bundle resets the alpha to the colour's own: set the alpha after the colour, in every bundle that needs it",
@@ -57983,12 +58035,12 @@
    ],
    "snippets": [
     {
-     "pointer": "/root/commands/9",
+     "pointer": "/root/commands/9/impulse/commands/0",
      "shows": "fx.particles",
      "note": "the game state: one particle, fifteen variables"
     },
     {
-     "pointer": "/root/commands/10",
+     "pointer": "/root/commands/9/impulse/commands/1/impulseProcess/commands/0",
      "shows": "fx.particles",
      "note": "the rules: one equation per state variable, run every frame"
     },
@@ -57998,12 +58050,12 @@
      "note": "a tap reverses @dir and counts @taps"
     },
     {
-     "pointer": "/root/commands/25",
+     "pointer": "/root/commands/24",
      "shows": "text.dynamic",
      "note": "the score read straight from the particle variable"
     },
     {
-     "pointer": "/root/commands/23/else/7",
+     "pointer": "/root/commands/22/else/7",
      "shows": "draw.arc",
      "note": "the star's countdown ring, 360 * lf"
     },
@@ -58015,11 +58067,49 @@
    ],
    "folder": "SHW-10-orbit-catcher",
    "derived": {
-    "bytes": 8332,
-    "op_count": 390,
+    "components": [],
+    "component_instances": 0,
+    "component_modes": {},
+    "component_patterns": [],
+    "converter": "json2rc",
+    "bytes": 8344,
     "header": {
      "width": 360,
      "height": 440
+    },
+    "op_count": 392,
+    "operations": {
+     "ACCESSIBILITY_SEMANTICS": 1,
+     "ANIMATED_FLOAT": 87,
+     "COLOR_CONSTANT": 40,
+     "COLOR_EXPRESSIONS": 40,
+     "COMPONENT_VALUE": 2,
+     "CanvasContent": 1,
+     "DATA_FLOAT": 2,
+     "DATA_TEXT": 13,
+     "DRAW_ARC": 1,
+     "DRAW_CIRCLE": 16,
+     "DRAW_OVAL": 1,
+     "DRAW_RECT": 2,
+     "DRAW_TEXT_ANCHOR": 11,
+     "HEADER": 1,
+     "ImpulseOperation": 1,
+     "ImpulseProcess": 1,
+     "LAYOUT_CANVAS": 1,
+     "LAYOUT_ROOT": 1,
+     "LayoutComponentContent": 1,
+     "LoopOperation": 43,
+     "MODIFIER_HEIGHT": 1,
+     "MODIFIER_TOUCH_DOWN": 1,
+     "MODIFIER_WIDTH": 1,
+     "NAMED_VARIABLE": 20,
+     "PAINT_VALUES": 35,
+     "ParticlesCreate": 1,
+     "ParticlesLoop": 1,
+     "THEME": 60,
+     "TextFromFloat": 2,
+     "TextMerge": 2,
+     "ValueFloatExpressionChangeActionOperation": 2
     },
     "host_variables": [
      {
@@ -58123,21 +58213,40 @@
       "value": "#FF070A18"
      }
     ],
-    "components": [],
+    "render_findings": [],
+    "audit": {
+     "error": 0,
+     "warning": 0,
+     "info": 2
+    },
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: text_in_canvas"
+    ],
+    "repaint": "continuous",
+    "interaction_targets": {
+     "total": 0,
+     "click": 0,
+     "area": 0,
+     "touch": 0
+    },
     "java_identical": true,
     "renders": {
      "light": {
+      "theme": "light",
       "render": "render-light.png",
-      "theme": "light"
+      "render_findings": []
      },
      "dark": {
+      "theme": "dark",
       "render": "render-dark.png",
-      "theme": "dark"
+      "render_findings": []
      },
      "mono-dark": {
-      "render": "render-mono-dark.png",
       "componentTheme": "mono-dark",
-      "bytes": 4747,
+      "bytes": 4759,
+      "component_modes": {},
+      "op_count": 176,
       "host_variables": [
        {
         "name": "accent",
@@ -58244,12 +58353,17 @@
         "type": "color",
         "value": "#FF070A18"
        }
-      ]
+      ],
+      "java_identical": true,
+      "repaint": "continuous",
+      "render": "render-mono-dark.png",
+      "render_findings": []
      },
      "mono-light": {
-      "render": "render-mono-light.png",
       "componentTheme": "mono-light",
-      "bytes": 4747,
+      "bytes": 4759,
+      "component_modes": {},
+      "op_count": 176,
       "host_variables": [
        {
         "name": "accent",
@@ -58356,20 +58470,27 @@
         "type": "color",
         "value": "#FFF4F1FF"
        }
-      ]
+      ],
+      "java_identical": true,
+      "repaint": "continuous",
+      "render": "render-mono-light.png",
+      "render_findings": []
      },
      "start-light": {
+      "theme": "light",
       "render": "render-start-light.png",
-      "theme": "light"
+      "render_findings": []
      },
      "gameover-light": {
+      "theme": "light",
       "render": "render-gameover-light.png",
-      "theme": "light"
+      "render_findings": []
      },
      "gameover-mono": {
-      "render": "render-gameover-mono.png",
       "componentTheme": "mono-light",
-      "bytes": 4747,
+      "bytes": 4759,
+      "component_modes": {},
+      "op_count": 176,
       "host_variables": [
        {
         "name": "accent",
@@ -58476,42 +58597,163 @@
         "type": "color",
         "value": "#FFF4F1FF"
        }
-      ]
+      ],
+      "java_identical": true,
+      "repaint": "continuous",
+      "render": "render-gameover-mono.png",
+      "render_findings": []
      },
      "playing": {
-      "render": "render-playing.png"
+      "render": "render-playing.png",
+      "render_findings": []
      },
      "gameover": {
-      "render": "render-gameover.png"
+      "render": "render-gameover.png",
+      "render_findings": []
      },
      "restart": {
-      "render": "render-restart.png"
+      "render": "render-restart.png",
+      "render_findings": []
      },
      "collision": {
-      "render": "render-collision.png"
+      "render": "render-collision.png",
+      "render_findings": []
      },
      "watch": {
-      "render": "render-watch.png"
+      "render": "render-watch.png",
+      "render_findings": [
+       "warning: round_cut"
+      ],
+      "size": [
+       227,
+       227
+      ],
+      "audit_findings": [
+       "info: repaint_continuous"
+      ]
      },
      "landscape": {
-      "render": "render-landscape.png"
+      "render": "render-landscape.png",
+      "render_findings": [],
+      "size": [
+       640,
+       400
+      ],
+      "audit_findings": [
+       "info: repaint_continuous"
+      ]
      },
      "tablet": {
-      "render": "render-tablet.png"
+      "render": "render-tablet.png",
+      "render_findings": [],
+      "size": [
+       800,
+       1000
+      ],
+      "audit_findings": [
+       "info: repaint_continuous"
+      ]
      }
     },
-    "repaint": "continuous",
-    "interaction_targets": {
-     "total": 0,
-     "click": 0,
-     "area": 0,
-     "touch": 0
-    },
-    "audit": {
-     "error": 0,
-     "warning": 1,
-     "info": 2
-    },
+    "json_keys": [
+     "$if",
+     "accent",
+     "alpha",
+     "apiLevel",
+     "bottom",
+     "centerX",
+     "centerY",
+     "color",
+     "colors",
+     "comet",
+     "cometCore",
+     "commands",
+     "contentDescription",
+     "count",
+     "createParticles",
+     "cx",
+     "cy",
+     "dark",
+     "decimal",
+     "dir",
+     "drawArc",
+     "drawCircle",
+     "drawOval",
+     "drawRect",
+     "drawTextAnchored",
+     "duration",
+     "dust",
+     "else",
+     "equations",
+     "flags",
+     "from",
+     "halo",
+     "header",
+     "height",
+     "id",
+     "id1",
+     "id2",
+     "impulse",
+     "impulseProcess",
+     "index",
+     "initialValues",
+     "left",
+     "light",
+     "loop",
+     "modifiers",
+     "muted",
+     "name",
+     "onSurface",
+     "onTouchDown",
+     "ops",
+     "orbit",
+     "paint",
+     "panX",
+     "panY",
+     "particlesLoop",
+     "planet1",
+     "planet2",
+     "planet3",
+     "player",
+     "playerCore",
+     "profiles",
+     "radialGradient",
+     "radius",
+     "resources",
+     "right",
+     "ring",
+     "root",
+     "score",
+     "semantics",
+     "shader",
+     "sky1",
+     "sky2",
+     "star",
+     "starCore",
+     "start",
+     "startAngle",
+     "strokeCap",
+     "strokeWidth",
+     "style",
+     "sweepAngle",
+     "system",
+     "taps",
+     "target",
+     "text",
+     "textSize",
+     "then",
+     "top",
+     "type",
+     "until",
+     "value",
+     "variable",
+     "variables",
+     "veil",
+     "whole",
+     "width",
+     "x",
+     "y"
+    ],
     "evidence": {
      "fx.particles": [
       "createParticles",
@@ -58552,101 +58794,7 @@
       "semantics"
      ]
     },
-    "json_keys": [
-     "$if",
-     "accent",
-     "alpha",
-     "apiLevel",
-     "bottom",
-     "centerX",
-     "centerY",
-     "color",
-     "colors",
-     "comet",
-     "cometCore",
-     "commands",
-     "contentDescription",
-     "count",
-     "createParticles",
-     "cx",
-     "cy",
-     "dark",
-     "decimal",
-     "dir",
-     "drawArc",
-     "drawCircle",
-     "drawOval",
-     "drawRect",
-     "drawTextAnchored",
-     "dust",
-     "else",
-     "equations",
-     "flags",
-     "from",
-     "halo",
-     "header",
-     "height",
-     "id",
-     "id1",
-     "id2",
-     "index",
-     "initialValues",
-     "left",
-     "light",
-     "loop",
-     "modifiers",
-     "muted",
-     "name",
-     "onSurface",
-     "onTouchDown",
-     "ops",
-     "orbit",
-     "paint",
-     "panX",
-     "panY",
-     "particlesLoop",
-     "planet1",
-     "planet2",
-     "planet3",
-     "player",
-     "playerCore",
-     "profiles",
-     "radialGradient",
-     "radius",
-     "resources",
-     "right",
-     "ring",
-     "root",
-     "score",
-     "semantics",
-     "shader",
-     "sky1",
-     "sky2",
-     "star",
-     "starCore",
-     "startAngle",
-     "strokeCap",
-     "strokeWidth",
-     "style",
-     "sweepAngle",
-     "system",
-     "taps",
-     "target",
-     "text",
-     "textSize",
-     "then",
-     "top",
-     "type",
-     "until",
-     "value",
-     "variable",
-     "variables",
-     "veil",
-     "whole",
-     "width",
-     "x",
-     "y"
-    ]
+    "built_at": "2026-11-05T20:52:18.786Z"
    }
   },
   {
@@ -58716,6 +58864,7 @@
     "Four looks. Dark is the nebula with pastel lines. Light lays a themed cream wash (@colors.wash: 84% cream in light, transparent in dark) over the same shader, so it reads as tinted paper, and the lines, sparks, beads and caption switch to deep inks through themed colours: the sweep gradient takes @colors refs. Mono ({\"$if\": \"theme.mono\"}) drops the shader, particles and glow: the figure is one hairline in onSurface with six dots, its phases from the minute (p1m = m·0.9), so an always-on screen repaints once a minute"
    ],
    "pitfalls": [
+    "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the fireflies would be re-seeded every frame",
     "Shader support: the AGSL nebula plays on Android 13+ (AGSL), in the C++/Skia player (SkRuntimeEffect) and in the TypeScript web player in a browser (transpiled to WebGL2). The headless TypeScript render (players/typescript/render.mjs) has no WebGL, so it stops at the shader with 'document is not defined'. Check the TypeScript side in a browser page instead (package_web)",
     "A particle document needs frames: render with duration (and a seed) or the fireflies are still where they were seeded",
     "Particle initialValues cannot read another particle variable (\"rand() * @life\" is refused: unknown token): give each its own expression",
@@ -58732,12 +58881,12 @@
      "note": "AGSL nebula: three domain warps, two cosine palettes, vignette; uniforms iResolution, iTime = @T, uHue"
     },
     {
-     "pointer": "/root/commands/8/else/14",
+     "pointer": "/root/commands/8/else/13/impulse/commands/1/impulseProcess/commands/0",
      "shows": "fx.particles",
      "note": "180 fireflies: per-particle life and age, a divergence-free vortex field, wrap round and respawn at alpha 0"
     },
     {
-     "pointer": "/root/commands/8/else/15",
+     "pointer": "/root/commands/8/else/14",
      "shows": "draw.path",
      "note": "the harmonograph of the current minute, 900 points"
     },
@@ -58849,11 +58998,49 @@
    "java_difference": "json2rc writes 8 bytes fewer: after a paint with an AGSL runtime shader, {\"shader\": 0} becomes one PaintBundle SHADER 0 in json2rc and two in Java's parser (a minimal case: Java 249 B, json2rc 241 B). Both clear the shader, so the documents behave the same",
    "folder": "SHW-12-generative-art",
    "derived": {
-    "bytes": 5338,
-    "op_count": 179,
+    "components": [],
+    "component_instances": 0,
+    "component_modes": {},
+    "component_patterns": [],
+    "converter": "json2rc",
+    "bytes": 5350,
     "header": {
      "width": 360,
      "height": 360
+    },
+    "op_count": 181,
+    "operations": {
+     "ANIMATED_FLOAT": 33,
+     "COLOR_CONSTANT": 18,
+     "COLOR_EXPRESSIONS": 18,
+     "COMPONENT_VALUE": 2,
+     "CanvasContent": 1,
+     "ConditionalOperations": 1,
+     "DATA_TEXT": 5,
+     "DRAW_CIRCLE": 2,
+     "DRAW_LINE": 1,
+     "DRAW_PATH": 6,
+     "DRAW_RECT": 2,
+     "DRAW_TEXT_ANCHOR": 1,
+     "HEADER": 1,
+     "ImpulseOperation": 1,
+     "ImpulseProcess": 1,
+     "LAYOUT_CANVAS": 1,
+     "LAYOUT_ROOT": 1,
+     "LayoutComponentContent": 1,
+     "LoopOperation": 19,
+     "MODIFIER_BACKGROUND": 1,
+     "MODIFIER_HEIGHT": 1,
+     "MODIFIER_WIDTH": 1,
+     "NAMED_VARIABLE": 9,
+     "PAINT_VALUES": 16,
+     "ParticlesCreate": 1,
+     "ParticlesLoop": 1,
+     "PathExpression": 2,
+     "SHADER_DATA": 1,
+     "THEME": 27,
+     "TextFromFloat": 2,
+     "TextMerge": 4
     },
     "host_variables": [
      {
@@ -58902,21 +59089,41 @@
       "value": "#00000000"
      }
     ],
-    "components": [],
+    "render_findings": [],
+    "audit": {
+     "error": 0,
+     "warning": 1,
+     "info": 2
+    },
+    "audit_findings": [
+     "warning: dead_code",
+     "info: repaint_continuous",
+     "info: expression_entries"
+    ],
+    "repaint": "continuous",
+    "interaction_targets": {
+     "total": 0,
+     "click": 0,
+     "area": 0,
+     "touch": 0
+    },
     "java_identical": false,
     "renders": {
      "light": {
+      "theme": "light",
       "render": "render-light.png",
-      "theme": "light"
+      "render_findings": []
      },
      "dark": {
+      "theme": "dark",
       "render": "render-dark.png",
-      "theme": "dark"
+      "render_findings": []
      },
      "mono-dark": {
-      "render": "render-mono-dark.png",
       "componentTheme": "mono-dark",
       "bytes": 1667,
+      "component_modes": {},
+      "op_count": 63,
       "host_variables": [
        {
         "name": "bead",
@@ -58973,12 +59180,17 @@
         "type": "color",
         "value": "#00000000"
        }
-      ]
+      ],
+      "java_identical": true,
+      "repaint": "scheduled",
+      "render": "render-mono-dark.png",
+      "render_findings": []
      },
      "mono-light": {
-      "render": "render-mono-light.png",
       "componentTheme": "mono-light",
       "bytes": 1667,
+      "component_modes": {},
+      "op_count": 63,
       "host_variables": [
        {
         "name": "bead",
@@ -59035,81 +59247,63 @@
         "type": "color",
         "value": "#D6F6F1E6"
        }
-      ]
+      ],
+      "java_identical": true,
+      "repaint": "scheduled",
+      "render": "render-mono-light.png",
+      "render_findings": []
      },
      "next-minute": {
-      "render": "render-next-minute.png"
+      "render": "render-next-minute.png",
+      "render_findings": []
      },
      "crossfade": {
-      "render": "render-crossfade.png"
+      "render": "render-crossfade.png",
+      "render_findings": []
      },
      "evening": {
-      "render": "render-evening.png"
+      "render": "render-evening.png",
+      "render_findings": []
      },
      "phone": {
-      "render": "render-phone.png"
+      "render": "render-phone.png",
+      "render_findings": [],
+      "size": [
+       360,
+       780
+      ],
+      "audit_findings": [
+       "warning: dead_code",
+       "info: repaint_continuous",
+       "info: expression_entries"
+      ]
      },
      "widget": {
-      "render": "render-widget.png"
+      "render": "render-widget.png",
+      "render_findings": [],
+      "size": [
+       360,
+       180
+      ],
+      "audit_findings": [
+       "warning: dead_code",
+       "info: repaint_continuous",
+       "info: expression_entries"
+      ]
      },
      "watch": {
-      "render": "render-watch.png"
+      "render": "render-watch.png",
+      "render_findings": [],
+      "size": [
+       227,
+       227
+      ],
+      "audit_findings": [
+       "warning: dead_code",
+       "info: repaint_continuous",
+       "info: expression_entries"
+      ]
      }
-    },
-    "repaint": "continuous",
-    "interaction_targets": {
-     "total": 0,
-     "click": 0,
-     "area": 0,
-     "touch": 0
-    },
-    "audit": {
-     "error": 0,
-     "warning": 1,
-     "info": 2
-    },
-    "evidence": {
-     "draw.shader": [
-      "shader"
-     ],
-     "fx.particles": [
-      "createParticles",
-      "particlesLoop"
-     ],
-     "draw.path": [
-      "drawPath"
-     ],
-     "time.clock": [
-      "timeInHr",
-      "timeInMin",
-      "continuousSec"
-     ],
-     "data.random": [
-      "rand"
-     ],
-     "expr.trig": [
-      "sin(",
-      "cos("
-     ],
-     "draw.gradient": [
-      "sweepGradient"
-     ],
-     "data.loop": [
-      "loop"
-     ],
-     "data.condition": [
-      "conditionalOperations",
-      "ifElse",
-      "step()"
-     ],
-     "data.measure": [
-      "componentWidth()",
-      "componentHeight()"
-     ],
-     "text.dynamic": [
-      "textFromFloat",
-      "textMerge"
-     ]
     },
     "json_keys": [
      "$if",
@@ -59138,6 +59332,7 @@
      "drawPath",
      "drawRect",
      "drawTextAnchored",
+     "duration",
      "else",
      "end",
      "equations",
@@ -59152,6 +59347,8 @@
      "id",
      "id1",
      "id2",
+     "impulse",
+     "impulseProcess",
      "index",
      "initialValues",
      "ink",
@@ -59212,7 +59409,51 @@
      "y",
      "y1",
      "y2"
-    ]
+    ],
+    "evidence": {
+     "draw.shader": [
+      "shader"
+     ],
+     "fx.particles": [
+      "createParticles",
+      "particlesLoop"
+     ],
+     "draw.path": [
+      "drawPath"
+     ],
+     "time.clock": [
+      "timeInHr",
+      "timeInMin",
+      "continuousSec"
+     ],
+     "data.random": [
+      "rand"
+     ],
+     "expr.trig": [
+      "sin(",
+      "cos("
+     ],
+     "draw.gradient": [
+      "sweepGradient"
+     ],
+     "data.loop": [
+      "loop"
+     ],
+     "data.condition": [
+      "conditionalOperations",
+      "ifElse",
+      "step()"
+     ],
+     "data.measure": [
+      "componentWidth()",
+      "componentHeight()"
+     ],
+     "text.dynamic": [
+      "textFromFloat",
+      "textMerge"
+     ]
+    },
+    "built_at": "2026-11-05T20:52:55.679Z"
    }
   },
   {
@@ -66235,7 +66476,7 @@
     "sub-steps"
    ],
    "teaches": [
-    "A particle system is a physics engine: each marble's state (x, y, vx, vy and helpers) is a particle variable, and the particlesLoop equations are one explicit-Euler step that the player runs for every marble on every frame",
+    "A particle system is a physics engine: each marble's state (x, y, vx, vy and helpers) is a particle variable, created once inside an impulse, and the particlesLoop equations in its impulseProcess are one explicit-Euler step that the player runs for every marble on every frame",
     "Sub-steps: four particlesLoop ops over the same system, each with dt = min(deltaTime(), 0.04) / 4, integrate four times per frame. Collisions stay tight because a marble moves about 1 px per step",
     "Equations update simultaneously from the previous step's values, so a helper variable lags one step. The peg offsets fu, fw are computed from the position predicted 4 steps ahead (x + y + (vx + vy) * 4 * dt) so they line up with the position the collision impulse acts on",
     "The nearest peg of a staggered lattice in two roundings: pegs sit where u = x + y and w = x − y are multiples of S, so fu = u − round(u / S) * S, fw = w − round(w / S) * S, the offset is ((fu + fw) / 2, (fu − fw) / 2) and the squared distance is (fu² + fw²) / 2",
@@ -66246,6 +66487,7 @@
     "Colour per marble without colour expressions: five particlesComparison passes over index ranges [0, 6), [6, 12)… each paint the marbles of one colour; the peg they last hit flashes as a fading ring in that colour"
    ],
    "pitfalls": [
+    "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the marbles stayed where they were spawned",
     "There are no marble-to-marble collisions. The format can express them (ParticlesCompare with two equation sets compares every pair, reading particle1/particle2 values through the CMD1/CMD2 tokens), but json2rc has no infix syntax for those tokens, so pairwise equations cannot be written in JSON today. Marbles pass through each other: visible when a tilt piles them against a wall",
     "Every equation must fit in 32 RPN entries (Android): split long formulas into helper variables, and remember each helper adds a step of lag",
     "createParticles initialValues are evaluated without the document's variables in the C++ player: use literals and the index u only; put spawns in the equations",
@@ -66255,17 +66497,17 @@
    ],
    "snippets": [
     {
-     "pointer": "/root/commands/40",
+     "pointer": "/root/commands/40/impulse/commands/0",
      "shows": "fx.particles",
      "note": "30 marbles, 18 state variables each"
     },
     {
-     "pointer": "/root/commands/41",
+     "pointer": "/root/commands/40/impulse/commands/1/impulseProcess/commands/0",
      "shows": "fx.physics",
      "note": "one sub-step: gravity, peg impulses, push-out, walls, spawning"
     },
     {
-     "pointer": "/root/commands/45/else/0",
+     "pointer": "/root/commands/41/else/0",
      "shows": "fx.particles",
      "note": "one colour pass over marbles 0..5: halo, body, highlight, peg flash, bin flash"
     },
@@ -66443,11 +66685,50 @@
    ],
    "folder": "SHW-23-marble-drop",
    "derived": {
-    "bytes": 11806,
-    "op_count": 326,
+    "components": [],
+    "component_instances": 0,
+    "component_modes": {},
+    "component_patterns": [],
+    "converter": "json2rc",
+    "bytes": 11818,
     "header": {
      "width": 360,
      "height": 640
+    },
+    "op_count": 328,
+    "operations": {
+     "ACCESSIBILITY_SEMANTICS": 1,
+     "ANIMATED_FLOAT": 108,
+     "COLOR_CONSTANT": 22,
+     "COLOR_EXPRESSIONS": 22,
+     "COMPONENT_VALUE": 2,
+     "CanvasContent": 1,
+     "DATA_FLOAT": 3,
+     "DATA_TEXT": 6,
+     "DRAW_CIRCLE": 26,
+     "DRAW_LINE": 2,
+     "DRAW_RECT": 1,
+     "DRAW_TEXT_ANCHOR": 2,
+     "HEADER": 1,
+     "ImpulseOperation": 1,
+     "ImpulseProcess": 1,
+     "LAYOUT_CANVAS": 1,
+     "LAYOUT_ROOT": 1,
+     "LayoutComponentContent": 1,
+     "LoopOperation": 25,
+     "MATRIX_RESTORE": 1,
+     "MATRIX_SAVE": 1,
+     "MATRIX_TRANSLATE": 1,
+     "MODIFIER_HEIGHT": 1,
+     "MODIFIER_TOUCH_DOWN": 1,
+     "MODIFIER_WIDTH": 1,
+     "NAMED_VARIABLE": 11,
+     "PAINT_VALUES": 38,
+     "ParticlesCompare": 5,
+     "ParticlesCreate": 1,
+     "ParticlesLoop": 4,
+     "THEME": 33,
+     "ValueFloatExpressionChangeActionOperation": 3
     },
     "host_variables": [
      {
@@ -66506,21 +66787,42 @@
       "value": "#FFB9C2E8"
      }
     ],
-    "components": [],
+    "render_findings": [],
+    "audit": {
+     "error": 0,
+     "warning": 0,
+     "info": 4
+    },
+    "audit_findings": [
+     "info: repaint_continuous",
+     "info: repeated_subtree",
+     "info: repeated_subtree",
+     "info: expression_entries"
+    ],
+    "repaint": "continuous",
+    "interaction_targets": {
+     "total": 0,
+     "click": 0,
+     "area": 0,
+     "touch": 0
+    },
     "java_identical": true,
     "renders": {
      "light": {
+      "theme": "light",
       "render": "render-light.png",
-      "theme": "light"
+      "render_findings": []
      },
      "dark": {
+      "theme": "dark",
       "render": "render-dark.png",
-      "theme": "dark"
+      "render_findings": []
      },
      "mono-dark": {
-      "render": "render-mono-dark.png",
       "componentTheme": "mono-dark",
-      "bytes": 10475,
+      "bytes": 10487,
+      "component_modes": {},
+      "op_count": 221,
       "host_variables": [
        {
         "name": "background",
@@ -66582,12 +66884,17 @@
         "type": "color",
         "value": "#FFB9C2E8"
        }
-      ]
+      ],
+      "java_identical": true,
+      "repaint": "continuous",
+      "render": "render-mono-dark.png",
+      "render_findings": []
      },
      "mono-light": {
-      "render": "render-mono-light.png",
       "componentTheme": "mono-light",
-      "bytes": 10475,
+      "bytes": 10487,
+      "component_modes": {},
+      "op_count": 221,
       "host_variables": [
        {
         "name": "background",
@@ -66649,46 +66956,165 @@
         "type": "color",
         "value": "#FF6A7194"
        }
-      ]
+      ],
+      "java_identical": true,
+      "repaint": "continuous",
+      "render": "render-mono-light.png",
+      "render_findings": []
      },
      "tilt-light": {
+      "theme": "light",
       "render": "render-tilt-light.png",
-      "theme": "light"
+      "render_findings": []
      },
      "early": {
-      "render": "render-early.png"
+      "render": "render-early.png",
+      "render_findings": []
      },
      "taps": {
-      "render": "render-taps.png"
+      "render": "render-taps.png",
+      "render_findings": []
      },
      "tilt": {
-      "render": "render-tilt.png"
+      "render": "render-tilt.png",
+      "render_findings": []
      },
      "landscape": {
-      "render": "render-landscape.png"
+      "render": "render-landscape.png",
+      "render_findings": [],
+      "size": [
+       640,
+       360
+      ],
+      "audit_findings": [
+       "info: repaint_continuous",
+       "info: expression_entries"
+      ]
      },
      "small": {
-      "render": "render-small.png"
+      "render": "render-small.png",
+      "render_findings": [],
+      "size": [
+       240,
+       400
+      ],
+      "audit_findings": [
+       "info: repaint_continuous",
+       "info: expression_entries"
+      ]
      },
      "tablet": {
-      "render": "render-tablet.png"
+      "render": "render-tablet.png",
+      "render_findings": [],
+      "size": [
+       800,
+       1280
+      ],
+      "audit_findings": [
+       "info: repaint_continuous",
+       "info: expression_entries"
+      ]
      }
     },
-    "repaint": "continuous",
-    "interaction_targets": {
-     "total": 0,
-     "click": 0,
-     "area": 0,
-     "touch": 0
-    },
-    "audit": {
-     "error": 0,
-     "warning": 1,
-     "info": 4
-    },
+    "json_keys": [
+     "$if",
+     "alpha",
+     "apiLevel",
+     "bg1",
+     "bg2",
+     "bottom",
+     "color",
+     "colors",
+     "commands",
+     "condition",
+     "contentDescription",
+     "count",
+     "createParticles",
+     "cx",
+     "cy",
+     "dark",
+     "divider",
+     "drawCircle",
+     "drawLine",
+     "drawRect",
+     "drawTextAnchored",
+     "drops",
+     "duration",
+     "dx",
+     "dy",
+     "else",
+     "equations",
+     "from",
+     "header",
+     "height",
+     "id",
+     "impulse",
+     "impulseProcess",
+     "index",
+     "initialValues",
+     "left",
+     "light",
+     "linearGradient",
+     "loop",
+     "m0",
+     "m1",
+     "m2",
+     "m3",
+     "m4",
+     "max",
+     "min",
+     "modifiers",
+     "muted",
+     "name",
+     "onSurface",
+     "onTouchDown",
+     "ops",
+     "paint",
+     "panX",
+     "panY",
+     "particlesComparison",
+     "particlesLoop",
+     "peg",
+     "profiles",
+     "radius",
+     "resources",
+     "restore",
+     "right",
+     "root",
+     "save",
+     "semantics",
+     "shader",
+     "start",
+     "strokeCap",
+     "strokeWidth",
+     "style",
+     "system",
+     "systemId",
+     "target",
+     "text",
+     "textSize",
+     "then",
+     "top",
+     "translate",
+     "tx",
+     "ty",
+     "type",
+     "until",
+     "value",
+     "variable",
+     "variables",
+     "width",
+     "x",
+     "x1",
+     "x2",
+     "y",
+     "y1",
+     "y2"
+    ],
     "evidence": {
      "fx.physics": [
-      "particlesComparison"
+      "particlesComparison",
+      "impulse"
      ],
      "fx.particles": [
       "createParticles",
@@ -66726,97 +67152,7 @@
       "semantics"
      ]
     },
-    "json_keys": [
-     "$if",
-     "alpha",
-     "apiLevel",
-     "bg1",
-     "bg2",
-     "bottom",
-     "color",
-     "colors",
-     "commands",
-     "condition",
-     "contentDescription",
-     "count",
-     "createParticles",
-     "cx",
-     "cy",
-     "dark",
-     "divider",
-     "drawCircle",
-     "drawLine",
-     "drawRect",
-     "drawTextAnchored",
-     "drops",
-     "dx",
-     "dy",
-     "else",
-     "equations",
-     "from",
-     "header",
-     "height",
-     "id",
-     "index",
-     "initialValues",
-     "left",
-     "light",
-     "linearGradient",
-     "loop",
-     "m0",
-     "m1",
-     "m2",
-     "m3",
-     "m4",
-     "max",
-     "min",
-     "modifiers",
-     "muted",
-     "name",
-     "onSurface",
-     "onTouchDown",
-     "ops",
-     "paint",
-     "panX",
-     "panY",
-     "particlesComparison",
-     "particlesLoop",
-     "peg",
-     "profiles",
-     "radius",
-     "resources",
-     "restore",
-     "right",
-     "root",
-     "save",
-     "semantics",
-     "shader",
-     "strokeCap",
-     "strokeWidth",
-     "style",
-     "system",
-     "systemId",
-     "target",
-     "text",
-     "textSize",
-     "then",
-     "top",
-     "translate",
-     "tx",
-     "ty",
-     "type",
-     "until",
-     "value",
-     "variable",
-     "variables",
-     "width",
-     "x",
-     "x1",
-     "x2",
-     "y",
-     "y1",
-     "y2"
-    ]
+    "built_at": "2026-11-05T20:53:08.676Z"
    }
   },
   {

@@ -33,17 +33,17 @@
  ],
  "teaches": [
   "Recognise needs_frames: particle and impulse documents do their per-frame work from the second frame, so render them with duration (and a seed) to see them",
-  "Emit a burst with createParticles (x, y at the centre, random vx, vy) and move it with particlesLoop equations",
+  "Emit a burst with createParticles (x, y at the centre, random vx, vy) inside an impulse, and move it with particlesLoop equations in the impulse's impulseProcess",
   "Start the particles at componentWidth() / 2, componentHeight() / 2 so the burst is centred in any box"
  ],
  "snippets": [
   {
-   "pointer": "/root/commands/4",
+   "pointer": "/root/commands/5/impulse/commands/0",
    "shows": "fx.particles",
    "note": "40 particles at (150, 100) with random velocities"
   },
   {
-   "pointer": "/root/commands/6",
+   "pointer": "/root/commands/5/impulse/commands/1/impulseProcess/commands/0",
    "shows": "fx.particles",
    "note": "each frame: move, damp by 0.98, add a little gravity"
   }
@@ -82,12 +82,12 @@
  ],
  "derived": {
   "converter": "json2rc",
-  "bytes": 482,
+  "bytes": 494,
   "header": {
    "width": 300,
    "height": 200
   },
-  "op_count": 18,
+  "op_count": 20,
   "operations": {
    "COMPONENT_VALUE": 2,
    "CanvasContent": 1,
@@ -96,6 +96,8 @@
    "DRAW_RECT": 1,
    "DRAW_TEXT_ANCHOR": 1,
    "HEADER": 1,
+   "ImpulseOperation": 1,
+   "ImpulseProcess": 1,
    "LAYOUT_CANVAS": 1,
    "LAYOUT_ROOT": 1,
    "LayoutComponentContent": 1,
@@ -166,10 +168,13 @@
    "drawCircle",
    "drawRect",
    "drawTextAnchored",
+   "duration",
    "equations",
    "header",
    "height",
    "id",
+   "impulse",
+   "impulseProcess",
    "initialValues",
    "left",
    "modifiers",
@@ -182,6 +187,7 @@
    "radius",
    "right",
    "root",
+   "start",
    "system",
    "text",
    "textSize",
@@ -208,6 +214,6 @@
     "drawTextAnchored"
    ]
   },
-  "built_at": "2026-11-02T08:51:40.784Z"
+  "built_at": "2026-11-05T20:52:10.705Z"
  }
 }

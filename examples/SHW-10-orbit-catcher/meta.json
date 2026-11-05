@@ -49,7 +49,7 @@
   "casual game"
  ],
  "teaches": [
-  "Persistent per-frame state: a createParticles system with count 1 is a set of variables the player integrates every frame (th, score, lf, alive, ...). Each particlesLoop equation is the next value of one variable, computed from the previous frame's values",
+  "Persistent per-frame state: a createParticles system with count 1, created once inside an impulse, is a set of variables the player integrates every frame (th, score, lf, alive, ...). Each particlesLoop equation, in the impulse's impulseProcess, is the next value of one variable, computed from the previous frame's values",
   "The equations update simultaneously: every equation reads last frame's values, so a flag such as the catch c is seen by score, sa and lf on the frame after it is set. Guard one-frame events against firing twice: c = alive * step(cos(th - sa), 0.988) * (1 - c)",
   "Game rules as branchless expressions: ifElse(else, then, cond) and step(a, b) (a > b ? 1 : 0) for the catch, the comet hit, the countdown, game over (alive), the cool-down after death (dT) and the restart (rs)",
   "Tap input: onTouchDown on the canvas runs two valueFloatExpressionChange actions, @dir = 0 - @dir and @taps = @taps + 1. The game compares @taps with the count it last saw to detect a restart tap, so no action needs to know the game's state",
@@ -58,6 +58,7 @@
   "Difficulty ramps with the score inside the equations: orbit speed 1.8 + 0.045 * min(score, 24) rad/s, the star's time max(1.6, 3.6 - 0.08 * score) s, the comet speed up with it"
  ],
  "pitfalls": [
+  "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the game started over every frame and was over at once",
   "Never write ifElse(then, else, cond): the order is ifElse(else, then, cond). ifElse(0, dT + dt, alive) froze the death timer and made restart impossible",
   "createParticles initialValues may use only literals and the particle index u: the C++ player evaluates them against an empty context, so a global (@taps) there reads 0. Do resets in the equations instead",
   "A colour op in a paint bundle resets the alpha to the colour's own: set the alpha after the colour, in every bundle that needs it",
@@ -1471,12 +1472,12 @@
  ],
  "snippets": [
   {
-   "pointer": "/root/commands/9",
+   "pointer": "/root/commands/9/impulse/commands/0",
    "shows": "fx.particles",
    "note": "the game state: one particle, fifteen variables"
   },
   {
-   "pointer": "/root/commands/10",
+   "pointer": "/root/commands/9/impulse/commands/1/impulseProcess/commands/0",
    "shows": "fx.particles",
    "note": "the rules: one equation per state variable, run every frame"
   },
@@ -1486,12 +1487,12 @@
    "note": "a tap reverses @dir and counts @taps"
   },
   {
-   "pointer": "/root/commands/25",
+   "pointer": "/root/commands/24",
    "shows": "text.dynamic",
    "note": "the score read straight from the particle variable"
   },
   {
-   "pointer": "/root/commands/23/else/7",
+   "pointer": "/root/commands/22/else/7",
    "shows": "draw.arc",
    "note": "the star's countdown ring, 360 * lf"
   },
@@ -1507,12 +1508,12 @@
   "component_modes": {},
   "component_patterns": [],
   "converter": "json2rc",
-  "bytes": 8332,
+  "bytes": 8344,
   "header": {
    "width": 360,
    "height": 440
   },
-  "op_count": 390,
+  "op_count": 392,
   "operations": {
    "ACCESSIBILITY_SEMANTICS": 1,
    "ANIMATED_FLOAT": 87,
@@ -1528,6 +1529,8 @@
    "DRAW_RECT": 2,
    "DRAW_TEXT_ANCHOR": 11,
    "HEADER": 1,
+   "ImpulseOperation": 1,
+   "ImpulseProcess": 1,
    "LAYOUT_CANVAS": 1,
    "LAYOUT_ROOT": 1,
    "LayoutComponentContent": 1,
@@ -1649,11 +1652,10 @@
   "render_findings": [],
   "audit": {
    "error": 0,
-   "warning": 1,
+   "warning": 0,
    "info": 2
   },
   "audit_findings": [
-   "warning: dead_code",
    "info: repaint_continuous",
    "info: text_in_canvas"
   ],
@@ -1678,9 +1680,9 @@
    },
    "mono-dark": {
     "componentTheme": "mono-dark",
-    "bytes": 4747,
+    "bytes": 4759,
     "component_modes": {},
-    "op_count": 174,
+    "op_count": 176,
     "host_variables": [
      {
       "name": "accent",
@@ -1795,9 +1797,9 @@
    },
    "mono-light": {
     "componentTheme": "mono-light",
-    "bytes": 4747,
+    "bytes": 4759,
     "component_modes": {},
-    "op_count": 174,
+    "op_count": 176,
     "host_variables": [
      {
       "name": "accent",
@@ -1922,9 +1924,9 @@
    },
    "gameover-mono": {
     "componentTheme": "mono-light",
-    "bytes": 4747,
+    "bytes": 4759,
     "component_modes": {},
-    "op_count": 174,
+    "op_count": 176,
     "host_variables": [
      {
       "name": "accent",
@@ -2063,7 +2065,6 @@
      227
     ],
     "audit_findings": [
-     "warning: dead_code",
      "info: repaint_continuous"
     ]
    },
@@ -2075,7 +2076,6 @@
      400
     ],
     "audit_findings": [
-     "warning: dead_code",
      "info: repaint_continuous"
     ]
    },
@@ -2087,7 +2087,6 @@
      1000
     ],
     "audit_findings": [
-     "warning: dead_code",
      "info: repaint_continuous"
     ]
    }
@@ -2118,6 +2117,7 @@
    "drawOval",
    "drawRect",
    "drawTextAnchored",
+   "duration",
    "dust",
    "else",
    "equations",
@@ -2129,6 +2129,8 @@
    "id",
    "id1",
    "id2",
+   "impulse",
+   "impulseProcess",
    "index",
    "initialValues",
    "left",
@@ -2164,6 +2166,7 @@
    "sky2",
    "star",
    "starCore",
+   "start",
    "startAngle",
    "strokeCap",
    "strokeWidth",
@@ -2227,6 +2230,6 @@
     "semantics"
    ]
   },
-  "built_at": "2026-11-02T20:18:26.016Z"
+  "built_at": "2026-11-05T20:52:18.786Z"
  }
 }

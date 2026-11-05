@@ -176,66 +176,80 @@
     }
    },
    {
-    "createParticles": {
-     "id": "game",
-     "count": 1,
-     "variables": [
-      "th",
-      "sa",
-      "c",
-      "score",
-      "lf",
-      "ha",
-      "hd",
-      "hit",
-      "alive",
-      "dT",
-      "seen",
-      "rs",
-      "best",
-      "ct",
-      "pa"
-     ],
-     "initialValues": [
-      "-1.5708",
-      "0.9",
-      "0",
-      "0",
-      "1",
-      "1.5708",
-      "1",
-      "0",
-      "0",
-      "9",
-      "0",
-      "0",
-      "0",
-      "9",
-      "0"
+    "impulse": {
+     "duration": 1000000000,
+     "start": 0,
+     "commands": [
+      {
+       "createParticles": {
+        "id": "game",
+        "count": 1,
+        "variables": [
+         "th",
+         "sa",
+         "c",
+         "score",
+         "lf",
+         "ha",
+         "hd",
+         "hit",
+         "alive",
+         "dT",
+         "seen",
+         "rs",
+         "best",
+         "ct",
+         "pa"
+        ],
+        "initialValues": [
+         "-1.5708",
+         "0.9",
+         "0",
+         "0",
+         "1",
+         "1.5708",
+         "1",
+         "0",
+         "0",
+         "9",
+         "0",
+         "0",
+         "0",
+         "9",
+         "0"
+        ]
+       }
+      },
+      {
+       "impulseProcess": {
+        "commands": [
+         {
+          "particlesLoop": {
+           "system": "@game",
+           "equations": [
+            "th + @dir * (1.8 + min(score, 24) * 0.045) * @dt * alive",
+            "ifElse(ifElse(sa, th + 1.4 + fract(sin(score * 91.7 + 3.1) * 437.5) * 3.5, c), th + 2.2 + fract(@taps * 0.618) * 1.9, rs)",
+            "alive * step(cos(th - sa), 0.988) * (1 - c)",
+            "ifElse(score + c, 0, rs)",
+            "ifElse(ifElse(lf - @dt * alive / max(1.6, 3.6 - score * 0.08), 1, c), 1, rs)",
+            "ifElse(ha + hd * (0.55 + min(score, 20) * 0.02) * @dt * alive, th + 3.14159, rs)",
+            "ifElse(ifElse(hd, 0 - hd, c * step(fract(sin(score * 13.7) * 91.3), 0.5)), 1, rs)",
+            "alive * step(cos(th - ha), 0.9935)",
+            "ifElse(alive * (1 - hit) * step(lf, 0), 1, rs)",
+            "ifElse(dT + @dt, 0, alive)",
+            "ifElse(seen, @taps, max(alive, step(0.7, dT)))",
+            "(1 - alive) * step(@taps, seen + 0.5) * (1 - rs)",
+            "max(best, score)",
+            "ifElse(ct + @dt, 0, c)",
+            "ifElse(pa, sa, c)"
+           ],
+           "commands": []
+          }
+         }
+        ]
+       }
+      }
      ]
-    }
-   },
-   {
-    "particlesLoop": {
-     "system": "@game",
-     "equations": [
-      "th + @dir * (1.8 + min(score, 24) * 0.045) * @dt * alive",
-      "ifElse(ifElse(sa, th + 1.4 + fract(sin(score * 91.7 + 3.1) * 437.5) * 3.5, c), th + 2.2 + fract(@taps * 0.618) * 1.9, rs)",
-      "alive * step(cos(th - sa), 0.988) * (1 - c)",
-      "ifElse(score + c, 0, rs)",
-      "ifElse(ifElse(lf - @dt * alive / max(1.6, 3.6 - score * 0.08), 1, c), 1, rs)",
-      "ifElse(ha + hd * (0.55 + min(score, 20) * 0.02) * @dt * alive, th + 3.14159, rs)",
-      "ifElse(ifElse(hd, 0 - hd, c * step(fract(sin(score * 13.7) * 91.3), 0.5)), 1, rs)",
-      "alive * step(cos(th - ha), 0.9935)",
-      "ifElse(alive * (1 - hit) * step(lf, 0), 1, rs)",
-      "ifElse(dT + @dt, 0, alive)",
-      "ifElse(seen, @taps, max(alive, step(0.7, dT)))",
-      "(1 - alive) * step(@taps, seen + 0.5) * (1 - rs)",
-      "max(best, score)",
-      "ifElse(ct + @dt, 0, c)",
-      "ifElse(pa, sa, c)"
-     ],
-     "commands": []
     }
    },
    {

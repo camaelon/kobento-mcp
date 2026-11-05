@@ -199,28 +199,6 @@
     }
    },
    {
-    "createParticles": {
-     "id": "sparks",
-     "count": 180,
-     "variables": [
-      "life",
-      "age",
-      "vx",
-      "vy",
-      "px",
-      "py"
-     ],
-     "initialValues": [
-      "150 + rand() * 150",
-      "rand() * 150",
-      "0",
-      "0",
-      "rand() * @W",
-      "rand() * @H"
-     ]
-    }
-   },
-   {
     "paint": {
      "ops": [
       {
@@ -239,32 +217,68 @@
     }
    },
    {
-    "particlesLoop": {
-     "system": "@sparks",
-     "equations": [
-      "life",
-      "(age + 1) % life",
-      "-1.4 * sin(px * @fx + @k1) * sin(py * @fy - @k2)",
-      "-1.4 * cos(px * @fx + @k1) * cos(py * @fy - @k2)",
-      "ifElse(rand() * @W, (px + vx + @W) % @W, age - 0.5)",
-      "ifElse(rand() * @H, (py + vy + @H) % @H, age - 0.5)"
-     ],
+    "impulse": {
+     "duration": 1000000000,
+     "start": 0,
      "commands": [
       {
-       "paint": {
-        "ops": [
-         {
-          "alpha": "0.85 * square(sin(3.1416 * age / life))"
-         }
+       "createParticles": {
+        "id": "sparks",
+        "count": 180,
+        "variables": [
+         "life",
+         "age",
+         "vx",
+         "vy",
+         "px",
+         "py"
+        ],
+        "initialValues": [
+         "150 + rand() * 150",
+         "rand() * 150",
+         "0",
+         "0",
+         "rand() * @W",
+         "rand() * @H"
         ]
        }
       },
       {
-       "drawLine": {
-        "x1": "px",
-        "y1": "py",
-        "x2": "px - 4 * vx",
-        "y2": "py - 4 * vy"
+       "impulseProcess": {
+        "commands": [
+         {
+          "particlesLoop": {
+           "system": "@sparks",
+           "equations": [
+            "life",
+            "(age + 1) % life",
+            "-1.4 * sin(px * @fx + @k1) * sin(py * @fy - @k2)",
+            "-1.4 * cos(px * @fx + @k1) * cos(py * @fy - @k2)",
+            "ifElse(rand() * @W, (px + vx + @W) % @W, age - 0.5)",
+            "ifElse(rand() * @H, (py + vy + @H) % @H, age - 0.5)"
+           ],
+           "commands": [
+            {
+             "paint": {
+              "ops": [
+               {
+                "alpha": "0.85 * square(sin(3.1416 * age / life))"
+               }
+              ]
+             }
+            },
+            {
+             "drawLine": {
+              "x1": "px",
+              "y1": "py",
+              "x2": "px - 4 * vx",
+              "y2": "py - 4 * vy"
+             }
+            }
+           ]
+          }
+         }
+        ]
        }
       }
      ]

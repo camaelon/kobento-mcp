@@ -51,24 +51,6 @@
     }
    },
    {
-    "createParticles": {
-     "id": "burst",
-     "count": 40,
-     "variables": [
-      "x",
-      "y",
-      "vx",
-      "vy"
-     ],
-     "initialValues": [
-      "componentWidth() / 2",
-      "componentHeight() / 2",
-      "(rand() - 0.5) * 6",
-      "(rand() - 0.5) * 6"
-     ]
-    }
-   },
-   {
     "paint": {
      "ops": [
       {
@@ -78,20 +60,52 @@
     }
    },
    {
-    "particlesLoop": {
-     "system": "@burst",
-     "equations": [
-      "x + vx",
-      "y + vy",
-      "vx * 0.98",
-      "vy * 0.98 + 0.05"
-     ],
+    "impulse": {
+     "duration": 1000000000,
+     "start": 0,
      "commands": [
       {
-       "drawCircle": {
-        "cx": "x",
-        "cy": "y",
-        "radius": 3
+       "createParticles": {
+        "id": "burst",
+        "count": 40,
+        "variables": [
+         "x",
+         "y",
+         "vx",
+         "vy"
+        ],
+        "initialValues": [
+         "componentWidth() / 2",
+         "componentHeight() / 2",
+         "(rand() - 0.5) * 6",
+         "(rand() - 0.5) * 6"
+        ]
+       }
+      },
+      {
+       "impulseProcess": {
+        "commands": [
+         {
+          "particlesLoop": {
+           "system": "@burst",
+           "equations": [
+            "x + vx",
+            "y + vy",
+            "vx * 0.98",
+            "vy * 0.98 + 0.05"
+           ],
+           "commands": [
+            {
+             "drawCircle": {
+              "cx": "x",
+              "cy": "y",
+              "radius": 3
+             }
+            }
+           ]
+          }
+         }
+        ]
        }
       }
      ]

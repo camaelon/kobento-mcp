@@ -809,6 +809,35 @@ function animOneFindings(doc) {
     }] : [];
 }
 
+// A particle system created outside an impulse. The androidx player initialises a system's
+// particles every time createParticles paints, so at the top level of a canvas they are reset
+// every frame: a simulation never advances (a game's state starts over each frame). Kobento's
+// players initialise them once, so the document looks right everywhere else. An impulse runs its
+// commands once when its window opens and its impulseProcess every frame after.
+const commandType = (x) => {
+    if (!isObj(x)) return null;
+    if (typeof x.type === "string") return x.type.toLowerCase();
+    const keys = Object.keys(x);
+    return keys.length === 1 && isObj(x[keys[0]]) ? keys[0].toLowerCase() : null;
+};
+function particlesOutsideImpulseFindings(doc) {
+    let n = 0;
+    const visit = (x, inImpulse) => {
+        if (Array.isArray(x)) { x.forEach((v) => visit(v, inImpulse)); return; }
+        if (!isObj(x)) return;
+        const t = commandType(x);
+        if (t === "createparticles" && !inImpulse) n++;
+        for (const v of Object.values(x)) visit(v, inImpulse || t === "impulse");
+    };
+    visit(doc.root, false); visit(doc.components, false);
+    return n ? [{
+        severity: "warning", code: "particles_outside_impulse",
+        title: `${n} createParticles outside an impulse`,
+        message: "The Android player resets a particle system's initial values every frame when createParticles is a plain command, so the particles never move on from their start (a game never leaves its first frame). Create the system in an impulse and move it in its impulseProcess: {\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [{\"createParticles\": {...}}, {\"impulseProcess\": {\"commands\": [{\"particlesLoop\": {...}}]}}]}}. Draw with particlesComparison after the impulse, or in the loop's commands; the loops run from the second frame on.",
+        count: n,
+    }] : [];
+}
+
 // A text field that is exactly "@name" where nothing declares `name`: the converter keeps it as
 // the literal text "@name" (a screen reader announced "@powerDesc"). A name declared only LATER in
 // the document (a canvas's own commands come after its modifiers, so a description there cannot
@@ -1247,6 +1276,7 @@ export function designAudit(json) {
         ...sharedStringFindings(doc),
         ...uncoloredTextFindings(doc),
         ...animOneFindings(doc),
+        ...particlesOutsideImpulseFindings(doc),
         ...undeclaredRefFindings(doc),
         ...paddingKeyFindings(doc),
         ...modifierOrderFindings(doc),

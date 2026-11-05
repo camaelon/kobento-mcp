@@ -457,153 +457,167 @@
     }
    },
    {
-    "createParticles": {
-     "id": "balls",
-     "count": 30,
-     "variables": [
-      "wl",
-      "k",
-      "seen",
-      "fresh",
-      "sp",
-      "out",
-      "x",
-      "y",
-      "vx",
-      "vy",
-      "fu",
-      "fw",
-      "J",
-      "P",
-      "m",
-      "h",
-      "hx",
-      "hy"
-     ],
-     "initialValues": [
-      "1",
-      "u",
-      "0",
-      "0",
-      "0",
-      "0 - (u % 6) * 0.35 - u * 0.04",
-      "0",
-      "100000",
-      "0",
-      "0",
-      "0",
-      "0",
-      "0",
-      "0",
-      "0",
-      "9",
-      "0",
-      "0"
+    "impulse": {
+     "duration": 1000000000,
+     "start": 0,
+     "commands": [
+      {
+       "createParticles": {
+        "id": "balls",
+        "count": 30,
+        "variables": [
+         "wl",
+         "k",
+         "seen",
+         "fresh",
+         "sp",
+         "out",
+         "x",
+         "y",
+         "vx",
+         "vy",
+         "fu",
+         "fw",
+         "J",
+         "P",
+         "m",
+         "h",
+         "hx",
+         "hy"
+        ],
+        "initialValues": [
+         "1",
+         "u",
+         "0",
+         "0",
+         "0",
+         "0 - (u % 6) * 0.35 - u * 0.04",
+         "0",
+         "100000",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "0",
+         "9",
+         "0",
+         "0"
+        ]
+       }
+      },
+      {
+       "impulseProcess": {
+        "commands": [
+         {
+          "particlesLoop": {
+           "system": "@balls",
+           "equations": [
+            "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
+            "k",
+            "@drops",
+            "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
+            "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
+            "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
+            "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
+            "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
+            "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
+            "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
+            "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
+            "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
+            "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
+            "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
+            "step(y, @mTop) * step(@mBot, y)",
+            "ifElse(h + @dt, 0, abs(J))",
+            "ifElse(hx, x - (fu + fw) / 2, abs(J))",
+            "ifElse(hy, y - (fu - fw) / 2, abs(J))"
+           ],
+           "commands": []
+          }
+         },
+         {
+          "particlesLoop": {
+           "system": "@balls",
+           "equations": [
+            "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
+            "k",
+            "@drops",
+            "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
+            "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
+            "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
+            "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
+            "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
+            "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
+            "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
+            "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
+            "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
+            "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
+            "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
+            "step(y, @mTop) * step(@mBot, y)",
+            "ifElse(h + @dt, 0, abs(J))",
+            "ifElse(hx, x - (fu + fw) / 2, abs(J))",
+            "ifElse(hy, y - (fu - fw) / 2, abs(J))"
+           ],
+           "commands": []
+          }
+         },
+         {
+          "particlesLoop": {
+           "system": "@balls",
+           "equations": [
+            "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
+            "k",
+            "@drops",
+            "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
+            "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
+            "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
+            "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
+            "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
+            "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
+            "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
+            "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
+            "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
+            "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
+            "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
+            "step(y, @mTop) * step(@mBot, y)",
+            "ifElse(h + @dt, 0, abs(J))",
+            "ifElse(hx, x - (fu + fw) / 2, abs(J))",
+            "ifElse(hy, y - (fu - fw) / 2, abs(J))"
+           ],
+           "commands": []
+          }
+         },
+         {
+          "particlesLoop": {
+           "system": "@balls",
+           "equations": [
+            "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
+            "k",
+            "@drops",
+            "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
+            "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
+            "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
+            "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
+            "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
+            "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
+            "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
+            "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
+            "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
+            "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
+            "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
+            "step(y, @mTop) * step(@mBot, y)",
+            "ifElse(h + @dt, 0, abs(J))",
+            "ifElse(hx, x - (fu + fw) / 2, abs(J))",
+            "ifElse(hy, y - (fu - fw) / 2, abs(J))"
+           ],
+           "commands": []
+          }
+         }
+        ]
+       }
+      }
      ]
-    }
-   },
-   {
-    "particlesLoop": {
-     "system": "@balls",
-     "equations": [
-      "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
-      "k",
-      "@drops",
-      "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
-      "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
-      "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
-      "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
-      "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
-      "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
-      "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
-      "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
-      "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
-      "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
-      "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
-      "step(y, @mTop) * step(@mBot, y)",
-      "ifElse(h + @dt, 0, abs(J))",
-      "ifElse(hx, x - (fu + fw) / 2, abs(J))",
-      "ifElse(hy, y - (fu - fw) / 2, abs(J))"
-     ],
-     "commands": []
-    }
-   },
-   {
-    "particlesLoop": {
-     "system": "@balls",
-     "equations": [
-      "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
-      "k",
-      "@drops",
-      "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
-      "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
-      "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
-      "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
-      "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
-      "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
-      "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
-      "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
-      "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
-      "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
-      "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
-      "step(y, @mTop) * step(@mBot, y)",
-      "ifElse(h + @dt, 0, abs(J))",
-      "ifElse(hx, x - (fu + fw) / 2, abs(J))",
-      "ifElse(hy, y - (fu - fw) / 2, abs(J))"
-     ],
-     "commands": []
-    }
-   },
-   {
-    "particlesLoop": {
-     "system": "@balls",
-     "equations": [
-      "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
-      "k",
-      "@drops",
-      "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
-      "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
-      "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
-      "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
-      "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
-      "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
-      "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
-      "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
-      "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
-      "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
-      "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
-      "step(y, @mTop) * step(@mBot, y)",
-      "ifElse(h + @dt, 0, abs(J))",
-      "ifElse(hx, x - (fu + fw) / 2, abs(J))",
-      "ifElse(hy, y - (fu - fw) / 2, abs(J))"
-     ],
-     "commands": []
-    }
-   },
-   {
-    "particlesLoop": {
-     "system": "@balls",
-     "equations": [
-      "ifElse(1 - 1.6 * step(abs(x), @WhI) * step(x * vx, 0), 1, step(1, wl))",
-      "k",
-      "@drops",
-      "step(@drops, seen + 0.5) * step(0.5, abs(@slot - k))",
-      "max(step(@drops, seen + 0.5) * step(0.5, abs(@slot - k)), step(out, k % 4 + 0.6 + step(k % 6, 2.5) * 1000000) * (1 - sp))",
-      "ifElse(ifElse(0, out + @dt, step(y, @Yexit)), 0, sp)",
-      "ifElse(clamp(x + vx * @dt + P * (fu + fw), @Wh, @nWh), ifElse((rand() - 0.5) * @rxw, @tx - @cx, fresh), sp)",
-      "ifElse(y + vy * @dt + P * (fu - fw), ifElse(@Ytop, @ty - @Y0, fresh), sp)",
-      "ifElse(vx * wl * @dm + @gxd - J * (fu + fw), (rand() - 0.5) * @rvw, sp)",
-      "ifElse(vy * @dm + @gyd - J * (fu - fw), 0, sp)",
-      "x + y + (vx + vy) * @D4 - round((x + y + (vx + vy) * @D4) / @S) * @S",
-      "x - y + (vx - vy) * @D4 - round((x - y + (vx - vy) * @D4) / @S) * @S",
-      "ifElse(@Jc * min((vx + vy) * fu + (vx - vy) * fw, 0) * step(@R2b, fu * fu + fw * fw) * m, 0, abs(J))",
-      "@kp * m * max(@R2b - (fu * fu + fw * fw), 0)",
-      "step(y, @mTop) * step(@mBot, y)",
-      "ifElse(h + @dt, 0, abs(J))",
-      "ifElse(hx, x - (fu + fw) / 2, abs(J))",
-      "ifElse(hy, y - (fu - fw) / 2, abs(J))"
-     ],
-     "commands": []
     }
    },
    {
@@ -1663,7 +1677,7 @@
    },
    {
     "drawTextAnchored": {
-     "text": "Tap to drop a marble \u00b7 tilt to tip",
+     "text": "Tap to drop a marble · tilt to tip",
      "x": "@S * 0.45",
      "y": "@S * 1.2",
      "panX": -1,

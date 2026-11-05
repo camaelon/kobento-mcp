@@ -49,7 +49,7 @@
   "sub-steps"
  ],
  "teaches": [
-  "A particle system is a physics engine: each marble's state (x, y, vx, vy and helpers) is a particle variable, and the particlesLoop equations are one explicit-Euler step that the player runs for every marble on every frame",
+  "A particle system is a physics engine: each marble's state (x, y, vx, vy and helpers) is a particle variable, created once inside an impulse, and the particlesLoop equations in its impulseProcess are one explicit-Euler step that the player runs for every marble on every frame",
   "Sub-steps: four particlesLoop ops over the same system, each with dt = min(deltaTime(), 0.04) / 4, integrate four times per frame. Collisions stay tight because a marble moves about 1 px per step",
   "Equations update simultaneously from the previous step's values, so a helper variable lags one step. The peg offsets fu, fw are computed from the position predicted 4 steps ahead (x + y + (vx + vy) * 4 * dt) so they line up with the position the collision impulse acts on",
   "The nearest peg of a staggered lattice in two roundings: pegs sit where u = x + y and w = x − y are multiples of S, so fu = u − round(u / S) * S, fw = w − round(w / S) * S, the offset is ((fu + fw) / 2, (fu − fw) / 2) and the squared distance is (fu² + fw²) / 2",
@@ -60,6 +60,7 @@
   "Colour per marble without colour expressions: five particlesComparison passes over index ranges [0, 6), [6, 12)… each paint the marbles of one colour; the peg they last hit flashes as a fading ring in that colour"
  ],
  "pitfalls": [
+  "Create the particle system inside an impulse ({\"impulse\": {\"duration\": 1000000000, \"start\": 0, \"commands\": [createParticles, {\"impulseProcess\": {\"commands\": [particlesLoop...]}}]}}): the impulse runs createParticles once and its process every frame. As a plain command, the Android player re-creates the particles on every frame, so the marbles stayed where they were spawned",
   "There are no marble-to-marble collisions. The format can express them (ParticlesCompare with two equation sets compares every pair, reading particle1/particle2 values through the CMD1/CMD2 tokens), but json2rc has no infix syntax for those tokens, so pairwise equations cannot be written in JSON today. Marbles pass through each other: visible when a tilt piles them against a wall",
   "Every equation must fit in 32 RPN entries (Android): split long formulas into helper variables, and remember each helper adds a step of lag",
   "createParticles initialValues are evaluated without the document's variables in the C++ player: use literals and the index u only; put spawns in the equations",
@@ -69,17 +70,17 @@
  ],
  "snippets": [
   {
-   "pointer": "/root/commands/40",
+   "pointer": "/root/commands/40/impulse/commands/0",
    "shows": "fx.particles",
    "note": "30 marbles, 18 state variables each"
   },
   {
-   "pointer": "/root/commands/41",
+   "pointer": "/root/commands/40/impulse/commands/1/impulseProcess/commands/0",
    "shows": "fx.physics",
    "note": "one sub-step: gravity, peg impulses, push-out, walls, spawning"
   },
   {
-   "pointer": "/root/commands/45/else/0",
+   "pointer": "/root/commands/41/else/0",
    "shows": "fx.particles",
    "note": "one colour pass over marbles 0..5: halo, body, highlight, peg flash, bin flash"
   },
@@ -261,12 +262,12 @@
   "component_modes": {},
   "component_patterns": [],
   "converter": "json2rc",
-  "bytes": 11806,
+  "bytes": 11818,
   "header": {
    "width": 360,
    "height": 640
   },
-  "op_count": 326,
+  "op_count": 328,
   "operations": {
    "ACCESSIBILITY_SEMANTICS": 1,
    "ANIMATED_FLOAT": 108,
@@ -281,6 +282,8 @@
    "DRAW_RECT": 1,
    "DRAW_TEXT_ANCHOR": 2,
    "HEADER": 1,
+   "ImpulseOperation": 1,
+   "ImpulseProcess": 1,
    "LAYOUT_CANVAS": 1,
    "LAYOUT_ROOT": 1,
    "LayoutComponentContent": 1,
@@ -359,11 +362,10 @@
   "render_findings": [],
   "audit": {
    "error": 0,
-   "warning": 1,
+   "warning": 0,
    "info": 4
   },
   "audit_findings": [
-   "warning: dead_code",
    "info: repaint_continuous",
    "info: repeated_subtree",
    "info: repeated_subtree",
@@ -390,9 +392,9 @@
    },
    "mono-dark": {
     "componentTheme": "mono-dark",
-    "bytes": 10475,
+    "bytes": 10487,
     "component_modes": {},
-    "op_count": 219,
+    "op_count": 221,
     "host_variables": [
      {
       "name": "background",
@@ -462,9 +464,9 @@
    },
    "mono-light": {
     "componentTheme": "mono-light",
-    "bytes": 10475,
+    "bytes": 10487,
     "component_modes": {},
-    "op_count": 219,
+    "op_count": 221,
     "host_variables": [
      {
       "name": "background",
@@ -557,7 +559,6 @@
      360
     ],
     "audit_findings": [
-     "warning: dead_code",
      "info: repaint_continuous",
      "info: expression_entries"
     ]
@@ -570,7 +571,6 @@
      400
     ],
     "audit_findings": [
-     "warning: dead_code",
      "info: repaint_continuous",
      "info: expression_entries"
     ]
@@ -583,7 +583,6 @@
      1280
     ],
     "audit_findings": [
-     "warning: dead_code",
      "info: repaint_continuous",
      "info: expression_entries"
     ]
@@ -612,6 +611,7 @@
    "drawRect",
    "drawTextAnchored",
    "drops",
+   "duration",
    "dx",
    "dy",
    "else",
@@ -620,6 +620,8 @@
    "header",
    "height",
    "id",
+   "impulse",
+   "impulseProcess",
    "index",
    "initialValues",
    "left",
@@ -654,6 +656,7 @@
    "save",
    "semantics",
    "shader",
+   "start",
    "strokeCap",
    "strokeWidth",
    "style",
@@ -682,7 +685,8 @@
   ],
   "evidence": {
    "fx.physics": [
-    "particlesComparison"
+    "particlesComparison",
+    "impulse"
    ],
    "fx.particles": [
     "createParticles",
@@ -720,6 +724,6 @@
     "semantics"
    ]
   },
-  "built_at": "2026-11-02T20:23:06.636Z"
+  "built_at": "2026-11-05T20:53:08.676Z"
  }
 }
