@@ -349,7 +349,7 @@ Structure
   ("markLon"/"markLat"). map_info {region} lists a region's countries (the valueCountries order), its height, its
   cities and how coarse it is. Building blocks for your own canvas: {"$map": {"region": "world" | a continent | a
   country (ISO "FRA" or name: its main landmass with nearby islands) | [lonMin, latMin, lonMax, latMax], "layer":
-  "land" | "countries" | "states" | "lakes" | "graticule", "detail": "low" | "medium" | "high", "countries": [...],
+  "land" | "countries" | "states" | "lakes" | "graticule", "detail": "low" | "medium" | "high" | "max", "countries": [...],
   "outline": true}} is a path in a box 1000 units wide and {"$mapHeight": region} tall (scale it uniformly:
   s = min(componentWidth() / 1000, componentHeight() / height), and clipRect the box; "outline": true for a STROKED
   coast, without the straight edges where a fill is cut); {"$mapPoint": {"region": ..., "at": "Tokyo" | [lon, lat],
@@ -358,8 +358,10 @@ Structure
   path, and with "axis": "x" | "y" | "angle" its samples as a float array (evenly spaced by distance, "wrap":
   "arraySpline({}, @progress)" is the point at that fraction; angle is the heading in degrees, 0 = east, 90 = down).
   Equirectangular: x ∝ longitude, y ∝ latitude, x scaled by cos of the region's middle latitude. Data is 1:50m (1:110m
-  for regions over 90° wide): fine for a continent or a country, too coarse for a city (map_info says). A world of
-  land at low detail is ~6 KB. Places at map coordinates in LAYOUT (a card beside a city): there is no offset
+  for regions over 90° wide, except at detail "max"): fine for a continent or a country, too coarse for a city
+  (map_info says). A world of land at low detail is ~6 KB. Detail follows the size the map is SHOWN at: low for a
+  widget, medium for a card, high for a map that fills a phone or the window ("fill": true), max for a desktop or
+  page-sized map (about twice high's bytes; SFO-Paris filling the window: low 15 KB, high 40, max 84). Places at map coordinates in LAYOUT (a card beside a city): there is no offset
   modifier: stack a box over the map whose column holds a spacer {"height": "y * s"} then a row of a spacer {"width":
   "x * s"} and the card (x, y from $mapPoint, s the map's scale), or draw the label in the canvas.
 - Charts from data: pathExpression draws a SMOOTH curve through its samples (a spline: a jump between neighbours
@@ -1392,7 +1394,7 @@ tools.push({
         "at that size. The countries list is the order to use for WorldMap's values/valueCountries when nothing else fixes one.",
     inputSchema: { type: "object", properties: {
         region: { description: "As WorldMap's region: \"world\", a continent, a subregion, a country (ISO or name) or [lonMin, latMin, lonMax, latMax]." },
-        detail: { type: "string", enum: ["low", "medium", "high"], description: "The detail you will draw at (default low)." },
+        detail: { type: "string", enum: ["low", "medium", "high", "max"], description: "The detail you will draw at (default low)." },
     }, required: ["region"] },
     handler: async ({ region, detail = "low" } = {}) => {
         const { mapInfo } = await import("./lib/maps.mjs");

@@ -14,11 +14,12 @@
    "values": [
     "low",
     "medium",
-    "high"
+    "high",
+    "max"
    ],
    "default": "low",
    "static": true,
-   "doc": "Outline detail: low for a widget (a world of land is ~6 KB), medium for a screen, high for a large country map. Each level roughly doubles the bytes"
+   "doc": "Outline detail: low for a widget (a world of land is ~6 KB), medium for a screen, high for a large country map, max for a map that fills a large screen or a page (a world-scale view drawn from the finer 1:50m coastlines, not 1:110m). Each level roughly doubles the bytes"
   },
   "borders": {
    "type": "bool",
@@ -173,7 +174,7 @@
    "type": "bool",
    "default": false,
    "static": true,
-   "doc": "Take the height left in the parent column (a vertical weight) instead of height: the map grows and shrinks with the window. The region is drawn at the largest scale that fits, centred, with the geography around it filling the rest of the box (not for a world, or with night); text, dots and lines scale with the map (0.8x to 1.8x), and labels that would collide on a small screen are hidden"
+   "doc": "Take the height left in the parent column (a vertical weight) instead of height: the map grows and shrinks with the window. The region is drawn at the largest scale that fits, centred, with the geography around it filling the rest of the box (not for a world, or with night); text, dots and lines scale with the map (0.8x to 1.8x), and labels that would collide on a small screen are hidden. A map that fills the window is drawn large: give it detail high (max for a desktop or a page), as low's coasts break up at that size"
   },
   "height": {
    "type": "float",

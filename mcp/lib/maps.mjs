@@ -316,11 +316,16 @@ function simplify(ring, tol) {
     return ring.filter((_, i) => keep[i]);
 }
 
-const DETAIL = { low: 0.006, medium: 0.0025, high: 0.001 };   // tolerance as a fraction of the width
+// Tolerance as a fraction of the width. low/medium/high take a world-scale view (90° of longitude
+// or more) from the 1:110m data; "max" takes 1:50m there too (at high's tolerance): coasts that
+// hold up on a large screen, about twice the bytes of high (SFO-Paris filling the window: low
+// 15 KB, medium 26, high 40, max 84). A coarser tolerance on 1:50m looks jagged: not offered.
+const DETAIL = { low: 0.006, medium: 0.0025, high: 0.001, max: 0.001 };
+export const DETAIL_LEVELS = Object.keys(DETAIL);
 
 /**
  * The rings of a layer for a region, projected, clipped, simplified: [[[x, y], ...], ...].
- * opts: {layer: land|countries|lakes|graticule, detail: low|medium|high, countries: [ids] (only
+ * opts: {layer: land|countries|lakes|graticule, detail: low|medium|high|max, countries: [ids] (only
  * these, for a highlight), exclude: [ids]}.
  */
 export function mapRings(region = "world", { layer = "land", detail = "medium", countries, exclude, outline = false, dot = 0 } = {}) {
@@ -341,7 +346,7 @@ export function mapRings(region = "world", { layer = "land", detail = "medium", 
     // A frame inside more geography (WorldMap fit or fill) is drawn at the frame's detail: its
     // data set and tolerance follow the frame's width, not the whole box's.
     const span = P.core ? P.core[2] - P.core[0] : P.box[2] - P.box[0];
-    const wide = span >= 90;
+    const wide = span >= 90 && detail !== "max";
     const tolBox = MAP_WIDTH * (DETAIL[detail] ?? DETAIL.medium);
     const tolCore = tolBox * (P.core ? Math.min(1, span / (P.box[2] - P.box[0])) : 1);
     // Outlines are cut well outside the box: the cut edges must not show as coastline (the
@@ -552,7 +557,7 @@ export function mapRoute(region, from, to, n = 48) {
 export function mapInfo(region = "world", { detail = "low" } = {}) {
     const P = projection(region);
     const m = loadMaps();
-    const wide = P.box[2] - P.box[0] >= 90;
+    const wide = P.box[2] - P.box[0] >= 90 && detail !== "max";
     const [lon0, lat0, lon1, lat1] = P.box;
     const hit = (b) => b[2] / 100 >= lon0 && b[0] / 100 <= lon1 && b[3] / 100 >= lat0 && b[1] / 100 <= lat1;
     // In the box: one of its rings is (Russia's whole bbox spans the world, its rings do not).
