@@ -15,6 +15,8 @@
 // key and admin accounts: all), and the index shows a signed-in visitor (the website's session
 // cookie) their own pages, a signed-out one a link to sign in. MCP_PAGE_INDEX=public keeps the
 // public list of every page.
+// get_page reads any page by id or URL, to remix it: someone else's shows only what its public
+// link serves (title, JSON, .rc); list_stream searches the stream for one.
 
 import { createHash, randomBytes } from "node:crypto";
 import { brotliCompressSync, gzipSync, constants as zlibConstants } from "node:zlib";
@@ -125,6 +127,30 @@ function coerceVariable(name, type, value) {
         return xs.join(", ");
     }
     return String(value);
+}
+
+/** A page id from an id or a page URL (".../pages/<id>/..."), else null. */
+export function pageIdOf(ref) {
+    const s = String(ref ?? "").trim();
+    if (PAGE_ID.test(s)) return s;
+    const m = /\/pages\/([A-Za-z0-9_-]{22})(?:[/?#]|$)/.exec(s);
+    return m ? m[1] : null;
+}
+
+/**
+ * A published page anyone may read, to remix it: {id, dir, meta, mine}. Its link is public (the
+ * page, its JSON and its .rc are served to anyone), so reading it here shows nothing the link
+ * does not; someone else's page shows only that public part.
+ */
+function readablePage(ref) {
+    if (!CAN_PUBLISH) throw new Error("this server does not publish pages");
+    const id = pageIdOf(ref);
+    const dir = id ? path.join(PAGES_DIR, id) : null;
+    if (!dir || !existsSync(dir) || !statSync(dir).isDirectory()) {
+        throw new Error(`no published page ${ref} (give a page id or a page URL: list_pages lists yours, list_stream the shared ones)`);
+    }
+    const meta = readMeta(id);
+    return { id, dir, meta, mine: owns(caller(), meta) };
 }
 
 function readMeta(id) {
@@ -507,7 +533,7 @@ export const definition = {
         "self-contained HTML page (TypeScript player + document inlined)" +
         (CAN_PUBLISH ? " and publishes it at a public URL" +
          (INDEX_PUBLIC ? `, listed in a public index at ${PUBLIC_URL}/pages/` : ACCOUNTS ? ", unguessable, listed only for the account that published it" : ", unguessable and unlisted") +
-         "; list_pages and unpublish_page manage those." : ".") +
+         "; list_pages and unpublish_page manage those; list_stream and get_page find a shared page and give its JSON, to remix." : ".") +
         " The page uses the TypeScript engine, which can differ from rc-render's C++ engine: " +
         "check the page itself, not only a render_rc picture.",
     publicRoute,
@@ -763,19 +789,27 @@ export const definition = {
     }, {
         name: "get_page",
         annotations: { title: "Get a published page's document", readOnlyHint: true, openWorldHint: false },
-        description: "A published page of yours: its metadata, URL, the .rc URL, and the JSON it was published from " +
-            "(when it was published from JSON) and its app script, so it can be edited and published again in place " +
-            "(publish with page_id).",
+        description: "A published page: its metadata, URL, the .rc URL, and the JSON it was published from (when it " +
+            "was published from JSON), saved as json_path. A page of yours (with its app script): edit it and publish " +
+            "again in place (publish with page_id). Anyone else's page, from the stream or a link someone shared: a " +
+            "remix, the JSON to start from; publish the edit as a NEW page (no page_id).",
         inputSchema: {
             type: "object",
-            properties: { page_id: { type: "string", description: "The id from package_web or list_pages." } },
+            properties: { page_id: { type: "string", description: "The id from package_web, list_pages or list_stream, or the page's URL." } },
             required: ["page_id"],
         },
         handler: async ({ page_id }) => {
-            const { id, dir, meta } = ownPage(page_id);
+            const { id, dir, meta, mine } = readablePage(page_id);
             const files = readdirSync(dir);
             const json = files.find((f) => f.endsWith(".json") && f !== "meta.json" && !f.endsWith(".expanded.json"));
-            const result = { ...meta, url: pageUrl(id), rc_url: `${pageUrl(id)}document.rc` };
+            const it = ACCOUNTS ? (await accounts())?.streamItem(id) : null;
+            // Someone else's page: what its link shows (no owner, source path or app script source).
+            const result = mine ? { ...meta, url: pageUrl(id), rc_url: `${pageUrl(id)}document.rc` }
+                : { id, title: meta?.title, url: pageUrl(id), rc_url: `${pageUrl(id)}document.rc`, document: meta?.document,
+                    rc_bytes: meta?.rc_bytes, ...(it ? { author: it.author } : {}), yours: false,
+                    remix: `Not your page: start from its JSON (json_path), make the change asked for, and publish it as a new page ` +
+                        `(publish without page_id).${it ? ` Credit it in the title or the reply: a remix of "${it.title}" by ${it.author}.` : ""}` +
+                        (meta?.app ? " It runs an app script, which is not part of the JSON: the remix runs without it." : "") };
             const MAX = 400_000;
             if (json) {
                 const text = readFileSync(path.join(dir, json), "utf8");
@@ -788,11 +822,36 @@ export const definition = {
                     try { result.json = JSON.parse(text); } catch { result.json_text = text; }
                 }
             } else result.json = null;   // published from an .rc: rc_url has the document
-            if (files.includes("app.ts")) result.app_script = readFileSync(path.join(dir, "app.ts"), "utf8");
-            if (ACCOUNTS) {
-                const it = (await accounts())?.streamItem(id);
-                if (it) result.stream = { title: it.title, score: it.score };
-            }
+            if (mine && files.includes("app.ts")) result.app_script = readFileSync(path.join(dir, "app.ts"), "utf8");
+            if (it) result.stream = { title: it.title, author: it.author, score: it.score };
+            return [{ type: "text", text: JSON.stringify(result, null, 1) }];
+        },
+    }, {
+        name: "list_stream",
+        annotations: { title: "Search the stream", readOnlyHint: true, openWorldHint: false },
+        description: "The public stream: documents people made and shared, each with its page_id, title, author, score " +
+            "and whether it is a showcase. A query matches titles and authors. get_page on one gives its JSON, to remix.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                query: { type: "string", description: "Words of the title or the author's name (all must match; default: everything)." },
+                sort: { type: "string", enum: ["new", "top"], description: "Newest first (default) or by score." },
+                showcases: { type: "boolean", description: "Only the items chosen as showcases." },
+                limit: { type: "integer", description: "At most this many (default 20, at most 100)." },
+            },
+        },
+        handler: async ({ query, sort = "new", showcases = false, limit = 20 } = {}) => {
+            const store = ACCOUNTS && CAN_PUBLISH ? await accounts() : null;
+            if (!store) return [{ type: "text", text: "This server has no stream (it needs accounts and published pages)." }];
+            const words = String(query ?? "").toLowerCase().split(/\s+/).filter(Boolean);
+            const items = store.streamItems({ sort: sort === "top" ? "top" : "new", limit: 1000 })
+                .filter((x) => !showcases || x.featured)
+                .filter((x) => words.every((w) => `${x.title} ${x.author}`.toLowerCase().includes(w)))
+                .slice(0, Math.max(1, Math.min(100, limit)))
+                .map((x) => ({ page_id: x.page_id, title: x.title, author: x.author, score: x.score,
+                               ...(x.featured ? { showcase: true } : {}), url: pageUrl(x.page_id), created: x.created }));
+            const result = { items, stream_url: `${PUBLIC_URL}/stream/` };
+            if (!items.length && words.length) result.note = `Nothing in the stream matches "${query}".`;
             return [{ type: "text", text: JSON.stringify(result, null, 1) }];
         },
     }, {

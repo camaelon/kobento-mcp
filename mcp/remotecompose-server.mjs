@@ -18,7 +18,7 @@ import { definition as json2rc } from "./json2rc-server.mjs";
 import { definition as render, publishImage } from "./rc-render-server.mjs";
 import { definition as inspect } from "./inspect-server.mjs";
 import { HOME } from "./lib/brand.mjs";
-import { definition as deploy } from "./deploy-server.mjs";
+import { definition as deploy, pageIdOf } from "./deploy-server.mjs";
 import { definition as examples } from "./examples-server.mjs";
 import { serve, isMain, currentCall } from "./lib/mcp-server.mjs";
 import { APP_GUIDE, SCRIPT_NOTE, SCRIPT_PROPS, scriptsAllowed, scriptsOffMessage } from "./lib/app-script.mjs";
@@ -149,6 +149,11 @@ The workflow for a new document:
    back the JSON it was published from (json_path), edit that, then publish with json_path and
    the same page_id. pages also lists the user's pages, shares one to the public stream or takes
    it out (only when the user asks), and unpublishes (confirm first: it cannot be undone).
+
+To remix something that exists rather than start blank: get a showcase or example by id
+(get {"id": "SHW-23"}), or a shared page by its link or page_id (get {"id": "<URL>"}; find
+{"kind": "stream", "query": ...} finds one in the stream). Change its JSON as asked, convert to
+check it, and publish it as a NEW page (no page_id), crediting the original.
 
 Look things up with find (examples, components, capabilities) and get; reference has the
 component authoring guide and full documentation for every tool. inspect answers questions
@@ -999,13 +1004,16 @@ const tools = [
             "\"components\": library components for a query or capabilities. kind \"icons\": Material Symbols " +
             "icons (4,157) by name, tag or category, each with its {\"Icon\": ...} call. kind \"capabilities\": the " +
             "capability ids (optionally under a prefix) with example counts. kind \"terms\": how words " +
-            "resolve to capabilities, use cases and components.",
+            "resolve to capabilities, use cases and components. kind \"stream\": documents people made and shared " +
+            "(title or author words in query; showcases: true for the chosen ones), each with the page_id that get " +
+            "takes, to remix it.",
         choices: {
             examples: tool(examples, "find_examples"),
             components: tool(examples, "find_components"),
             capabilities: tool(examples, "list_capabilities"),
             terms: tool(examples, "resolve_terms"),
             icons: tool(examples, "find_icons"),
+            stream: tool(deploy, "list_stream"),
         },
     }),
     {
@@ -1014,11 +1022,13 @@ const tools = [
         description:
             "Fetch one catalog entry: an example by id (\"TIM-10\"; or a generated document \"GEN-20\", parts meta, json, notes, render) with its JSON, meta, pitfalls and " +
             "renders (`parts` selects which), or a library component by name (\"Gauge\") with its call, " +
-            "params and pitfalls (definition: true adds the full definition, to copy its structure).",
+            "params and pitfalls (definition: true adds the full definition, to copy its structure). Also a " +
+            "published page by its URL or page_id (from the stream, find kind \"stream\", or a link someone shared): " +
+            "its JSON, saved as json_path, to remix; publish the remix as a new page.",
         inputSchema: {
             type: "object",
             properties: {
-                id: { type: "string", description: "Example id (e.g. \"EXP-06\") or component name (e.g. \"ProgressRing\")." },
+                id: { type: "string", description: "Example id (e.g. \"EXP-06\"), component name (e.g. \"ProgressRing\"), or a published page's URL or page_id." },
                 ...tool(examples, "get_example").inputSchema.properties,
                 ...tool(examples, "get_component").inputSchema.properties,
                 parts: { type: "array", items: { type: "string" }, description:
@@ -1030,6 +1040,9 @@ const tools = [
             const key = id ?? name;
             if (!key) throw new Error("get: give an example id or a component name");
             if (/^GEN-\d+$/i.test(key)) return getGenerated(key.toUpperCase(), rest);
+            // A published page (its link, or its id when no component has that name): its JSON, to remix.
+            const pageId = pageIdOf(key);
+            if (pageId && (pageId !== key || !loadLibrary().components.has(key))) return tool(deploy, "get_page").handler({ page_id: pageId });
             const out = await (/^[A-Z0-9]+-\d+/.test(key)
                 ? tool(examples, "get_example").handler({ id: key, ...rest })
                 : tool(examples, "get_component").handler({ name: key, ...rest }));

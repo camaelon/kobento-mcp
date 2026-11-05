@@ -39,6 +39,15 @@ const WORKFLOWS = [
                 "rc-render.validate, then render_rc; rc-inspect.audit before calling it done."],
     },
     {
+        title: "Remix something that exists (a showcase, a stream page, a page someone shared)",
+        steps: ["Get its JSON: a showcase or example by id with rc-examples.get_example (\"SHW-23\"); a page from the " +
+                "stream with rc-deploy.list_stream (a query finds it by title) then get_page; a page link someone " +
+                "shared with get_page and the URL. On the remotecompose endpoint: get {\"id\": \"SHW-23\"} or " +
+                "get {\"id\": <page URL or id>}, and find {\"kind\": \"stream\"}.",
+                "Make the change asked for on that JSON, validate and render it as for a new document.",
+                "Publish it as a new page (no page_id: the page you started from stays as it is), crediting the original."],
+    },
+    {
         title: "See what a JSON document looks like",
         steps: ["rc-render.render_rc with `json` or `json_path` — no separate conversion step.",
                 "Pin `clock` (and `seed` if it uses rand()) so the picture is reproducible."],

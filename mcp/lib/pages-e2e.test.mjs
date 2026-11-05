@@ -111,18 +111,34 @@ test("pages: list, get, replace in place, share, unshare, unpublish", { skip: !e
     assert.deepEqual(json(await b("pages", {})).pages.length, 1);
     await b("pages", { action: "unpublish", page_id: json(await b("pages", {})).pages[0].id });
 
-    // Someone else's page: no page at all, for every action.
-    for (const [tool, args] of [["pages", { action: "get", page_id: id }], ["pages", { action: "share", page_id: id }],
+    // Someone else's page: no page at all for every action that changes it.
+    for (const [tool, args] of [["pages", { action: "share", page_id: id }],
         ["pages", { action: "unpublish", page_id: id }], ["publish", { json_path: "one.json", page_id: id }]]) {
         r = await b(tool, args);
         assert.equal(r.error, true, `${tool} ${args.action ?? ""}`);
         assert.match(r.text, /no published page .* of yours/);
     }
     assert.deepEqual(json(await b("pages", {})).pages, []);
+    // Reading it is a remix: what its public link serves, no more (no owner, source, app script).
+    const theirs = json(await b("pages", { action: "get", page_id: id }));
+    assert.equal(theirs.yours, false);
+    assert.deepEqual(theirs.json, doc("Version two"));
+    assert.ok(theirs.json_path && theirs.remix.includes("new page"));
+    for (const k of ["owner", "source", "doc_sha", "app_script"]) assert.equal(theirs[k], undefined, k);
+    assert.equal(json(await a("pages", { action: "get", page_id: id })).yours, undefined, "the owner's own view");
 
     // The stream: share under a name, listed so; unshare.
     r = await a("pages", { action: "share", page_id: id, title: "My page" });
     assert.ok(!r.error, r.text);
+    // Found in the stream by a word of its title, then fetched through get by its link: a remix credited to Ada.
+    const found = json(await b("find", { kind: "stream", query: "my" }));
+    assert.deepEqual(found.items.map((x) => [x.page_id, x.title, x.author]), [[id, "My page", "Ada"]]);
+    assert.deepEqual(json(await b("find", { kind: "stream", query: "nothing-like-it" })).items, []);
+    const remix = json(await b("get", { id: `${base}/pages/${id}/#fill=1` }));
+    assert.deepEqual(remix.json, doc("Version two"));
+    assert.match(remix.remix, /a remix of "My page" by Ada/);
+    assert.equal(json(await b("get", { id })).title, "Two", "a bare page id too");
+    assert.match((await b("get", { id: "Button" })).text, /"name":"Button"/, "a component name is still a component");
     assert.deepEqual(json(await a("pages", {})).pages[0].stream?.title, "My page");
     assert.match(await (await fetch(`${base}/stream/`)).text(), /My page/);
     r = await a("pages", { action: "unshare", page_id: id });

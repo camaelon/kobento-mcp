@@ -466,7 +466,7 @@ function examplesPage(showcases = false, { generated: withGenerated = true, lead
         title: showcases ? "RemoteCompose showcases" : "RemoteCompose demos", current: showcases ? "showcases" : "demos", families, cards,
         modes: list.some((e) => e.derived?.renders), generated: gen.length, kinds: !showcases, sizes: true, lead,
         sub: showcases
-            ? `${list.length} showcases: what the format can do (3D, shaders, particles, physics, morphing, live data), each in light, dark and both monochrome looks. ${badge}`
+            ? `${list.length} showcases: what the format can do (3D, shaders, particles, physics, morphing, live data), each in light, dark and both monochrome looks. ${badge} To remix one, ask an agent connected to Kobento's MCP server: “Get SHW-23 from Kobento and turn it into a pinball table.”`
             : `${list.length} focused demos, one technique or screen each, every one byte-identical to the Java parser's output. ${badge}`,
     });
 }

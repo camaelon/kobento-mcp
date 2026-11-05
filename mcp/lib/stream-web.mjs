@@ -122,7 +122,7 @@ function streamPage({ site, items, sort, acct, sid, total }) {
 <header>
 <nav>${site.nav("stream")}</nav>
 <h1>Stream</h1>
-<p class="sub">Documents people made with Kobento and chose to share. Open one to play with it in the playground.${total ? ` ${total} item${total === 1 ? "" : "s"}.` : ""}</p>
+<p class="sub">Documents people made with Kobento and chose to share. Open one to play with it in the playground. To remix one, give its link to an agent connected to Kobento's MCP server: “Get &lt;link&gt; from Kobento and make it …”.${total ? ` ${total} item${total === 1 ? "" : "s"}.` : ""}</p>
 <div class="sortbar">${sortLink("new", "Newest")}${sortLink("top", "Top")}<span class="note">${note}</span></div>
 </header>
 <main>${cards || `<p class="empty">Nothing in the stream yet. Publish a document with the publish tool, then post it from your account page.</p>`}</main>
