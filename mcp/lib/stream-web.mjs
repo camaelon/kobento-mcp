@@ -1,7 +1,8 @@
 // The stream: published pages their owners chose to show everyone, under a name and their
 // account's name, with votes. Served by the examples site (lib/examples-web.mjs) at <base>/stream/:
-//   GET  <base>/stream/[?sort=new|top]   the items: preview, name, poster, score; a card opens
-//                                        the published page (its playground)
+//   GET  <base>/stream/[?sort=new|top][&tag=t]  the items (only those tagged t): preview, name,
+//                                        poster, score, tags; a card opens the published page
+//                                        (its playground). A bar lists the tags in use.
 //   POST <base>/stream/<page id>/vote    value=1|-1|0 (0 takes the vote back); signed in, CSRF.
 //                                        With Accept: application/json it answers the item's new
 //                                        score instead of redirecting (the page's script uses it)
@@ -9,12 +10,12 @@
 //   POST <base>/stream/<page id>/feature value=1|0: admins mark an item as a showcase, or not;
 //                                        the Showcases page lists marked items (featuredSection)
 // Posting, renaming and removing one's own items, and the account's name, are on the account page
-// (lib/account-web.mjs). The data is in the accounts store (lib/accounts.mjs, schema 8).
+// (lib/account-web.mjs). The data is in the accounts store (lib/accounts.mjs, schema 8; tags: 11).
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { siteFooter } from "./privacy-web.mjs";
-import { accounts, accountsEnabled, csrfFor, readCookie } from "./accounts.mjs";
+import { Accounts, accounts, accountsEnabled, csrfFor, readCookie } from "./accounts.mjs";
 import { esc, readForm, sameOrigin } from "./account-web.mjs";
 import { formatBytes } from "./web-page.mjs";
 import { workspaceRoot } from "./workspace.mjs";
@@ -60,7 +61,22 @@ const STREAM_CSS = `
 .lead p a { color:var(--accent); text-decoration:none; }
 .lead .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
 .lead + main h2.cat { grid-column:1/-1; font-size:16px; margin:12px 0 0; }
+.tagbar { display:flex; gap:4px 10px; flex-wrap:wrap; align-items:baseline; margin:6px 0 2px; font-size:13px; }
+.tagbar .label { color:var(--muted); }
+.tagbar a, .sitem .tags a { color:var(--accent); text-decoration:none; }
+.tagbar a[aria-current] { font-weight:700; color:var(--ink); }
+.tagbar .n { color:var(--muted); font-size:11px; margin-left:2px; font-variant-numeric:tabular-nums; }
+.sitem .tags { display:flex; flex-wrap:wrap; gap:2px 8px; padding:0 12px 8px; font-size:12px; }
 `;
+
+/** The stream's query string for a sort and a tag ("" for the newest, untagged). */
+const query = (sort, tag) => {
+    const q = new URLSearchParams();
+    if (sort === "top") q.set("sort", "top");
+    if (tag) q.set("tag", tag);
+    const s = q.toString();
+    return s ? `?${s}` : "";
+};
 
 // Votes without a reload: the form posts as it would, asking for JSON back. (The forms work
 // without the script too: the server then redirects back to the stream.)
@@ -86,35 +102,41 @@ for (const form of document.querySelectorAll("form.vote")) form.addEventListener
 
 const day = (iso) => String(iso ?? "").slice(0, 10);
 
-function itemCard(it, { csrf, signedIn, admin, sort }) {
+function itemCard(it, { csrf, signedIn, admin, sort, tag }) {
+    const qs = query(sort, tag);
     const m = it.meta;
     const preview = m.preview && it.url ? `<img src="${esc(it.url)}preview.png" alt="" loading="lazy">` : "<span>no preview</span>";
     const size = m.rc_bytes ? `${formatBytes(m.rc_bytes)} .rc` : "";
     const docSize = m.document?.width > 0 ? `${m.document.width}×${m.document.height}` : "";
     const btn = (v, cls, label, sign) => `<button class="${cls}" type="submit" name="value" data-v="${v}" value="${it.my_vote === v ? 0 : v}" aria-pressed="${it.my_vote === v}" aria-label="${label}"${signedIn ? "" : " disabled"}>${sign}</button>`;
     const vote = signedIn
-        ? `<form class="vote" method="post" action="${esc(it.page_id)}/vote${sort === "top" ? "?sort=top" : ""}">${csrf}${btn(1, "up", "Vote up", "▲")}</form>
+        ? `<form class="vote" method="post" action="${esc(it.page_id)}/vote${qs}">${csrf}${btn(1, "up", "Vote up", "▲")}</form>
 <span class="score">${it.score}</span>
-<form class="vote" method="post" action="${esc(it.page_id)}/vote${sort === "top" ? "?sort=top" : ""}">${csrf}${btn(-1, "down", "Vote down", "▼")}</form>`
+<form class="vote" method="post" action="${esc(it.page_id)}/vote${qs}">${csrf}${btn(-1, "down", "Vote down", "▼")}</form>`
         : `${btn(1, "up", "Vote up (sign in to vote)", "▲")}<span class="score">${it.score}</span>${btn(-1, "down", "Vote down (sign in to vote)", "▼")}`;
     return `<article class="sitem" id="s-${esc(it.page_id)}">
 <a href="${esc(it.url)}"><div class="thumb">${preview}</div>
 <div class="body">${it.featured ? '<span class="star">Showcase</span>' : ""}<span class="title">${esc(it.title)}</span><span class="by">by ${esc(it.author)}</span>
 <span class="meta">${[size, docSize, day(it.created)].filter(Boolean).map(esc).join(" · ")}</span></div></a>
+${it.tags?.length ? `<div class="tags">${it.tags.map((t) => `<a href="./${query(sort, t)}">#${esc(t)}</a>`).join("")}</div>` : ""}
 <div class="votes">${vote}<span class="split">+${it.ups} / −${it.downs}</span>
-${admin ? `<div class="admin"><form method="post" action="${esc(it.page_id)}/feature${sort === "top" ? "?sort=top" : ""}">${csrf}<input type="hidden" name="value" value="${it.featured ? 0 : 1}"><button class="feature" type="submit" title="${it.featured ? "Take it off the Showcases page" : "Show it on the Showcases page"}">${it.featured ? "Unshowcase" : "Make showcase"}</button></form>
+${admin ? `<div class="admin"><form method="post" action="${esc(it.page_id)}/feature${qs}">${csrf}<input type="hidden" name="value" value="${it.featured ? 0 : 1}"><button class="feature" type="submit" title="${it.featured ? "Take it off the Showcases page" : "Show it on the Showcases page"}">${it.featured ? "Unshowcase" : "Make showcase"}</button></form>
 <form method="post" action="${esc(it.page_id)}/remove">${csrf}<button type="submit">Remove</button></form></div>` : ""}</div>
 </article>`;
 }
 
-function streamPage({ site, items, sort, acct, sid, total }) {
+function streamPage({ site, items, sort, tag, tags, acct, sid, total }) {
     const csrf = sid ? `<input type="hidden" name="csrf" value="${csrfFor(sid)}">` : "";
-    const sortLink = (k, label) => `<a href="./${k === "new" ? "" : "?sort=" + k}"${sort === k ? ' aria-current="page"' : ""}>${label}</a>`;
+    const sortLink = (k, label) => `<a href="./${query(k, tag)}"${sort === k ? ' aria-current="page"' : ""}>${label}</a>`;
+    // The tags in use, the most used first; the one filtering, even when it is not among them.
+    const shown = tag && !tags.some((t) => t.tag === tag) ? [{ tag, count: 0 }, ...tags] : tags;
+    const tagBar = shown.length ? `<div class="tagbar"><span class="label">Tags:</span><a href="./${query(sort, null)}"${tag ? "" : ' aria-current="true"'}>all</a>${shown
+        .map((t) => `<a href="./${query(sort, t.tag)}"${t.tag === tag ? ' aria-current="true"' : ""}>#${esc(t.tag)}<span class="n">${t.count || ""}</span></a>`).join("")}</div>` : "";
     const note = acct
-        ? (acct.name ? `You are <b>${esc(acct.name)}</b> (<a href="../account/#name">change</a>) · <a href="../account/#stream">Post your pages</a>`
+        ? (acct.name ? `You are <b>${esc(acct.name)}</b> (<a href="../account/#name">change</a>) · <a href="../account/#pages">Post your pages</a>`
             : `<a href="../account/#name">Set your name</a> to post your pages`)
         : `<a href="../account/">Sign in</a> to vote and to post your pages`;
-    const cards = items.map((it) => itemCard(it, { csrf, signedIn: !!acct, admin: !!acct?.admin, sort })).join("\n");
+    const cards = items.map((it) => itemCard(it, { csrf, signedIn: !!acct, admin: !!acct?.admin, sort, tag })).join("\n");
     return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stream</title>${site.fonts ?? ""}<style>${site.css}${STREAM_CSS}</style></head>
@@ -122,10 +144,12 @@ function streamPage({ site, items, sort, acct, sid, total }) {
 <header>
 <nav>${site.nav("stream")}</nav>
 <h1>Stream</h1>
-<p class="sub">Documents people made with Kobento and chose to share. Open one to play with it in the playground. To remix one, give its link to an agent connected to Kobento's MCP server: “Get &lt;link&gt; from Kobento and make it …”.${total ? ` ${total} item${total === 1 ? "" : "s"}.` : ""}</p>
+<p class="sub">Documents people made with Kobento and chose to share. Open one to play with it in the playground. To remix one, give its link to an agent connected to Kobento's MCP server: “Get &lt;link&gt; from Kobento and make it …”.${total ? ` ${total} item${total === 1 ? "" : "s"}${tag ? ` tagged #${esc(tag)}` : ""}.` : ""}</p>
 <div class="sortbar">${sortLink("new", "Newest")}${sortLink("top", "Top")}<span class="note">${note}</span></div>
+${tagBar}
 </header>
-<main>${cards || `<p class="empty">Nothing in the stream yet. Publish a document with the publish tool, then post it from your account page.</p>`}</main>
+<main>${cards || (tag ? `<p class="empty">Nothing tagged #${esc(tag)}. <a href="./${query(sort, null)}">Everything</a>.</p>`
+    : `<p class="empty">Nothing in the stream yet. Publish a document with the publish tool, then post it from your account page.</p>`)}</main>
 ${siteFooter("../")}
 <script>${STREAM_SCRIPT}</script>
 </body></html>`;
@@ -150,18 +174,19 @@ export async function streamRoute(req, url, res, site) {
     const sid = readCookie(req);
     const acct = sid ? store.sessionAccount(sid) : null;
     const sort = url.searchParams.get("sort") === "top" ? "top" : "new";
+    const tag = url.searchParams.get("tag") ? Accounts.normalizeTags([url.searchParams.get("tag")])[0] ?? null : null;
     if (p === "/stream/") {
         if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405, { Allow: "GET, HEAD" }); res.end(); return true; }
-        const items = store.streamItems({ sort, viewerId: acct?.id ?? null })
+        const items = store.streamItems({ sort, tag, viewerId: acct?.id ?? null })
             .map((it) => ({ ...it, meta: pageMeta(it.page_id) })).filter((it) => it.meta && it.url);
-        return reply(res, 200, "text/html; charset=utf-8", streamPage({ site, items, sort, acct, sid, total: items.length }));
+        return reply(res, 200, "text/html; charset=utf-8", streamPage({ site, items, sort, tag, tags: store.streamTags(), acct, sid, total: items.length }));
     }
     const m = /^\/stream\/([A-Za-z0-9_-]{22})\/(vote|remove|feature)$/.exec(p);
     if (!m) return reply(res, 404, "text/plain", "not found\n");
     if (req.method !== "POST") { res.writeHead(405, { Allow: "POST" }); res.end(); return true; }
     const wantsJson = /application\/json/.test(String(req.headers.accept ?? ""));
     const back = (status = 303) => {
-        res.writeHead(status, { Location: `../${sort === "top" ? "?sort=top" : ""}#s-${m[1]}`, ...HEADERS });
+        res.writeHead(status, { Location: `../${query(sort, tag)}#s-${m[1]}`, ...HEADERS });
         res.end();
         return true;
     };

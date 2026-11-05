@@ -21,7 +21,7 @@ import path from "node:path";
 import { deleteTraceImages } from "./trace-images.mjs";
 import { assignThreads } from "./threads.mjs";
 
-const SCHEMA_VERSION = 10;
+const SCHEMA_VERSION = 11;
 // Session traces (calls.args / calls.result) are kept this long; the rows themselves stay.
 export const TRACE_DAYS = 30;
 // OAuth (lib/oauth.mjs): authorization codes, access and refresh tokens.
@@ -35,6 +35,9 @@ const SESSION_DAYS = 30;
 const LAST_USED_EVERY_MS = 60_000;
 /** Items an account may post to the stream in a day (RC_STREAM_PER_DAY). */
 const STREAM_PER_DAY = Number(process.env.RC_STREAM_PER_DAY ?? 10);
+/** Tags on a stream item: at most this many, each at most TAG_LENGTH characters. */
+export const MAX_TAGS = 6;
+const TAG_LENGTH = 24;
 
 const sha256 = (s) => createHash("sha256").update(String(s)).digest("hex");
 const now = () => new Date().toISOString();
@@ -202,7 +205,15 @@ export class Accounts {
                 this.db.exec("ALTER TABLE accounts ADD COLUMN scripts INTEGER NOT NULL DEFAULT 0;");
             }
         }
-        // (Later migrations: `if (v < 11) { ... }`, then bump SCHEMA_VERSION.)
+        if (v < 11) {
+            // Tags on stream items, set by their owners: the stream filters by one.
+            this.db.exec(`
+                CREATE TABLE IF NOT EXISTS stream_tags (
+                    page_id TEXT NOT NULL, tag TEXT NOT NULL, PRIMARY KEY (page_id, tag));
+                CREATE INDEX IF NOT EXISTS stream_tags_tag ON stream_tags(tag);
+            `);
+        }
+        // (Later migrations: `if (v < 12) { ... }`, then bump SCHEMA_VERSION.)
         if (v < SCHEMA_VERSION) this.db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
     }
 
@@ -731,7 +742,7 @@ export class Accounts {
      * Posts a page to the stream under `title` (or renames it there). The page must be the
      * account's (admins may post any) and the account needs a public name; throws a message.
      */
-    streamPost({ pageId, account, title }) {
+    streamPost({ pageId, account, title, tags }) {
         pageId = String(pageId ?? "");
         const owner = this.pageOwner(pageId);
         if (owner == null) throw new Error("That page is not published (or was unpublished).");
@@ -740,20 +751,53 @@ export class Accounts {
         title = String(title ?? "").normalize("NFC").replace(/\s+/g, " ").trim().slice(0, 80);
         if (!title) throw new Error("Give the item a name.");
         const existing = this.db.prepare("SELECT page_id FROM stream WHERE page_id = ?").get(pageId);
+        // Tags given (even empty) replace the item's; left out, they stay.
+        const tagList = tags == null ? null : Accounts.normalizeTags(tags);
         if (existing) {
             this.db.prepare("UPDATE stream SET title = ? WHERE page_id = ?").run(title, pageId);
+            if (tagList) this.#setTags(pageId, tagList);
             return;
         }
         const recent = this.db.prepare("SELECT COUNT(*) AS n FROM stream WHERE account_id = ? AND created > ?")
             .get(owner, new Date(Date.now() - 86400_000).toISOString()).n;
         if (recent >= STREAM_PER_DAY && !account.admin) throw new Error(`You posted ${STREAM_PER_DAY} items in the last day: try again tomorrow.`);
         this.db.prepare("INSERT INTO stream (page_id, account_id, title, created) VALUES (?, ?, ?, ?)").run(pageId, owner, title, now());
+        if (tagList) this.#setTags(pageId, tagList);
+    }
+
+    /**
+     * Tags as stored: from "Game, 3D physics" or ["game", "#3d"], lowercase words of letters,
+     * digits and dashes, each at most 24 characters, no repeats, at most MAX_TAGS (throws past that).
+     */
+    static normalizeTags(input) {
+        const words = (Array.isArray(input) ? input.map(String) : String(input ?? "").split(/[,\s]+/))
+            .flatMap((w) => w.split(/[,\s]+/))
+            .map((w) => w.normalize("NFC").toLowerCase().replace(/^#+/, "").replace(/[^\p{L}\p{N}-]+/gu, "-")
+                .replace(/-{2,}/g, "-").replace(/^-|-$/g, "").slice(0, TAG_LENGTH).replace(/-$/, ""))
+            .filter(Boolean);
+        const out = [...new Set(words)];
+        if (out.length > MAX_TAGS) throw new Error(`At most ${MAX_TAGS} tags (you gave ${out.length}).`);
+        return out;
+    }
+
+    #setTags(pageId, tags) {
+        this.db.prepare("DELETE FROM stream_tags WHERE page_id = ?").run(pageId);
+        const add = this.db.prepare("INSERT OR IGNORE INTO stream_tags (page_id, tag) VALUES (?, ?)");
+        for (const t of tags) add.run(pageId, t);
+    }
+
+    /** The tags in use in the stream, the most used first: [{tag, count}]. */
+    streamTags(limit = 40) {
+        return this.db.prepare(`SELECT t.tag, COUNT(*) AS count FROM stream_tags t JOIN stream s ON s.page_id = t.page_id
+            GROUP BY t.tag ORDER BY count DESC, t.tag LIMIT ?`).all(Math.max(1, Math.min(500, limit)))
+            .map((r) => ({ tag: r.tag, count: r.count }));
     }
 
     /** Takes a page out of the stream, with its votes. */
     streamRemove(pageId) {
         this.db.prepare("DELETE FROM stream WHERE page_id = ?").run(String(pageId));
         this.db.prepare("DELETE FROM votes WHERE page_id = ?").run(String(pageId));
+        this.db.prepare("DELETE FROM stream_tags WHERE page_id = ?").run(String(pageId));
     }
 
     /** One stream item (with its poster's name as `author`, and its score), or null. */
@@ -762,9 +806,11 @@ export class Accounts {
     }
 
     /** The stream: sort "new" (newest first) or "top" (score, then newest); `viewerId` adds each item's my_vote. */
-    streamItems({ sort = "new", viewerId = null, limit = 200, offset = 0 } = {}) {
+    streamItems({ sort = "new", viewerId = null, limit = 200, offset = 0, tag = null } = {}) {
         const order = sort === "top" ? "score DESC, s.created DESC" : "s.created DESC";
-        return this.#streamRows("", [], viewerId, order, limit, offset);
+        const t = tag == null || tag === "" ? null : Accounts.normalizeTags([tag])[0] ?? "";
+        return t == null ? this.#streamRows("", [], viewerId, order, limit, offset)
+            : this.#streamRows("WHERE s.page_id IN (SELECT page_id FROM stream_tags WHERE tag = ?)", [t], viewerId, order, limit, offset);
     }
 
     streamCount() { return this.db.prepare("SELECT COUNT(*) AS n FROM stream").get().n; }
@@ -778,12 +824,13 @@ export class Accounts {
         return this.db.prepare(`
             SELECT s.page_id, s.account_id, s.title, s.created, s.featured, a.name AS author, p.url,
                 COALESCE(SUM(v.value), 0) AS score, COALESCE(SUM(v.value = 1), 0) AS ups, COALESCE(SUM(v.value = -1), 0) AS downs,
-                (SELECT value FROM votes WHERE page_id = s.page_id AND account_id = ?) AS my_vote
+                (SELECT value FROM votes WHERE page_id = s.page_id AND account_id = ?) AS my_vote,
+                (SELECT group_concat(tag, ' ') FROM stream_tags WHERE page_id = s.page_id) AS tags
             FROM stream s JOIN accounts a ON a.id = s.account_id LEFT JOIN pages p ON p.id = s.page_id
             LEFT JOIN votes v ON v.page_id = s.page_id
             ${where} GROUP BY s.page_id ORDER BY ${order} LIMIT ? OFFSET ?`)
             .all(viewerId ?? -1, ...args, Math.max(1, Math.min(1000, limit)), Math.max(0, offset))
-            .map((r) => ({ ...r, my_vote: r.my_vote ?? 0 }));
+            .map((r) => ({ ...r, my_vote: r.my_vote ?? 0, tags: r.tags ? r.tags.split(" ").sort() : [] }));
     }
 
     /**

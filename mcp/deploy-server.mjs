@@ -26,7 +26,7 @@ import { loadLibrary, usesComponents } from "./lib/components.mjs";
 import { DOCUMENT_PROPS, prepareDocument } from "./lib/document.mjs";
 import { compileComponents, jsonToRc } from "./lib/json2rc.mjs";
 import { currentCall, isMain, serve } from "./lib/mcp-server.mjs";
-import { accounts, accountsEnabled, requestAccount } from "./lib/accounts.mjs";
+import { accounts, accountsEnabled, MAX_TAGS, requestAccount } from "./lib/accounts.mjs";
 import { checkReport, runRc2image } from "./lib/rc2image.mjs";
 import { keptPng } from "./lib/trace-images.mjs";
 import { PAGE_CARD_CSS, pageCards } from "./lib/page-cards.mjs";
@@ -780,7 +780,7 @@ export const definition = {
                 const store = await accounts();
                 for (const p of result.pages) {
                     const it = store?.streamItem(p.id);
-                    if (it) p.stream = { title: it.title, score: it.score };
+                    if (it) p.stream = { title: it.title, score: it.score, tags: it.tags };
                 }
             }
             if (PAGE_INDEX) result.index_url = `${PUBLIC_URL}/pages/`;
@@ -823,59 +823,64 @@ export const definition = {
                 }
             } else result.json = null;   // published from an .rc: rc_url has the document
             if (mine && files.includes("app.ts")) result.app_script = readFileSync(path.join(dir, "app.ts"), "utf8");
-            if (it) result.stream = { title: it.title, author: it.author, score: it.score };
+            if (it) result.stream = { title: it.title, author: it.author, score: it.score, tags: it.tags };
             return [{ type: "text", text: JSON.stringify(result, null, 1) }];
         },
     }, {
         name: "list_stream",
         annotations: { title: "Search the stream", readOnlyHint: true, openWorldHint: false },
-        description: "The public stream: documents people made and shared, each with its page_id, title, author, score " +
-            "and whether it is a showcase. A query matches titles and authors. get_page on one gives its JSON, to remix.",
+        description: "The public stream: documents people made and shared, each with its page_id, title, author, tags, " +
+            "score and whether it is a showcase. A query matches titles, authors and tags; tag keeps the items with that " +
+            "tag. The result also lists the tags in use. get_page on one gives its JSON, to remix.",
         inputSchema: {
             type: "object",
             properties: {
-                query: { type: "string", description: "Words of the title or the author's name (all must match; default: everything)." },
+                query: { type: "string", description: "Words of the title, the author's name or the tags (all must match; default: everything)." },
+                tag: { type: "string", description: "Only the items with this tag (\"game\")." },
                 sort: { type: "string", enum: ["new", "top"], description: "Newest first (default) or by score." },
                 showcases: { type: "boolean", description: "Only the items chosen as showcases." },
                 limit: { type: "integer", description: "At most this many (default 20, at most 100)." },
             },
         },
-        handler: async ({ query, sort = "new", showcases = false, limit = 20 } = {}) => {
+        handler: async ({ query, tag, sort = "new", showcases = false, limit = 20 } = {}) => {
             const store = ACCOUNTS && CAN_PUBLISH ? await accounts() : null;
             if (!store) return [{ type: "text", text: "This server has no stream (it needs accounts and published pages)." }];
             const words = String(query ?? "").toLowerCase().split(/\s+/).filter(Boolean);
-            const items = store.streamItems({ sort: sort === "top" ? "top" : "new", limit: 1000 })
+            const items = store.streamItems({ sort: sort === "top" ? "top" : "new", limit: 1000, tag: tag || null })
                 .filter((x) => !showcases || x.featured)
-                .filter((x) => words.every((w) => `${x.title} ${x.author}`.toLowerCase().includes(w)))
+                .filter((x) => words.every((w) => `${x.title} ${x.author} ${x.tags.join(" ")}`.toLowerCase().includes(w.replace(/^#/, ""))))
                 .slice(0, Math.max(1, Math.min(100, limit)))
-                .map((x) => ({ page_id: x.page_id, title: x.title, author: x.author, score: x.score,
+                .map((x) => ({ page_id: x.page_id, title: x.title, author: x.author, tags: x.tags, score: x.score,
                                ...(x.featured ? { showcase: true } : {}), url: pageUrl(x.page_id), created: x.created }));
-            const result = { items, stream_url: `${PUBLIC_URL}/stream/` };
-            if (!items.length && words.length) result.note = `Nothing in the stream matches "${query}".`;
+            const result = { items, tags_in_use: store.streamTags(30).map((t) => `${t.tag} (${t.count})`), stream_url: `${PUBLIC_URL}/stream/` };
+            if (!items.length && (words.length || tag)) result.note = `Nothing in the stream matches${words.length ? ` "${query}"` : ""}${tag ? ` with tag ${tag}` : ""}.`;
             return [{ type: "text", text: JSON.stringify(result, null, 1) }];
         },
     }, {
         name: "share_page",
         annotations: { title: "Post a page to the stream", readOnlyHint: false, destructiveHint: false, openWorldHint: true },
-        description: "Post a published page of yours to the public stream under a name (or rename it there): anyone can " +
-            "open it there and signed-in people vote on it. Only when the user asks to share it. Needs an account with a " +
-            "public name (set on the account page).",
+        description: "Post a published page of yours to the public stream under a name (or rename or retag it there): " +
+            "anyone can open it there and signed-in people vote on it. Only when the user asks to share it. Needs an " +
+            "account with a public name (set on the account page). Tags say what it is, so people find it by them " +
+            "(the stream filters by a tag): a few plain words, reusing tags already in use where they fit.",
         inputSchema: {
             type: "object",
             properties: {
                 page_id: { type: "string", description: "The id from package_web or list_pages." },
                 title: { type: "string", description: "The name it is shown under in the stream (at most 80 characters; default: the page's title)." },
+                tags: { type: "array", items: { type: "string" }, description: `Up to ${MAX_TAGS} tags, e.g. ["game", "physics"] (lowercase words; they replace the item's tags; left out, its tags stay; [] removes them). list_stream lists the tags in use.` },
             },
             required: ["page_id"],
         },
-        handler: async ({ page_id, title }) => {
+        handler: async ({ page_id, title, tags }) => {
             const { id, meta } = ownPage(page_id);
             const who = caller();
             const store = ACCOUNTS ? await accounts() : null;
             if (!store || !who) throw new Error("the stream needs accounts: this server has none, or you are not signed in");
-            store.streamPost({ pageId: id, account: who, title: title ?? meta?.title ?? "" });
+            const prior = store.streamItem(id);
+            store.streamPost({ pageId: id, account: who, title: title ?? prior?.title ?? meta?.title ?? "", tags });
             const it = store.streamItem(id);
-            return [{ type: "text", text: JSON.stringify({ page_id: id, stream: { title: it?.title }, stream_url: `${PUBLIC_URL}/stream/` }, null, 1) }];
+            return [{ type: "text", text: JSON.stringify({ page_id: id, stream: { title: it?.title, tags: it?.tags ?? [] }, stream_url: `${PUBLIC_URL}/stream/` }, null, 1) }];
         },
     }, {
         name: "unshare_page",

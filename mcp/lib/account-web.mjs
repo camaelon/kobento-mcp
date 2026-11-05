@@ -36,7 +36,7 @@
 // ignore cookies: they take the token.
 
 import { siteFooter } from "./privacy-web.mjs";
-import { Accounts, accounts, accountsEnabled, csrfFor, emailVerify, RateLimiter, readCookie, SESSION_COOKIE, signupOpen } from "./accounts.mjs";
+import { Accounts, MAX_TAGS, accounts, accountsEnabled, csrfFor, emailVerify, RateLimiter, readCookie, SESSION_COOKIE, signupOpen } from "./accounts.mjs";
 import { linkEmail, sendMail } from "./mail.mjs";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
@@ -593,10 +593,11 @@ function pagesPanel(store, acct, csrf, pages) {
         const id = esc(pg.id);
         const nameForm = (label) => `<form class="row" method="post" action="stream" style="margin:0">${csrf}<input type="hidden" name="page_id" value="${id}">
 <label class="f">Name in the stream<input type="text" name="title" maxlength="80" value="${esc(it?.title ?? pg.title ?? "")}" required></label>
+<label class="f">Tags <span class="muted">(up to ${MAX_TAGS}, e.g. game, clock, 3d)</span><input type="text" name="tags" maxlength="200" value="${esc((it?.tags ?? []).join(", "))}" placeholder="game, physics"></label>
 <button class="btn" type="submit"${acct.name ? "" : " disabled"}>${label}</button></form>`;
         const stream = it
-            ? `<div><span class="pill">in the stream</span> <span class="muted">score ${it.score} (+${it.ups} / −${it.downs}) · since ${esc(day(it.created).slice(0, 10))}</span></div>
-<details><summary class="link">Rename in the stream</summary>${nameForm("Rename")}</details>
+            ? `<div><span class="pill">in the stream</span> <span class="muted">score ${it.score} (+${it.ups} / −${it.downs}) · since ${esc(day(it.created).slice(0, 10))}</span>${it.tags.length ? ` <span class="muted">· ${it.tags.map((t) => `<a href="../stream/?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join(" ")}</span>` : ""}</div>
+<details><summary class="link">Rename or tag in the stream</summary>${nameForm("Save")}</details>
 <form class="inline" method="post" action="stream/${id}/remove">${csrf}<button class="link danger" type="submit">Remove from the stream</button></form>`
             : `<details><summary class="link">Post to the stream</summary>${nameForm("Post")}${acct.name ? "" : '<p class="muted">Set your <a href="#name">name</a> first: it is shown with what you post.</p>'}</details>`;
         const del = `<details class="confirm"><summary class="link danger">Delete…</summary>
@@ -864,7 +865,7 @@ export async function accountRoute(req, url, res, site) {
         return redirect(res, "./#name");
     }
     if (p === "/account/stream") {
-        try { store.streamPost({ pageId: form.get("page_id"), account: acct, title: form.get("title") }); } catch (e) { return render(400, { acct, sid, error: e.message }); }
+        try { store.streamPost({ pageId: form.get("page_id"), account: acct, title: form.get("title"), tags: form.get("tags") }); } catch (e) { return render(400, { acct, sid, error: e.message }); }
         return redirect(res, "./#pages");
     }
     let m = /^\/account\/stream\/([A-Za-z0-9_-]{22})\/remove$/.exec(p);

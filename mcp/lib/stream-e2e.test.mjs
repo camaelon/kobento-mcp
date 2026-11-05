@@ -88,9 +88,12 @@ test("stream: post, list, vote, sort, remove", async (t) => {
     await s.post("/account/name", { csrf: csrfFor(bob), name: "Bob" }, bob);
 
     // Post two pages; a stranger's page is refused; a stale form is refused.
-    assert.equal((await s.post("/account/stream", { csrf: csrfFor(ann), page_id: P1, title: "My clock" }, ann)).status, 303);
+    assert.equal((await s.post("/account/stream", { csrf: csrfFor(ann), page_id: P1, title: "My clock", tags: "Clock, #Time widget" }, ann)).status, 303);
     await sleep(5);
-    assert.equal((await s.post("/account/stream", { csrf: csrfFor(ann), page_id: P2, title: "Weather <b>now</b>" }, ann)).status, 303);
+    assert.equal((await s.post("/account/stream", { csrf: csrfFor(ann), page_id: P2, title: "Weather <b>now</b>", tags: "widget" }, ann)).status, 303);
+    r = await s.post("/account/stream", { csrf: csrfFor(ann), page_id: P2, title: "Weather <b>now</b>", tags: "a b c d e f g" }, ann);
+    assert.equal(r.status, 400);
+    assert.match(await r.text(), /At most 6 tags/);
     r = await s.post("/account/stream", { csrf: csrfFor(ann), page_id: PB, title: "Not mine" }, ann);
     assert.match(await r.text(), /only post your own/);
     assert.equal((await s.post("/account/stream", { csrf: "nope", page_id: PB, title: "x" }, bob)).status, 403);
@@ -101,6 +104,25 @@ test("stream: post, list, vote, sort, remove", async (t) => {
     assert.match(page, new RegExp(`href="${s.base}/pages/${P1}/"`), "a card opens the published page");
     assert.match(page, new RegExp(`src="${s.base}/pages/${P1}/preview.png"`));
     assert.match(page, /2 items/);
+
+    // Tags: on the cards, in the bar (most used first), and ?tag= filters, keeping the sort.
+    assert.match(page, new RegExp(`id="s-${P1}"[\\s\\S]*?<div class="tags"><a href="\\./\\?tag=clock">#clock</a><a href="\\./\\?tag=time">#time</a><a href="\\./\\?tag=widget">#widget</a></div>`));
+    assert.match(page, /<div class="tagbar"><span class="label">Tags:<\/span><a href="\.\/" aria-current="true">all<\/a><a href="\.\/\?tag=widget">#widget<span class="n">2<\/span>/);
+    let tagged = await (await s.get("/stream/?tag=Clock")).text();
+    assert.match(tagged, /My clock/);
+    assert.ok(!tagged.includes("Weather"), "only the tagged item");
+    assert.match(tagged, /1 item tagged #clock/);
+    assert.match(tagged, /href="\.\/\?sort=top&amp;tag=clock"|href="\.\/\?sort=top&tag=clock"/);
+    assert.match(await (await s.get("/stream/?tag=nothing")).text(), /Nothing tagged #nothing/);
+    // A vote from a filtered page comes back to it.
+    r = await s.post(`/stream/${P2}/vote?tag=widget`, { csrf: csrfFor(bob), value: "1" }, bob);
+    assert.equal(r.headers.get("location"), `../?tag=widget#s-${P2}`);
+    await s.post(`/stream/${P2}/vote`, { csrf: csrfFor(bob), value: "0" }, bob);
+    // Renaming keeps the tags unless they are sent; sent empty, they go.
+    acctPage = await (await s.get("/account/", ann)).text();
+    assert.match(acctPage, /name="tags" maxlength="200" value="clock, time, widget"/);
+    await s.post("/account/stream", { csrf: csrfFor(ann), page_id: P2, title: "Weather <b>now</b>", tags: "" }, ann);
+    assert.ok(!(await (await s.get("/stream/?tag=widget")).text()).includes("Weather"));
 
     // Votes: the form redirects back; JSON answers the score; one per account, replaced, taken back.
     r = await s.post(`/stream/${P1}/vote`, { csrf: csrfFor(bob), value: "1" }, bob);
@@ -134,7 +156,7 @@ test("stream: post, list, vote, sort, remove", async (t) => {
     // The account page shows the score and offers rename and remove.
     acctPage = await (await s.get("/account/", ann)).text();
     assert.match(acctPage, /in the stream<\/span> <span class="muted">score 1 \(\+1 \/ −0\)/);
-    assert.match(acctPage, /Rename<\/button>/);
+    assert.match(acctPage, /Rename or tag in the stream/);
 
     // A stranger cannot remove an item; its owner can; an admin can remove any from the stream page.
     await s.post(`/account/stream/${P1}/remove`, { csrf: csrfFor(bob) }, bob);

@@ -128,8 +128,15 @@ test("pages: list, get, replace in place, share, unshare, unpublish", { skip: !e
     assert.equal(json(await a("pages", { action: "get", page_id: id })).yours, undefined, "the owner's own view");
 
     // The stream: share under a name, listed so; unshare.
-    r = await a("pages", { action: "share", page_id: id, title: "My page" });
+    r = await a("pages", { action: "share", page_id: id, title: "My page", tags: ["Toy", "#physics"] });
     assert.ok(!r.error, r.text);
+    assert.deepEqual(json(r).stream.tags, ["physics", "toy"]);
+    assert.deepEqual(json(await b("find", { kind: "stream", tag: "toy" })).items.map((x) => x.page_id), [id]);
+    assert.deepEqual(json(await b("find", { kind: "stream", tag: "other" })).items, []);
+    assert.deepEqual(json(await b("find", { kind: "stream" })).tags_in_use, ["physics (1)", "toy (1)"]);
+    // Sharing again without tags keeps them (and the name); with tags, replaces them.
+    assert.deepEqual(json(await a("pages", { action: "share", page_id: id })).stream, { title: "My page", tags: ["physics", "toy"] });
+    assert.match((await a("pages", { action: "share", page_id: id, tags: ["a", "b", "c", "d", "e", "f", "g"] })).text, /At most 6 tags/);
     // Found in the stream by a word of its title, then fetched through get by its link: a remix credited to Ada.
     const found = json(await b("find", { kind: "stream", query: "my" }));
     assert.deepEqual(found.items.map((x) => [x.page_id, x.title, x.author]), [[id, "My page", "Ada"]]);

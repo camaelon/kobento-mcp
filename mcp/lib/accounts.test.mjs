@@ -143,7 +143,7 @@ test("a database file: created, migrated once, shared by two handles", async () 
         const t = one.issueToken(a.id);
         const two = await openAccounts(file);   // another process, in effect
         assert.equal(two.authenticate(t.token).account.email, "f@example.com");
-        assert.equal(two.db.prepare("PRAGMA user_version").get().user_version, 10);
+        assert.equal(two.db.prepare("PRAGMA user_version").get().user_version, 11);
         assert.equal(two.db.prepare("PRAGMA journal_mode").get().journal_mode, "wal");
         assert.ok(existsSync(file));
         assert.equal(accountsEnabled({ RC_DB: file }), true, "on when the database exists");
@@ -266,7 +266,7 @@ test("migration from schema 1: existing accounts are grandfathered as verified",
                  PRAGMA user_version = 1;`);
         v1.close();
         const s = await openAccounts(file);
-        assert.equal(s.db.prepare("PRAGMA user_version").get().user_version, 10);
+        assert.equal(s.db.prepare("PRAGMA user_version").get().user_version, 11);
         const e = s.findAccount("early@example.com");
         assert.equal(e.status, "active");
         assert.equal(e.verified_at, "2026-01-01T00:00:00.000Z");
@@ -360,7 +360,7 @@ test("stream: a daily limit per account (admins exempt)", async () => {
     assert.equal(s.streamCount(), 11);
 });
 
-test("schema 10 migrates a version 7 database", async () => {
+test("the current schema migrates a version 7 database", async () => {
     const dir = mkdtempSync(path.join(tmpdir(), "rc-acc-"));
     const file = path.join(dir, "rc.db");
     try {
@@ -370,12 +370,36 @@ test("schema 10 migrates a version 7 database", async () => {
         s.db.exec("DROP TABLE stream; DROP TABLE votes; PRAGMA user_version = 7;");
         s.close();
         s = await openAccounts(file);
-        assert.equal(s.db.prepare("PRAGMA user_version").get().user_version, 10);
+        assert.equal(s.db.prepare("PRAGMA user_version").get().user_version, 11);
         assert.equal(s.setName(a.id, "Old"), "Old");
         assert.equal(s.getAccount(a.id).name, "Old");
         assert.equal(s.streamCount(), 0);
         s.close();
     } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("stream tags: normalised, set by posting, kept when left out, filter, counts, gone with the item", async () => {
+    const s = await fresh();
+    assert.deepEqual(Accounts.normalizeTags("Game, 3D  #physics,game"), ["game", "3d", "physics"]);
+    assert.deepEqual(Accounts.normalizeTags(["a/b", "  ", "Été"]), ["a-b", "été"]);
+    assert.throws(() => Accounts.normalizeTags("a b c d e f g"), /At most 6 tags/);
+    const a = s.createAccount({ email: "t@example.com", name: "T" });
+    for (const id of ["p".repeat(22), "q".repeat(22)]) s.recordPage({ id, accountId: a.id, title: id, url: `u/${id}` });
+    const [P, Q] = ["p".repeat(22), "q".repeat(22)];
+    s.streamPost({ pageId: P, account: a, title: "One", tags: "game, physics" });
+    s.streamPost({ pageId: Q, account: a, title: "Two", tags: ["game"] });
+    assert.deepEqual(s.streamItem(P).tags, ["game", "physics"]);
+    assert.deepEqual(s.streamItems({ tag: "physics" }).map((i) => i.page_id), [P]);
+    assert.deepEqual(s.streamItems({ tag: "#Game" }).map((i) => i.page_id).sort(), [P, Q]);
+    assert.deepEqual(s.streamItems({ tag: "none" }), []);
+    assert.deepEqual(s.streamTags(), [{ tag: "game", count: 2 }, { tag: "physics", count: 1 }]);
+    s.streamPost({ pageId: P, account: a, title: "One renamed" });
+    assert.deepEqual(s.streamItem(P).tags, ["game", "physics"], "left out: kept");
+    s.streamPost({ pageId: P, account: a, title: "One", tags: "" });
+    assert.deepEqual(s.streamItem(P).tags, []);
+    s.streamRemove(Q);
+    assert.deepEqual(s.streamTags(), []);
+    s.close();
 });
 
 test("showcases: an admin's mark on a stream item, newest mark first; gone with the item", async () => {

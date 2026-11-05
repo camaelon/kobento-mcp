@@ -1005,7 +1005,8 @@ const tools = [
             "icons (4,157) by name, tag or category, each with its {\"Icon\": ...} call. kind \"capabilities\": the " +
             "capability ids (optionally under a prefix) with example counts. kind \"terms\": how words " +
             "resolve to capabilities, use cases and components. kind \"stream\": documents people made and shared " +
-            "(title or author words in query; showcases: true for the chosen ones), each with the page_id that get " +
+            "(title, author or tag words in query; tag for one tag; showcases: true for the chosen ones), with the tags " +
+            "in use, each with the page_id that get " +
             "takes, to remix it.",
         choices: {
             examples: tool(examples, "find_examples"),
@@ -1340,7 +1341,7 @@ const tools = [
         description: "Manage the pages published with publish. action \"list\" (default): yours, with URLs and stream status. " +
             "\"get\" (page_id): one page's metadata, .rc URL, and the JSON it was published from (also saved as json_path) " +
             "and app script: edit it, then publish with json_path and page_id to replace the page in place (same URL). " +
-            "\"share\" (page_id, optional title): post it to the public stream, only when the user asks. \"unshare\" (page_id): " +
+            "\"share\" (page_id, optional title and tags): post it to the public stream, only when the user asks (or rename or retag it there). \"unshare\" (page_id): " +
             "take it out of the stream. \"unpublish\" (page_id): take it down for good (cannot be undone; confirm with the user).",
         choices: { list: tool(deploy, "list_pages"), get: tool(deploy, "get_page"), share: tool(deploy, "share_page"),
                    unshare: tool(deploy, "unshare_page"), unpublish: tool(deploy, "unpublish_page") },
