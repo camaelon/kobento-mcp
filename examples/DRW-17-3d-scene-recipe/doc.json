@@ -188,7 +188,7 @@
       {
        "drawMesh3D": {
         "mesh": 1,
-        "mode": "smooth"
+        "mode": "gl-smooth"
        }
       }
      ]

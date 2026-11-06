@@ -100,7 +100,7 @@
    ],
    "default": "solid",
    "static": true,
-   "doc": "solid: lit faces. outlined: lit faces with their edges drawn in lineColor (a technical look). wireframe: only the edges, in each part's colour. Mono is always background faces with onSurface edges"
+   "doc": "solid: lit faces (on the GPU where the player has one: the web player draws them with WebGL). outlined: lit faces with their edges drawn in lineColor (a technical look; software, as the edges need the faces in its depth buffer). wireframe: only the edges, in each part's colour. Mono is always background faces with onSurface edges"
   },
   "floor": {
    "type": "bool",

@@ -250,7 +250,7 @@
        {
         "drawMesh3D": {
          "mesh": 1,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        },
        {
@@ -300,7 +300,7 @@
        {
         "drawMesh3D": {
          "mesh": 2,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        },
        {
@@ -350,7 +350,7 @@
        {
         "drawMesh3D": {
          "mesh": 3,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        },
        {
@@ -400,7 +400,7 @@
        {
         "drawMesh3D": {
          "mesh": 4,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        },
        {
@@ -450,7 +450,7 @@
        {
         "drawMesh3D": {
          "mesh": 5,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        },
        {
@@ -500,7 +500,7 @@
        {
         "drawMesh3D": {
          "mesh": 6,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        },
        {
@@ -550,7 +550,7 @@
        {
         "drawMesh3D": {
          "mesh": 7,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        }
       ]

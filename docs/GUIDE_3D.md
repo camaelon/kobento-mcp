@@ -97,7 +97,7 @@ One canvas that fills the window, then in its `commands`:
   {"matrix3D": {"op": "rotate", "angle": "@tilt", "axis": [1, 0, 0]}},
   {"matrix3D": {"op": "rotate", "angle": "@spin", "axis": [0, 1, 0]}},
   {"paint": {"ops": [{"color": "@colors.primary"}]}},
-  {"drawMesh3D": {"mesh": 1, "mode": "smooth"}}
+  {"drawMesh3D": {"mesh": 1, "mode": "gl-smooth"}}
  ]}}}
 ```
 
@@ -125,10 +125,20 @@ One canvas that fills the window, then in its `commands`:
 - **matrix3D:** `identity`, `translate` {x, y, z}, `scale` {x, y, z}, `rotate` {angle (radians),
   axis}, `multiply` {m: 16 floats}. Each post-multiplies the model matrix, so the op nearest the
   draw acts first on the mesh. Every op needs `op`.
-- **paint** colour, then **drawMesh3D** {mesh, mode}: `flat` (one shade a face: boxes) or
-  `smooth` (Gouraud: round shapes). `wireframe: true` draws hidden-line edges instead, in the
+- **paint** colour, then **drawMesh3D** {mesh, mode}: `gl-flat` (one shade a face: boxes) or
+  `gl-smooth` (Gouraud: round shapes). `wireframe: true` draws hidden-line edges instead, in the
   paint colour; `edges: [0, 1]` draws a primitive's quads without their diagonals.
   `depthBias3D` offsets depth (lines over a face).
+- **Which mode:** `gl-flat` / `gl-smooth` draw on the GPU where the player has one (the web
+  player's WebGL: a 68-mesh scene at 1225 x 932 runs at about 30 fps there against 2 in
+  software) and in software everywhere else (the C++ player), so they are the default for
+  faces. `flat` / `smooth` (also spelt `software-flat` / `software-smooth`) ask for the software
+  rasterizer. Keep a frame on one side: a wireframe is always software and hides its edges
+  against the software depth buffer, which faces drawn on the GPU never reach, and the GPU's
+  picture lands over the software one whatever the depth. So a frame that draws edges over
+  faces (an outlined look, Chart3D's grids, mono's background fills) draws those faces in
+  software; the colour look in the `else` of a mono `$if` can still use `gl-*`. The web player
+  draws `flat` / `smooth` on the GPU too when the document draws no wireframe anywhere.
 
 **Drag to orbit:** two `touchExpression`s on touchX() and touchY() with `stopMode: "gently"`
 accumulate the drag in dp and coast after release; scale them to radians (0.01 a dp for the
@@ -151,7 +161,7 @@ in the commands:
  "then": [{"paint": {"ops": [{"color": "@colors.onSurface"}]}},
           {"drawMesh3D": {"mesh": 1, "wireframe": true, "edges": [0, 1]}}],
  "else": [{"paint": {"ops": [{"color": "@colors.primary"}]}},
-          {"drawMesh3D": {"mesh": 1, "mode": "smooth"}}]}
+          {"drawMesh3D": {"mesh": 1, "mode": "gl-smooth"}}]}
 ```
 
 One mesh hides its own back lines. With several meshes, also fill each one with
@@ -175,10 +185,10 @@ segments so the lines stay apart.
   part (160 B when it assembles, about 35 B more for each distinct mesh). DRW-17 is 1.0 KB;
   CMP-35 (7 parts, autorotate, floor) 3.3 KB; CMP-36 (11 parts, assembly) 3.8 KB. Theme colours
   cost their usual ~100 B each.
-- **Time:** every part is rasterised in software every frame. At 1080 x 1920 (density 3) the
+- **Time:** in software every part is rasterised every frame. At 1080 x 1920 (density 3) the
   C++ player takes about 3 ms a frame for one torus, 18 ms for CMP-35 and 23 ms for CMP-36; the
   TypeScript player in Node about 6, 34 and 38 ms (it composites the window-sized buffer after
-  every mesh). Keep to about 30 parts, prefer boxes (12 triangles) to spheres and tori (300 to
+  every mesh). On a web page the `gl-*` modes take this to the GPU (see Which mode). Keep to about 30 parts, prefer boxes (12 triangles) to spheres and tori (300 to
   600), and use motion only when it explains something.
 
 ## Limits

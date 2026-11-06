@@ -972,7 +972,7 @@
            {
             "drawMesh3D": {
              "mesh": 1,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -987,7 +987,7 @@
            {
             "drawMesh3D": {
              "mesh": 2,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1002,7 +1002,7 @@
            {
             "drawMesh3D": {
              "mesh": 3,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1017,7 +1017,7 @@
            {
             "drawMesh3D": {
              "mesh": 4,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1032,7 +1032,7 @@
            {
             "drawMesh3D": {
              "mesh": 5,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1047,7 +1047,7 @@
            {
             "drawMesh3D": {
              "mesh": 6,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1062,7 +1062,7 @@
            {
             "drawMesh3D": {
              "mesh": 7,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1077,7 +1077,7 @@
            {
             "drawMesh3D": {
              "mesh": 8,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1092,7 +1092,7 @@
            {
             "drawMesh3D": {
              "mesh": 9,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {
@@ -1107,7 +1107,7 @@
            {
             "drawMesh3D": {
              "mesh": 10,
-             "mode": "software-smooth"
+             "mode": "gl-smooth"
             }
            },
            {

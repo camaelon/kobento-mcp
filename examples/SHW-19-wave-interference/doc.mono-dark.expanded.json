@@ -750,7 +750,7 @@
        {
         "drawMesh3D": {
          "mesh": 1,
-         "mode": "flat"
+         "mode": "gl-flat"
         }
        },
        {
@@ -761,7 +761,7 @@
        {
         "drawMesh3D": {
          "mesh": 2,
-         "mode": "flat"
+         "mode": "gl-flat"
         }
        },
        {
@@ -784,7 +784,7 @@
        {
         "drawMesh3D": {
          "mesh": 3,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        },
        {
@@ -803,7 +803,7 @@
        {
         "drawMesh3D": {
          "mesh": 3,
-         "mode": "smooth"
+         "mode": "gl-smooth"
         }
        }
       ]

@@ -449,7 +449,11 @@ export function generate(spec, ctx) {
     let lastColor = null;
     const paint = (c) => { if (c !== lastColor) { cmds.push({ paint: { ops: [{ color: c }] } }); lastColor = c; } };
     const draw = (id, smooth, color) => {
-        if (style === "solid" || style === "outlined") { paint(color); cmds.push({ drawMesh3D: { mesh: id, mode: smooth ? "smooth" : "flat" } }); }
+        // Solid faces go to the GPU where a player has one (gl-*: the web player's WebGL path,
+        // software elsewhere). Outlined keeps them in software: its edges are hidden-line drawn
+        // against the software depth buffer, which faces drawn on the GPU never reach.
+        const shade = style === "solid" ? (smooth ? "gl-smooth" : "gl-flat") : (smooth ? "smooth" : "flat");
+        if (style === "solid" || style === "outlined") { paint(color); cmds.push({ drawMesh3D: { mesh: id, mode: shade } }); }
         if (style === "mono") { paint(bg); cmds.push({ drawMesh3D: { mesh: id, mode: "flat" } }); }
         if (style !== "solid") { paint(style === "wireframe" ? color : lineColor); cmds.push({ drawMesh3D: { mesh: id, wireframe: true, edges: [0, 1] } }); }
     };
