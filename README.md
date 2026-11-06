@@ -44,5 +44,19 @@ npm test
 On a VPS, `sudo kobento-mcp/mcp/deploy/setup.sh DOMAIN` does all of it under `/opt/kobento`
 (see mcp/README.md, "Remote").
 
-This repository is not endorsed or supported by Google. Official RemoteCompose production code
-for Android lives in the [AndroidX repository](https://github.com/androidx/androidx/tree/androidx-main/compose/remote).
+## Not from Google
+
+Kobento is an independent implementation of RemoteCompose. It is not affiliated with, endorsed or
+supported by Google, and it comes with no support or warranty (Apache 2.0). Official RemoteCompose
+code for Android lives in the [AndroidX repository](https://github.com/androidx/androidx/tree/androidx-main/compose/remote).
+
+## The other Kobento repositories
+
+| repository | what |
+| :--- | :--- |
+| [kobento-libs](https://github.com/camaelon/kobento-libs) | the C++ engine |
+| [kobento-ts](https://github.com/camaelon/kobento-ts) | the TypeScript engine and the web player |
+| [kobento-tools](https://github.com/camaelon/kobento-tools) | json2rc, the renderers, the inspector, the Android and iOS showcase apps |
+| [kobento-desktop](https://github.com/camaelon/kobento-desktop) | the desktop player |
+| [kobento-ios](https://github.com/camaelon/kobento-ios) | the iOS engine build and viewer |
+| [kobento-mcu](https://github.com/hoford/kobento-mcu) | the microcontroller player: ESP32 boards (M5Stack Tab5, Core2, PaperS3; Waveshare round and AMOLED; Elecrow CrowPanels), STM32U5, Raspberry Pi |

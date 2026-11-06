@@ -6,7 +6,7 @@
 import { TRACE_DAYS } from "./accounts.mjs";
 
 const UPDATED = "3 November 2026";
-const REPO = "https://github.com/camaelon/remotecompose-experiments";
+const REPO = "https://github.com/camaelon/kobento-mcp";
 
 /** The footer line, linking to the notice. prefix: the path from the page to the site root. */
 export function siteFooter(prefix = "../") {

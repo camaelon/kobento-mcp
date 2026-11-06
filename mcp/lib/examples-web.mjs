@@ -580,7 +580,8 @@ code { font:13px ui-monospace,Menlo,monospace; background:var(--chip); padding:2
 <main class="landing" style="display:block">
 ${hero}
 <h1>Interfaces for RemoteCompose, built with AI.</h1>
-<p class="lead">Kobento is an implementation of RemoteCompose. It gives you ready-made components and AI tools to build RemoteCompose screens.</p>
+<p class="lead">Kobento is an independent implementation of RemoteCompose. It gives you ready-made components and AI tools to build RemoteCompose screens, and players that show them beyond Android, down to microcontrollers.</p>
+<p class="sub">Kobento is not affiliated with, endorsed or supported by Google.</p>
 <div class="go">
   <a class="primary" href="showcases/">See the showcases</a>
   <a href="components/">Browse the components</a>
@@ -596,7 +597,8 @@ ${hero}
   <li><strong>Components.</strong> ${count("basic")} basic parts (buttons, switches, sliders, tabs, cards) and ${count("advanced")} advanced ones (charts, clocks, maps, 3D). Each works in light, dark and two monochrome looks.</li>
   <li><strong>Layouts.</strong> ${count("layout")} layouts, such as a list with its detail or a dashboard grid. They adapt from a phone to a tablet.</li>
   <li><strong>AI tools.</strong> MCP servers that let Claude, ChatGPT or another assistant find the right parts, write the document, check it and show you the result.</li>
-  <li><strong>Players.</strong> A web player and a desktop player that draw the same documents, and an ${link("https://camaelon.github.io/remotecompose-experiments/inspector/", "inspector")} that shows what is inside one.</li>
+  <li><strong>Players.</strong> A web player, a desktop player and apps for Android and iOS that draw the same documents, and an <a href="inspector/">inspector</a> that shows what is inside one.</li>
+  <li><strong>Microcontrollers.</strong> A player for ESP32 boards that draws the same documents on small screens: M5Stack's Tab5, Core2 and PaperS3, Waveshare's round LCD and AMOLED, Elecrow's CrowPanels. It handles touch, knobs and buttons, and e-paper as well as colour. It also runs on an STM32U5 and on a Raspberry Pi.</li>
 </ul>
 <p>The ${showcases} showcases show what the format can do: 3D, physics, live data, morphing shapes.</p>
 
@@ -609,7 +611,18 @@ ${hero}
 <div class="go"><a class="primary" href="account/">Create an account</a></div>
 
 <h2>Open source</h2>
-<p>The code is on ${link("https://github.com/camaelon/remotecompose-experiments", "GitHub")}: the players, the components, the MCP servers and this site.</p>
+<p>The code is on GitHub, under the Apache 2.0 license:</p>
+<ul>
+  <li>${link("https://github.com/camaelon/kobento-mcp", "kobento-mcp")}: the MCP servers, the components and examples, and this site.</li>
+  <li>${link("https://github.com/camaelon/kobento-libs", "kobento-libs")}: the C++ engine.</li>
+  <li>${link("https://github.com/camaelon/kobento-ts", "kobento-ts")}: the TypeScript engine and the web player.</li>
+  <li>${link("https://github.com/camaelon/kobento-tools", "kobento-tools")}: the JSON converter, the renderers, the inspector, and the Android and iOS apps.</li>
+  <li>${link("https://github.com/camaelon/kobento-desktop", "kobento-desktop")} and ${link("https://github.com/camaelon/kobento-ios", "kobento-ios")}: the desktop and iOS players.</li>
+  <li>${link("https://github.com/hoford/kobento-mcu", "kobento-mcu")}: the microcontroller player (ESP32, STM32).</li>
+</ul>
+
+<h2>Not from Google</h2>
+<p>RemoteCompose is a format defined by Android, and Kobento follows its spec. Kobento is an independent project. It is not affiliated with, endorsed or supported by Google. Google's own RemoteCompose code is in ${link("https://github.com/androidx/androidx/tree/androidx-main/compose/remote", "androidx")}. Kobento is provided as is, with no support or warranty.</p>
 </main>
 ${siteFooter("")}
 </body></html>`;
