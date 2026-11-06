@@ -10,7 +10,7 @@ const REPO = "https://github.com/camaelon/kobento-mcp";
 
 /** The footer line, linking to the notice. prefix: the path from the page to the site root. */
 export function siteFooter(prefix = "../") {
-    return `<footer class="site-foot"><a href="${prefix}privacy/">Privacy</a> · <a href="${REPO}">Source</a></footer>`;
+    return `<footer class="site-foot"><a href="${prefix}about/">How it fits</a> · <a href="${prefix}tools/">Tools</a> · <a href="${prefix}status/">Status</a> · <a href="${prefix}privacy/">Privacy</a> · <a href="${REPO}">Source</a></footer>`;
 }
 
 export const FOOTER_CSS = `.site-foot{max-width:1100px;margin:48px auto 24px;padding:16px;border-top:1px solid color-mix(in srgb,currentColor 15%,transparent);font-size:13px;opacity:.7;text-align:center}

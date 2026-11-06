@@ -1,5 +1,9 @@
 # kobento-mcp
 
+> Part of [Kobento](https://mcp.kobento.dev/), an independent implementation of RemoteCompose, not affiliated
+> with Google. [How the repositories fit together](https://mcp.kobento.dev/about/) ·
+> [Status and known gaps](https://mcp.kobento.dev/status/)
+
 Kobento MCP services: the [Model Context Protocol](https://modelcontextprotocol.io) servers that
 let an agent write, convert, render, inspect and publish
 [RemoteCompose](https://github.com/androidx/androidx/tree/androidx-main/compose/remote)
@@ -52,11 +56,6 @@ code for Android lives in the [AndroidX repository](https://github.com/androidx/
 
 ## The other Kobento repositories
 
-| repository | what |
-| :--- | :--- |
-| [kobento-libs](https://github.com/camaelon/kobento-libs) | the C++ engine |
-| [kobento-ts](https://github.com/camaelon/kobento-ts) | the TypeScript engine and the web player |
-| [kobento-tools](https://github.com/camaelon/kobento-tools) | json2rc, the renderers, the inspector, the Android and iOS showcase apps |
-| [kobento-desktop](https://github.com/camaelon/kobento-desktop) | the desktop player |
-| [kobento-ios](https://github.com/camaelon/kobento-ios) | the iOS engine build and viewer |
-| [kobento-mcu](https://github.com/hoford/kobento-mcu) | the microcontroller player: ESP32 boards (M5Stack Tab5, Core2, PaperS3; Waveshare round and AMOLED; Elecrow CrowPanels), STM32U5, Raspberry Pi |
+The engines, players and tools are in six sibling repositories. The one map of all of them, with
+what each holds and builds on, is [How Kobento fits together](https://mcp.kobento.dev/about/)
+(`mcp/lib/about-web.mjs`).

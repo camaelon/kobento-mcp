@@ -3,7 +3,7 @@
  "name": "watch-face",
  "version": 1,
  "title": "A premium analog watch face with steps, battery and an always-on mode",
- "summary": "A 227x227 round watch face drawn in 3.5 KB: faceted dauphine hands with drop shadows, a smooth sweeping second hand with a counterweight, exact 60-minute track and hour batons from two loops, a steps ring from host variables at nine, a battery ring from the system battery at three (amber below 40%, red with LOW below 20%), and the weekday and date at six. The always-on (mono) look drops the second hand, the gradient and the colour, and outlines the hands.",
+ "summary": "A 227x227 round watch face: faceted dauphine hands with drop shadows, a smooth sweeping second hand with a counterweight, exact 60-minute track and hour batons from two loops, a steps ring from host variables at nine, a battery ring from the system battery at three (amber below 40%, red with LOW below 20%), and the weekday and date at six. The always-on (mono) look drops the second hand, the gradient and the colour, and outlines the hands.",
  "prompt": "Design a premium round watch face (227x227, it should scale to any round watch): analog hands with a smooth second hand, the date, a battery arc from the system battery that turns red when low, my steps as a ring from a host value, and an always-on mode.",
  "level": 5,
  "family": "SHW",

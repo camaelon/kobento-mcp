@@ -48,6 +48,7 @@ import { featuredSection, STREAM_CSS, streamRoute } from "./stream-web.mjs";
 import { compileAppScript, scriptsOffered } from "./app-script.mjs";
 import { oauthRoute } from "./oauth.mjs";
 import { FOOTER_CSS, privacyPage, siteFooter } from "./privacy-web.mjs";
+import { aboutPage, statusPage, toolsPage } from "./about-web.mjs";
 import { accountsEnabled, requestAccount } from "./accounts.mjs";
 import { INSPECTOR } from "./siblings.mjs";
 
@@ -477,7 +478,7 @@ function examplesPage(showcases = false, { generated: withGenerated = true, lead
     if (gen.length && !families.includes("GEN")) families.push("GEN");
     const badge = "The badge is the size of the .rc document a device downloads (green under 8 KB, amber under 24 KB, red above). Click one to open it in the playground.";
     return page({
-        title: showcases ? "RemoteCompose showcases" : "RemoteCompose demos", current: showcases ? "showcases" : "demos", families, cards,
+        title: showcases ? "Kobento showcases" : "Kobento demos", current: showcases ? "showcases" : "demos", families, cards,
         modes: list.some((e) => e.derived?.renders), generated: gen.length, kinds: !showcases, sizes: true, lead,
         sub: showcases
             ? `${list.length} showcases: what the format can do (3D, shaders, particles, physics, morphing, live data), each in light, dark and both monochrome looks. ${badge} To remix one, ask an agent connected to Kobento's MCP server: “Get SHW-23 from Kobento and turn it into a pinball table.”`
@@ -576,7 +577,7 @@ async function landingPage() {
         try { return `img/${ex.id}/${name}.png?v=${statSync(path.join(EXAMPLES_DIR, ex.folder, `render-${name}.png`)).mtimeMs.toString(36).replace(".", "")}`; } catch { return null; }
     };
     const [light, arrival] = ex ? [shot("home-light"), shot("home-arrival")] : [];
-    const kb = ex?.derived?.bytes ? `about ${Math.round(ex.derived.bytes / 1000)} KB` : "a few KB";
+    const kb = ex?.derived?.bytes ? `about ${Math.round(ex.derived.bytes / 1024)} KB` : "a few KB";
     const example = light && arrival ? `<h3>For example</h3>
 <blockquote class="ask">${esc(ex.prompt)}</blockquote>
 <div class="shots">
@@ -630,13 +631,13 @@ ${hero}
 <ul>
   <li><strong>Components.</strong> ${count("basic")} basic parts (buttons, switches, sliders, tabs, cards) and ${count("advanced")} advanced ones (charts, clocks, maps, 3D). Each works in light, dark and two monochrome looks.</li>
   <li><strong>Layouts.</strong> ${count("layout")} layouts, such as a list with its detail or a dashboard grid. They adapt from a phone to a tablet.</li>
-  <li><strong>AI tools.</strong> MCP servers that let Claude, ChatGPT or another assistant find the right parts, write the document, check it and show you the result.</li>
+  <li><strong>AI tools.</strong> MCP servers that let Claude, ChatGPT or another assistant find the right parts (<code>build_kit</code>), write the document, render it (<code>render_rc</code>), check it (<code>audit</code>, <code>try_controls</code>) and publish it as a page (<code>package_web</code>). <a href="tools/">Every tool</a>.</li>
   <li><strong>Players.</strong> A web player, a desktop player and apps for Android and iOS that draw the same documents, and an <a href="inspector/">inspector</a> that shows what is inside one.</li>
   <li><strong>Microcontrollers.</strong> A player for ESP32 boards that draws the same documents on small screens: M5Stack's Tab5, Core2 and PaperS3, Waveshare's round LCD and AMOLED, Elecrow's CrowPanels. It handles touch, knobs and buttons, and e-paper as well as colour. It also runs on an STM32U5 and on a Raspberry Pi.</li>
 </ul>
 <p>The ${showcases} showcases show what the format can do: 3D, physics, live data, morphing shapes.</p>
 
-<h2>How to use it</h2>
+<h2 id="how">How to use it</h2>
 <ol>
   <li><a href="account/">Create an account</a>. We email you a link to confirm your address, and you get access to the MCP servers.</li>
   <li>Add Kobento to your assistant. In claude.ai or ChatGPT, add a custom connector with the URL <code>${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then sign in when asked. In Claude Code, run <code>claude mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>. In the Gemini CLI, run <code>gemini mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then <code>/mcp auth kobento</code> to sign in.</li>
@@ -645,19 +646,18 @@ ${hero}
 ${example}
 <div class="go"><a class="primary" href="account/">Create an account</a></div>
 
+<h2 id="by-hand">Or write it by hand</h2>
+<p>A document is JSON that converts to a <code>.rc</code> file. Every example on this site shows its JSON: open one and press <b>Expanded JSON</b> for the plain JSON the converter reads (the <b>JSON</b> button shows it as written, with calls to library components). Change it, then convert it with json2rc:</p>
+<pre><code>git clone https://github.com/camaelon/kobento-tools
+node kobento-tools/json2rc/build/cli.js screen.json screen.rc</code></pre>
+<p>Open the <code>.rc</code> in the <a href="inspector/">inspector</a>, which plays it and shows what is inside, or in the desktop player. To write components of your own, read ${link("https://github.com/camaelon/kobento-mcp/blob/main/docs/COMPONENT_AUTHORING.md", "the component guide")}; for 3D, ${link("https://github.com/camaelon/kobento-mcp/blob/main/docs/GUIDE_3D.md", "the 3D guide")}.</p>
+
 <h2>Open source</h2>
-<p>The code is on GitHub, under the Apache 2.0 license:</p>
-<ul>
-  <li>${link("https://github.com/camaelon/kobento-mcp", "kobento-mcp")}: the MCP servers, the components and examples, and this site.</li>
-  <li>${link("https://github.com/camaelon/kobento-libs", "kobento-libs")}: the C++ engine.</li>
-  <li>${link("https://github.com/camaelon/kobento-ts", "kobento-ts")}: the TypeScript engine and the web player.</li>
-  <li>${link("https://github.com/camaelon/kobento-tools", "kobento-tools")}: the JSON converter, the renderers, the inspector, and the Android and iOS apps.</li>
-  <li>${link("https://github.com/camaelon/kobento-desktop", "kobento-desktop")} and ${link("https://github.com/camaelon/kobento-ios", "kobento-ios")}: the desktop and iOS players.</li>
-  <li>${link("https://github.com/hoford/kobento-mcu", "kobento-mcu")}: the microcontroller player (ESP32, STM32).</li>
-</ul>
+<p>The code is on GitHub, under the Apache 2.0 license, in seven repositories: the engines, the players, the tools, and the MCP servers with this site. <a href="about/">How they fit together</a>.</p>
 
 <h2>Not from Google</h2>
 <p>RemoteCompose is a format defined by Android, and Kobento follows its spec. Kobento is an independent project. It is not affiliated with, endorsed or supported by Google. Google's own RemoteCompose code is in ${link("https://github.com/androidx/androidx/tree/androidx-main/compose/remote", "androidx")}. Kobento is provided as is, with no support or warranty.</p>
+<p>It is pre-1.0. <a href="status/">What is measured, and what does not work yet</a>.</p>
 </main>
 ${siteFooter("")}
 </body></html>`;
@@ -730,7 +730,7 @@ export async function publicRoute(req, url, res) {
     const seesGenerated = async () => !accountsEnabled() || Boolean((await requestAccount(req).catch(() => null))?.admin);
     if (/^\/(play|img|thumb|json|rc)\/GEN-/.test(url.pathname) && !(await seesGenerated())) return send(req, res, 404, "text/plain", "not found\n");
     if (await oauthRoute(req, url, res, { css: CSS, nav: siteNav })) return true;
-    const known = p === "/" || p === "" || /^\/(components|advanced|layouts|structures|showcases|demos|examples|privacy|play|img|thumb|json|rc|inspector)(\/|$)/.test(p);
+    const known = p === "/" || p === "" || /^\/(components|advanced|layouts|structures|showcases|demos|examples|privacy|about|tools|status|play|img|thumb|json|rc|inspector)(\/|$)/.test(p);
     if (!known) return false;
     if (req.method !== "GET" && req.method !== "HEAD") {
         res.writeHead(405, { Allow: "GET, HEAD" });
@@ -767,6 +767,16 @@ export async function publicRoute(req, url, res) {
         if (p === `/${route}/`) return send(req, res, 200, "text/html; charset=utf-8", await render(), { "Cache-Control": "private, no-cache" });
     }
     if (p === "/privacy") { res.writeHead(301, { Location: `privacy/${url.search}` }); res.end(); return true; }
+    for (const name of ["about", "tools", "status"]) {
+        if (p === `/${name}`) { res.writeHead(301, { Location: `${name}/${url.search}` }); res.end(); return true; }
+    }
+    const site = { css: CSS, nav: siteNav, fonts: FONTS };
+    if (p === "/about/") return send(req, res, 200, "text/html; charset=utf-8", aboutPage(site));
+    if (p === "/tools/") return send(req, res, 200, "text/html; charset=utf-8", await toolsPage(site, process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp"));
+    if (p === "/status/") {
+        const C = loadCatalog();
+        return send(req, res, 200, "text/html; charset=utf-8", statusPage(site, { examples: C.examples.length, javaIdentical: C.examples.filter((e) => e.derived?.java_identical === true).length }));
+    }
     if (p === "/privacy/") return send(req, res, 200, "text/html; charset=utf-8", privacyPage({ css: CSS, nav: siteNav, fonts: FONTS }));
     if (p === "/structures") { res.writeHead(301, { Location: `structures/${url.search}` }); res.end(); return true; }
     if (p === "/structures/") return send(req, res, 200, "text/html; charset=utf-8", structuresPage());

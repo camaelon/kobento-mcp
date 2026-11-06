@@ -724,9 +724,36 @@ function audit() {
                 if (e && (!longest || e.length > longest.entries)) longest = { index: idxOf(op), entries: e.length, name: `path expression (${axis})` };
             }
         }
+        // Particle equations as well: ParticlesCreate's initial values and ParticlesLoop's restart
+        // and equations at 32 entries, ParticlesCompare's condition and equations at 46. A
+        // longer one stops Android loading the document ("34 map entries more than max = 32").
+        const particleFields = [["ParticlesCreate", 32, [["mEquations", "initial value"]]],
+            ["ParticlesLoop", 32, [["mRestart", "restart"], ["mEquations", "equation"]]],
+            ["ParticlesCompare", 46, [["mCondition", "condition"], ["mEquations1", "then1"], ["mEquations2", "then2"]]]];
+        // The flat list stops at an impulse: the loops it runs are in its process (mProcess.mList).
+        const withImpulses = [];
+        const seenOps = new Set();
+        const visitOp = (op) => {
+            if (!op || seenOps.has(op)) return;
+            seenOps.add(op); withImpulses.push(op);
+            for (const k of [op.mList, op.mProcess?.mList]) if (Array.isArray(k)) k.forEach(visitOp);
+        };
+        ops.forEach(visitOp);
+        for (const op of withImpulses) {
+            const kind = particleFields.find(([n]) => nameOf(op).includes(n));
+            if (!kind) continue;
+            const [n, max, fields] = kind;
+            for (const [field, what] of fields) {
+                const v = op[field];
+                const list = !v ? [] : Array.isArray(v) ? v : [v];
+                list.forEach((e, i) => {
+                    if (e && e.length > max) long.push({ ...(idxOf(op) !== null ? { index: idxOf(op) } : {}), entries: e.length, max, expression: `${n} ${what}${Array.isArray(v) ? `[${i}]` : ""}` });
+                });
+            }
+        }
         if (long.length) add("warning", "expression_too_long",
-            `${long.length} expression(s) longer than 32 entries`,
-            `Android rejects a float or path expression over 32 entries (operands and operators); the document fails to load there although it renders here. Longest: ${Math.max(...long.map((l) => l.entries))} entries. ` +
+            `${long.length} expression(s) longer than Android allows`,
+            `Android rejects a float, path or particle expression over 32 entries (operands and operators; 46 in a particle comparison): the document fails to load there although it renders here. Longest: ${Math.max(...long.map((l) => l.entries))} entries. ` +
             "Split it: compute parts into named `variable`s (or resources.variables) and combine them.",
             { count: long.length, examples: long.slice(0, 5) });
     } catch {}

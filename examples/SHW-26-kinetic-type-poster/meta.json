@@ -3,7 +3,7 @@
  "name": "kinetic-type-poster",
  "version": 1,
  "title": "A festival poster where the type moves",
- "summary": "A Swiss-style concert poster on one canvas: ECHO in huge letters that drop in one after another with an overshoot and then breathe, five red outline echoes trailing beneath them, a red disc beating inside a ring of text that turns, sound rings spreading past the edges, a sentence flowing along a moving sine wave, and a tilted black band with the dates scrolling. Light (warm paper), a designed dark look (night paper, cream type) and two still mono looks. About 4.2 KB.",
+ "summary": "A Swiss-style concert poster on one canvas: ECHO in huge letters that drop in one after another with an overshoot and then breathe, five red outline echoes trailing beneath them, a red disc beating inside a ring of text that turns, sound rings spreading past the edges, a sentence flowing along a moving sine wave, and a tilted black band with the dates scrolling. Light (warm paper), a designed dark look (night paper, cream type) and two still mono looks.",
  "prompt": "Make a typographic poster that moves, like a concert poster: a big headline whose letters animate in one after another, text running along a curve that flows, a scrolling band with the dates, and a strong graphic design.",
  "level": 4,
  "family": "SHW",
