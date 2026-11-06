@@ -172,6 +172,12 @@ Anyone who has that URL can use the server, so treat it like a password.
   - **Claude Code**: `claude mcp add --transport http kobento https://<domain>/mcp`, then
     run `/mcp` in Claude Code and pick the server to authenticate in the browser.
   - Clients that take no OAuth still use a token: header, or `https://<domain>/mcp/<token>`.
+  - **Mobile apps** (kobento-tools/android; an iOS app the same way): the sign-in page in the
+    system browser (a Custom Tab, `ASWebAuthenticationSession`), PKCE, and the answer on the
+    app's own reverse-domain scheme (`dev.kobento.showcases:/oauth`, RFC 8252 7.1), which
+    registration accepts beside https and loopback http. Someone signed in on the website in
+    that browser only sees the Allow page. The app then lists its account's pages with
+    `GET /deploy/pages.json` (below).
   Env: `RC_PUBLIC_ORIGIN` (the public origin, set by setup.sh), `RC_MOUNT` (each server's
   path under it, also set by setup.sh); locally both default to the request's own origin.
 - **Email.** Registration creates a *pending* account and emails a confirmation link
@@ -532,6 +538,14 @@ the token**: anyone with the link can open the page, and the 128-bit random id m
 unguessable. Published pages are not pruned. Manage them with `list_pages` and
 `unpublish_page`, which deletes a page and stops its link working immediately. Pages are
 served with `noindex`, `nosniff` and `no-referrer`.
+
+**Your pages, for an app.** With accounts on, `MCP_PUBLIC_URL/pages.json` lists the caller's
+own pages as JSON: the account (email, name), then each page's id, title, `url`, `rc_url` (its
+document, `<page>/document.rc`), `preview_url`, created/updated, `rc_bytes`, document size and
+stream entry, newest first. The caller is named by `Authorization: Bearer` with an OAuth
+access token (`rco_`, what the Android app holds) or an account token (`rc_`), or by the
+website's session cookie; anything else gets a 401. Only the caller's own pages, even for an
+admin. The pages and their `.rc` stay public as before.
 
 **Page index.** `https://DOMAIN/pages` (also `MCP_PUBLIC_URL/pages/`) is a public,
 token-free list of every published page: title, source, kind (playground or bare player),

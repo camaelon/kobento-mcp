@@ -59,15 +59,27 @@ export function knownResource(r, req) {
     return !publicOrigin() && isLocalHost(u.hostname) && /\/mcp$/.test(u.pathname);
 }
 
-/** RFC 7591 redirect URIs: https, or http on the loopback host (native apps, Claude Code, the Inspector); no fragment. */
+// A private-use URI scheme (RFC 8252 7.1): a reverse domain name the app owns, so it has a dot
+// ("dev.kobento.showcases:/oauth"). The dot also keeps out javascript:, data:, file: and the like.
+const PRIVATE_SCHEME = /^[a-z][a-z0-9+-]*(\.[a-z0-9+-]+)+:$/;
+
+/**
+ * RFC 7591 redirect URIs: https; http on the loopback host (Claude Code, the Inspector); or a
+ * native app's private-use scheme (RFC 8252 7.1: an Android or iOS app's reverse-domain scheme;
+ * PKCE, required here, is what protects its codes). No fragment, no credentials.
+ */
 export function validRedirectUri(uri) {
     if (typeof uri !== "string" || uri.length > 2000) return false;
     let u;
     try { u = new URL(uri); } catch { return false; }
     if (u.hash || u.username || u.password) return false;
     if (u.protocol === "https:") return true;
-    return u.protocol === "http:" && isLocalHost(u.hostname);
+    if (u.protocol === "http:") return isLocalHost(u.hostname);
+    return PRIVATE_SCHEME.test(u.protocol);
 }
+
+/** What a form-action may name to let the consent form redirect there: an origin, or a private scheme. */
+const formTarget = (uri) => { const u = new URL(uri); return /^https?:$/.test(u.protocol) ? u.origin : u.protocol; };
 
 /** PKCE S256: BASE64URL(SHA256(verifier)) == challenge; the verifier is 43-128 unreserved characters. */
 export function verifyPkce(verifier, challenge) {
@@ -171,7 +183,7 @@ async function register(req, res, store) {
     const uris = meta.redirect_uris;
     if (!Array.isArray(uris) || !uris.length || uris.length > 10) return oauthError(res, 400, "invalid_redirect_uri", "redirect_uris: one to ten URIs");
     const bad = uris.find((u) => !validRedirectUri(u));
-    if (bad !== undefined) return oauthError(res, 400, "invalid_redirect_uri", `not allowed: ${String(bad).slice(0, 200)} (https, or http on localhost / 127.0.0.1)`);
+    if (bad !== undefined) return oauthError(res, 400, "invalid_redirect_uri", `not allowed: ${String(bad).slice(0, 200)} (https, http on localhost / 127.0.0.1, or an app's reverse-domain scheme such as com.example.app:/oauth)`);
     const grants = meta.grant_types ?? ["authorization_code", "refresh_token"];
     if (!Array.isArray(grants) || grants.some((g) => !["authorization_code", "refresh_token"].includes(g))) {
         return oauthError(res, 400, "invalid_client_metadata", "grant_types: authorization_code and refresh_token only");
@@ -222,12 +234,14 @@ function checkAuthorize(q, store, req) {
 const PARAMS = ["response_type", "client_id", "redirect_uri", "code_challenge", "code_challenge_method", "state", "scope", "resource"];
 
 function consentPage({ client, redirectUri, acct, q, sid }) {
-    const host = new URL(redirectUri).host;
+    // Where the answer goes: a website's host, or the app itself for its own scheme (an Android or iOS app).
+    const u = new URL(redirectUri);
+    const back = /^https?:$/.test(u.protocol) ? `<b>${esc(u.host)}</b>` : `the app (<b>${esc(u.protocol.slice(0, -1))}</b>)`;
     const hidden = PARAMS.filter((k) => q.get(k) != null).map((k) => `<input type="hidden" name="${k}" value="${esc(q.get(k))}">`).join("");
     return `<section class="panel consent">
 <h2>${esc(client.name || "An app")} wants to use your RemoteCompose account</h2>
 <p>It will be able to call the RemoteCompose MCP tools (build, render, inspect, publish pages, …) as <b>${esc(acct.email)}</b>. Its calls count in your usage and the pages it publishes are yours.</p>
-<p class="muted">After you allow it you go back to <b>${esc(host)}</b>. You can disconnect it at any time under Connected apps on your account page.</p>
+<p class="muted">After you allow it you go back to ${back}. You can disconnect it at any time under Connected apps on your account page.</p>
 <form class="row" method="post" action="authorize" style="margin-top:14px">${hidden}<input type="hidden" name="csrf" value="${csrfFor(sid)}">
 <button class="btn" type="submit" name="decision" value="allow">Allow</button>
 <button class="link" type="submit" name="decision" value="deny" style="padding:7px 14px">Deny</button></form>
@@ -250,7 +264,7 @@ async function authorize(req, url, res, store, site) {
             return redirect(res, "../account/", { "Set-Cookie": `${NEXT_COOKIE}=${encodeURIComponent(next)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=1800${isHttps(req) ? "; Secure" : ""}` });
         }
         // The form posts here, and the answer redirects to the app: the CSP must allow that target.
-        const target = new URL(c.ok.redirectUri).origin;
+        const target = formTarget(c.ok.redirectUri);
         return render(200, "Connect an app", "Allow it to use the RemoteCompose MCP servers as you?", consentPage({ ...c.ok, acct, q, sid }),
             { "Content-Security-Policy": HEADERS["Content-Security-Policy"].replace("form-action 'self'", `form-action 'self' ${target}`) });
     }

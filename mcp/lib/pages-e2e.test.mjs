@@ -60,6 +60,7 @@ test("pages: list, get, replace in place, share, unshare, unpublish", { skip: !e
             return { error: r.isError === true, text: r.content.map((x) => x.text ?? "").join("\n") };
         };
         call.sid = sid;
+        call.token = token;
         return call;
     }
     const a = await account("a@example.com", "Ada");
@@ -80,6 +81,24 @@ test("pages: list, get, replace in place, share, unshare, unpublish", { skip: !e
     const rc = await fetch(got.rc_url);
     assert.equal(rc.status, 200);
     assert.ok(Buffer.from(await rc.arrayBuffer()).toString("latin1").includes("Version one"));
+
+    // pages.json, what the Android app lists: the caller's own pages, by bearer token or session cookie.
+    const pj = (headers) => fetch(`${base}/pages.json`, { headers });
+    let pr = await pj({ Authorization: `Bearer ${a.token}` });
+    assert.equal(pr.status, 200);
+    assert.match(pr.headers.get("cache-control"), /no-store/);
+    let pjs = await pr.json();
+    assert.equal(pjs.account.email, "a@example.com");
+    assert.deepEqual(pjs.pages.map((p) => [p.id, p.title]), [[id, "One"]]);
+    assert.equal(pjs.pages[0].rc_url, `${base}/pages/${id}/document.rc`);
+    assert.equal((await fetch(pjs.pages[0].rc_url)).status, 200);
+    assert.ok(pjs.pages[0].rc_bytes > 0 && pjs.pages[0].document.width > 0);
+    assert.deepEqual((await (await pj({ Cookie: `rc_session=${a.sid}` })).json()).pages.map((p) => p.id), [id], "the session cookie too");
+    assert.deepEqual((await (await pj({ Authorization: `Bearer ${b.token}` })).json()).pages, [], "someone else's are not listed");
+    pr = await pj({});
+    assert.equal(pr.status, 401);
+    assert.match(pr.headers.get("www-authenticate"), /^Bearer/);
+    assert.equal((await pj({ Authorization: "Bearer rc_wrong" })).status, 401);
 
     // Edit the copy and publish it in place: the same id and URL, the new document.
     const copy = path.join(root, got.json_path);

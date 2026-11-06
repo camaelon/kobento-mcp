@@ -208,6 +208,28 @@ test("OAuth: discover, register, sign in, consent, code, token, call, refresh, r
     assert.equal((await B.post(`${S.auth}/account/apps/${appId}/revoke`, { csrf })).status, 303);
     assert.equal((await rpc(mcp, t5.access_token)).status, 401, "disconnected from the account page");
 
+    // A native app (kobento-tools/android): its reverse-domain scheme as the redirect, the consent
+    // form allowed to send the answer there, and the code coming back on it.
+    const appUri = "dev.kobento.showcases:/oauth";
+    const appReg = await fetch(as.registration_endpoint, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ client_name: "Kobento showcases (Android)", redirect_uris: [appUri], token_endpoint_auth_method: "none" }) });
+    assert.equal(appReg.status, 201);
+    const app = await appReg.json();
+    const appConsent = await B.get(`${as.authorization_endpoint}?${new URLSearchParams({ response_type: "code", client_id: app.client_id,
+        redirect_uri: appUri, code_challenge: challenge, code_challenge_method: "S256", state: "app-1", scope: "mcp" })}`);
+    assert.equal(appConsent.status, 200);
+    assert.match(appConsent.headers.get("content-security-policy"), /form-action 'self' dev\.kobento\.showcases:;/);
+    const appPage = await appConsent.text();
+    assert.match(appPage, /go back to the app \(<b>dev\.kobento\.showcases<\/b>\)/);
+    const appFields = Object.fromEntries([...appPage.matchAll(/<input type="hidden" name="([^"]+)" value="([^"]*)">/g)].map((m) => [m[1], m[2].replaceAll("&amp;", "&")]));
+    const appBack = new URL((await B.post(as.authorization_endpoint, { ...appFields, decision: "allow" })).headers.get("location"));
+    assert.equal(`${appBack.protocol}${appBack.pathname}`, appUri);
+    assert.equal(appBack.searchParams.get("state"), "app-1");
+    const appTok = await form(as.token_endpoint, { client_id: app.client_id, grant_type: "authorization_code",
+        code: appBack.searchParams.get("code"), redirect_uri: appUri, code_verifier: verifier });
+    assert.equal(appTok.status, 200);
+    assert.match((await appTok.json()).access_token, /^rco_/);
+
     // Nothing secret in the logs.
     for (const s of [t2.access_token, t2.refresh_token, code3, verifier, rcToken]) assert.ok(!S.logs.a.includes(s) && !S.logs.r.includes(s));
 });

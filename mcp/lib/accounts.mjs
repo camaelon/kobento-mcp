@@ -911,6 +911,22 @@ export async function requestAccount(req) {
     return store && sid ? store.sessionAccount(sid) : null;
 }
 
+/**
+ * Who an app's request acts for: "Authorization: Bearer <token>" with an OAuth access token
+ * ("rco_...", what the Android app holds) or an account token ("rc_..."), else the website's
+ * session cookie. {account}, {disabled: reason} for a known but unusable account, or null.
+ */
+export async function bearerAccount(req) {
+    const store = await accounts();
+    if (!store) return null;
+    const m = /^Bearer\s+(\S+)\s*$/i.exec(String(req.headers.authorization ?? ""));
+    if (!m) { const a = await requestAccount(req); return a ? { account: a } : null; }
+    const found = m[1].startsWith("rco_") ? store.authenticateAccess(m[1]) : store.authenticate(m[1]);
+    if (found?.account) return { account: found.account };
+    if (found?.disabled) return { disabled: found.pending ? "this account's email is not confirmed yet" : "this account is disabled" };
+    return null;
+}
+
 /** A form's anti-CSRF value, tied to the session (unguessable without the cookie). */
 export const csrfFor = (sid) => sha256("csrf|" + sid).slice(0, 32);
 

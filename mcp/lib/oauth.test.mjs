@@ -22,10 +22,12 @@ test("PKCE S256: the RFC 7636 example, and what fails", () => {
     assert.equal(verifyPkce(verifier, challenge), true);
 });
 
-test("redirect URI rules: https, or http on loopback; no fragments or credentials", () => {
+test("redirect URI rules: https, http on loopback, or an app's reverse-domain scheme; no fragments or credentials", () => {
     for (const ok of ["https://claude.ai/api/mcp/auth_callback", "https://chatgpt.com/connector_platform_oauth_redirect",
-        "http://localhost:6274/oauth/callback", "http://127.0.0.1:33418/callback", "http://[::1]:8080/cb"]) assert.ok(validRedirectUri(ok), ok);
+        "http://localhost:6274/oauth/callback", "http://127.0.0.1:33418/callback", "http://[::1]:8080/cb",
+        "dev.kobento.showcases:/oauth", "com.example.app:/oauth2redirect/provider", "com.example.app://cb"]) assert.ok(validRedirectUri(ok), ok);
     for (const bad of ["http://example.com/cb", "https://x/cb#frag", "javascript:alert(1)", "ftp://x/", "cursor://cb",
+        "data:text/html,x", "file:///etc/passwd", "dev.kobento.showcases:/oauth#f",
         "https://user:pw@x/cb", "not a url", "", 42]) assert.ok(!validRedirectUri(bad), String(bad));
 });
 

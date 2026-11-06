@@ -26,7 +26,7 @@ import { loadLibrary, usesComponents } from "./lib/components.mjs";
 import { DOCUMENT_PROPS, prepareDocument } from "./lib/document.mjs";
 import { compileComponents, jsonToRc } from "./lib/json2rc.mjs";
 import { currentCall, isMain, serve } from "./lib/mcp-server.mjs";
-import { accounts, accountsEnabled, MAX_TAGS, requestAccount } from "./lib/accounts.mjs";
+import { accounts, accountsEnabled, bearerAccount, MAX_TAGS, requestAccount } from "./lib/accounts.mjs";
 import { checkReport, runRc2image } from "./lib/rc2image.mjs";
 import { keptPng } from "./lib/trace-images.mjs";
 import { PAGE_CARD_CSS, pageCards } from "./lib/page-cards.mjs";
@@ -268,6 +268,40 @@ function sendFile(req, res, file, type, cache, rewrite = null) {
     return true;
 }
 
+/**
+ * GET <base>/pages.json — the caller's own pages, for an app (kobento-tools/android): the account,
+ * then each page with its URLs (the page, its document as an .rc, its preview), size, document
+ * size and stream entry, newest first. "Authorization: Bearer <token>" (an OAuth access token or
+ * an account token) or the website's session cookie. Only the caller's own, even for an admin.
+ */
+async function pagesJson(req, res) {
+    const send = (status, body, extra = {}) => {
+        const buf = Buffer.from(JSON.stringify(body));
+        res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Content-Length": buf.length,
+            "Cache-Control": "private, no-store", "Vary": "Authorization, Cookie", "X-Content-Type-Options": "nosniff", ...extra });
+        res.end(req.method === "HEAD" ? undefined : buf);
+        return true;
+    };
+    if (req.method !== "GET" && req.method !== "HEAD") return send(405, { error: "GET only" }, { Allow: "GET, HEAD" });
+    if (!ACCOUNTS || !CAN_PUBLISH) return send(404, { error: "this server has no accounts or does not publish pages" });
+    const who = await bearerAccount(req);
+    if (!who?.account) {
+        return send(401, { error: `unauthorized: ${who?.disabled ?? "sign in, and send Authorization: Bearer <token>"}` },
+            { "WWW-Authenticate": `Bearer realm="pages"${req.headers.authorization ? ', error="invalid_token"' : ""}` });
+    }
+    const acct = who.account;
+    const store = await accounts();
+    const pages = publishedPages().filter((p) => p.owner != null && p.owner === acct.id).map((p) => {
+        const it = store?.streamItem(p.id);
+        return {
+            id: p.id, title: p.title, url: p.url, rc_url: `${p.url}document.rc`, preview_url: p.preview ? `${p.url}preview.png` : null,
+            created: p.created, ...(p.updated ? { updated: p.updated } : {}), rc_bytes: p.rc_bytes ?? null,
+            document: p.document ?? null, ...(it ? { stream: { title: it.title, score: it.score, tags: it.tags } } : {}),
+        };
+    });
+    return send(200, { account: { email: acct.email, name: acct.name ?? null }, pages });
+}
+
 async function publicRoute(req, url, res) {
     // The shared player script: named by its hash, so it never changes and caches for good.
     const pm = /^\/pages\/_player\/([0-9a-f]{16}\.js)$/.exec(url.pathname);
@@ -303,6 +337,7 @@ async function publicRoute(req, url, res) {
         res.end(req.method === "HEAD" ? undefined : bytes);
         return true;
     }
+    if (url.pathname === "/pages.json") return pagesJson(req, res);
     if (PAGE_INDEX && PAGES_DIR && (url.pathname === "/pages" || url.pathname === "/pages/")) {
         if (req.method !== "GET" && req.method !== "HEAD") {
             res.writeHead(405, { Allow: "GET, HEAD" });
