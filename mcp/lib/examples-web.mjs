@@ -581,8 +581,8 @@ async function landingPage() {
     const example = light && arrival ? `<h3>For example</h3>
 <blockquote class="ask">${esc(ex.prompt)}</blockquote>
 <div class="shots">
-  <figure><img src="${light}" width="720" height="560" alt="A card titled LHR to JFK with a slider and 4 h 38 left beside it, over a map of the North Atlantic with the route arching from London to New York and the plane on it a little under halfway, in the light theme."><figcaption>What comes back: the route, the plane, the time left and the slider.</figcaption></figure>
-  <figure><img src="${arrival}" width="720" height="560" alt="The same card in the dark theme, the slider near its end with 0 h 24 left, the plane almost at New York."><figcaption>Drag the slider and the plane flies, the time left counting down. Or the app sends the progress. Here in dark mode, nearly landed.</figcaption></figure>
+  <figure><img src="${light}" width="720" height="560" alt="A card titled JFK to LHR with a slider and 4 h 38 left beside it, over a map of the North Atlantic with the route arching from New York to London and the plane on it a little under halfway, in the light theme."><figcaption>What comes back: the route, the plane, the time left and the slider.</figcaption></figure>
+  <figure><img src="${arrival}" width="720" height="560" alt="The same card in the dark theme, the slider near its end with 0 h 24 left, the plane almost at London."><figcaption>Drag the slider and the plane flies, the time left counting down. Or the app sends the progress. Here in dark mode, nearly landed.</figcaption></figure>
 </div>
 <p>The whole card is ${kb}. It follows the light or dark theme, and lays out again at any size. <a href="play/${ex.id}/">Play with it</a>.</p>` : "";
     return `<!doctype html>

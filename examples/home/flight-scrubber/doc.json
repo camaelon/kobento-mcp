@@ -4,7 +4,7 @@
   "width": 360,
   "height": 280,
   "profiles": 513,
-  "contentDescription": "Flight tracker: London to New York on a map of the North Atlantic, the plane at the flight's progress along the great-circle route, with a slider to scrub through the flight and the time left"
+  "contentDescription": "Flight tracker: New York to London on a map of the North Atlantic, the plane at the flight's progress along the great-circle route, with a slider to scrub through the flight and the time left"
  },
  "resources": {
   "variables": {
@@ -21,7 +21,7 @@
       20,
       65
      ],
-     "at": "London"
+     "at": "New York"
     }
    },
    "y0": {
@@ -32,7 +32,7 @@
       20,
       65
      ],
-     "at": "London",
+     "at": "New York",
      "axis": "y"
     }
    },
@@ -44,7 +44,7 @@
       20,
       65
      ],
-     "at": "New York"
+     "at": "London"
     }
    },
    "y1": {
@@ -55,7 +55,7 @@
       20,
       65
      ],
-     "at": "New York",
+     "at": "London",
      "axis": "y"
     }
    },
@@ -77,8 +77,8 @@
       20,
       65
      ],
-     "from": "London",
-     "to": "New York",
+     "from": "New York",
+     "to": "London",
      "axis": "x",
      "wrap": "arraySpline({}, @progress)"
     }
@@ -91,8 +91,8 @@
       20,
       65
      ],
-     "from": "London",
-     "to": "New York",
+     "from": "New York",
+     "to": "London",
      "axis": "y",
      "wrap": "arraySpline({}, @progress)"
     }
@@ -120,7 +120,7 @@
       "children": [
        {
         "text": {
-         "value": "LHR → JFK",
+         "value": "JFK → LHR",
          "fontSize": 18,
          "fontWeight": 600,
          "color": "@colors.onSurface",
@@ -235,7 +235,7 @@
        },
        {
         "semantics": {
-         "contentDescription": "Map of the North Atlantic with the flight path from London to New York and the plane on it"
+         "contentDescription": "Map of the North Atlantic with the flight path from New York to London and the plane on it"
         }
        }
       ],
@@ -318,8 +318,8 @@
               20,
               65
              ],
-             "from": "London",
-             "to": "New York"
+             "from": "New York",
+             "to": "London"
             }
            }
           }
@@ -335,8 +335,8 @@
               20,
               65
              ],
-             "from": "London",
-             "to": "New York",
+             "from": "New York",
+             "to": "London",
              "axis": "x",
              "wrap": "arraySpline({}, a[0])"
             }
@@ -349,8 +349,8 @@
               20,
               65
              ],
-             "from": "London",
-             "to": "New York",
+             "from": "New York",
+             "to": "London",
              "axis": "y",
              "wrap": "arraySpline({}, a[0])"
             }
