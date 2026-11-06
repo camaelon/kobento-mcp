@@ -532,6 +532,8 @@ const INSPECTOR_DIR = path.join(INSPECTOR, "dist");
 
 // The landing page's header plays this document (the animated logo) in the web player.
 const LOGO_DOC = "SHW-32";
+/** The example under "How to use it": a request and its result (render-home-*.png). */
+const EXAMPLE_DOC = "MAP-03";
 
 /** The landing page: what Kobento is, in plain words, under its animated logo. */
 async function landingPage() {
@@ -556,6 +558,20 @@ async function landingPage() {
 </script>`
         : `<div class="hero-logo static">${MARK}<span>Kobento</span></div>`;
     const link = (href, text) => `<a href="${href}" rel="noopener">${text}</a>`;
+    // One request and what comes back: the flight tracker, mid-flight and about to land.
+    const ex = C.examples.find((e) => e.id === EXAMPLE_DOC);
+    const shot = (name) => {
+        try { return `img/${EXAMPLE_DOC}/${name}.png?v=${statSync(path.join(EXAMPLES_DIR, ex.folder, `render-${name}.png`)).mtimeMs.toString(36).replace(".", "")}`; } catch { return null; }
+    };
+    const [light, arrival] = ex ? [shot("home-light"), shot("home-arrival")] : [];
+    const kb = ex?.derived?.bytes ? `about ${Math.round(ex.derived.bytes / 1000)} KB` : "a few KB";
+    const example = light && arrival ? `<h3>For example</h3>
+<blockquote class="ask">${esc(ex.prompt)}</blockquote>
+<div class="shots">
+  <figure><img src="${light}" width="720" height="480" alt="A card titled LHR to JFK, 3 h 58 left: a map of the North Atlantic with the route arching from London to New York and the plane on it, a little under halfway, in the light theme."><figcaption>What comes back: the route, the plane and the time left.</figcaption></figure>
+  <figure><img src="${arrival}" width="720" height="480" alt="The same card in the dark theme with 0 h 12 left, the plane almost at New York."><figcaption>The app sends two numbers (progress, minutes left) and the plane moves. Here in dark mode, nearly landed.</figcaption></figure>
+</div>
+<p>The whole card is ${kb}. It follows the light or dark theme, and lays out again at any size. <a href="play/${EXAMPLE_DOC}/">Play with it</a>.</p>` : "";
     return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kobento</title><meta name="description" content="Kobento: components and AI tools for building RemoteCompose interfaces.">
@@ -574,6 +590,12 @@ ${FONTS}<style>${CSS}
 .go a { padding:10px 16px; border-radius:999px; border:1px solid var(--line); background:var(--card); color:var(--ink); text-decoration:none; font-weight:600; }
 .go a.primary { background:var(--ink); color:var(--bg); border-color:var(--ink); }
 code { font:13px ui-monospace,Menlo,monospace; background:var(--chip); padding:2px 6px; border-radius:6px; }
+.landing h3 { margin:28px 0 8px; }
+.ask { margin:0 0 16px; padding:12px 16px; border-left:3px solid var(--accent); background:var(--card); border-radius:0 10px 10px 0; font-style:italic; }
+.shots { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; }
+.shots figure { margin:0; }
+.shots img { width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--line); }
+.shots figcaption { color:var(--muted); font-size:14px; margin-top:6px; }
 </style></head>
 <body>
 <header><nav>${siteNav("home")}</nav></header>
@@ -608,6 +630,7 @@ ${hero}
   <li>Add Kobento to your assistant. In claude.ai or ChatGPT, add a custom connector with the URL <code>${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then sign in when asked. In Claude Code, run <code>claude mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>. In the Gemini CLI, run <code>gemini mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then <code>/mcp auth kobento</code> to sign in.</li>
   <li>Describe the screen you want. The assistant builds it from the components, checks it and shows you a picture of it.</li>
 </ol>
+${example}
 <div class="go"><a class="primary" href="account/">Create an account</a></div>
 
 <h2>Open source</h2>

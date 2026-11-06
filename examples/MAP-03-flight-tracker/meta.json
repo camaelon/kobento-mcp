@@ -110,6 +110,22 @@
     "name": "large",
     "width": 1000,
     "height": 700
+   },
+   {
+    "name": "home-light",
+    "theme": "light",
+    "output_width": 720,
+    "output_height": 480
+   },
+   {
+    "name": "home-arrival",
+    "theme": "dark",
+    "variables": {
+     "progress": 0.95,
+     "minutesLeft": 12
+    },
+    "output_width": 720,
+    "output_height": 480
    }
   ]
  },
@@ -684,6 +700,16 @@
      700
     ],
     "audit_findings": []
+   },
+   "home-light": {
+    "theme": "light",
+    "render": "render-home-light.png",
+    "render_findings": []
+   },
+   "home-arrival": {
+    "theme": "dark",
+    "render": "render-home-arrival.png",
+    "render_findings": []
    }
   },
   "json_keys": [
@@ -816,7 +842,7 @@
     "<arithmetic>"
    ]
   },
-  "built_at": "2026-11-02T08:52:50.887Z"
+  "built_at": "2026-11-06T15:16:08.870Z"
  },
  "snippets": [
   {
