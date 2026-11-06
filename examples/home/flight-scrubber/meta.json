@@ -1,0 +1,886 @@
+{
+ "id": "example",
+ "name": "flight-scrubber",
+ "version": 1,
+ "title": "Scrub through a flight on a map",
+ "summary": "MAP-03's flight tracker with a Slider bound to the progress: dragging it moves the plane along the great-circle route, extends the flown part and counts the time left down (an 8-hour flight, so the app only sends the progress). The route points and the time left read the slider's live value because the expander declares them after the slider.",
+ "prompt": "A flight tracker card: London to New York on a map, the plane along the route at the flight's progress, the time left, and a slider to scrub through the flight.",
+ "level": 3,
+ "family": "HOME",
+ "capabilities": {
+  "primary": [
+   "map.marker",
+   "map.region",
+   "map.route",
+   "input.drag"
+  ],
+  "secondary": [
+   "draw.path",
+   "host.variables",
+   "text.dynamic",
+   "data.expression"
+  ]
+ },
+ "use_cases": [
+  "map",
+  "travel",
+  "card"
+ ],
+ "form_factor": "phone",
+ "keywords": [
+  "delivery tracker map",
+  "flight map",
+  "flight path",
+  "flight scrubber",
+  "flight tracker",
+  "great circle",
+  "path between cities",
+  "plane",
+  "plane heading",
+  "progress on a map",
+  "route",
+  "route on a map",
+  "scrub progress",
+  "slider on a map",
+  "tracker map"
+ ],
+ "teaches": [
+  "A Slider bound to an exported variable (\"value\": \"@progress\") presets it from the app and drives everything that reads it after the slider; resources variables that read it (the route point, the time left) are moved after the slider by the expander, so put the slider ABOVE the map in the tree",
+  "Derive what you can from one input: the time left is 480 * (1 - @progress), so the slider moves the plane and the clock together"
+ ],
+ "inputs": {
+  "variables": {
+   "progress": {
+    "type": "float",
+    "meaning": "Flight progress 0..1",
+    "default": 0.42,
+    "min": 0,
+    "max": 1,
+    "step": 0.01
+   }
+  },
+  "clock": null,
+  "touch": true
+ },
+ "check": {
+  "describe": "MAP-03's map with a slider under the title: the plane 42 % of the way, 4 h 38 left; dragging the slider moves the plane and the time left together; at 0.95 the plane is near New York with 0 h 24 left.",
+  "render": {},
+  "renders": [
+   {
+    "name": "light",
+    "theme": "light"
+   },
+   {
+    "name": "dark",
+    "theme": "dark"
+   },
+   {
+    "name": "mono-dark",
+    "componentTheme": "mono-dark"
+   },
+   {
+    "name": "mono-light",
+    "componentTheme": "mono-light"
+   },
+   {
+    "name": "small",
+    "width": 240,
+    "height": 260
+   },
+   {
+    "name": "landscape",
+    "width": 640,
+    "height": 360
+   },
+   {
+    "name": "large",
+    "width": 1000,
+    "height": 700
+   },
+   {
+    "name": "arrival",
+    "variables": {
+     "progress": 0.95
+    }
+   },
+   {
+    "name": "home-light",
+    "theme": "light",
+    "output_width": 720,
+    "output_height": 560
+   },
+   {
+    "name": "home-arrival",
+    "theme": "dark",
+    "variables": {
+     "progress": 0.95
+    },
+    "output_width": 720,
+    "output_height": 560
+   }
+  ]
+ },
+ "related": [
+  "MAP-03",
+  "MAP-01",
+  "MAP-02"
+ ],
+ "derived": {
+  "components": [
+   "Slider"
+  ],
+  "component_instances": 1,
+  "component_modes": {
+   "Slider": "expand"
+  },
+  "component_patterns": [],
+  "converter": "json2rc",
+  "bytes": 15351,
+  "header": {
+   "width": 360,
+   "height": 280
+  },
+  "op_count": 160,
+  "operations": {
+   "ACCESSIBILITY_SEMANTICS": 2,
+   "ANIMATED_FLOAT": 13,
+   "CLIP_RECT": 1,
+   "COLOR_CONSTANT": 10,
+   "COLOR_EXPRESSIONS": 10,
+   "COMPONENT_VALUE": 4,
+   "CanvasContent": 2,
+   "CoreText": 2,
+   "DATA_FLOAT": 7,
+   "DATA_TEXT": 5,
+   "DRAW_CIRCLE": 4,
+   "DRAW_LINE": 2,
+   "DRAW_PATH": 3,
+   "DataListFloat": 2,
+   "HEADER": 1,
+   "LAYOUT_BOX": 4,
+   "LAYOUT_CANVAS": 2,
+   "LAYOUT_COLUMN": 1,
+   "LAYOUT_ROOT": 1,
+   "LAYOUT_ROW": 2,
+   "LayoutComponentContent": 9,
+   "LoopOperation": 10,
+   "MATRIX_RESTORE": 1,
+   "MATRIX_SAVE": 1,
+   "MATRIX_SCALE": 1,
+   "MATRIX_TRANSLATE": 1,
+   "MODIFIER_BACKGROUND": 1,
+   "MODIFIER_HEIGHT": 6,
+   "MODIFIER_PADDING": 1,
+   "MODIFIER_WIDTH": 9,
+   "NAMED_VARIABLE": 8,
+   "PAINT_VALUES": 7,
+   "PATH_DATA": 2,
+   "PathExpression": 1,
+   "THEME": 15,
+   "TextFromFloat": 2,
+   "TextMerge": 6,
+   "TouchExpression": 1
+  },
+  "host_variables": [
+   {
+    "name": "background",
+    "type": "color",
+    "value": "#FF101828"
+   },
+   {
+    "name": "muted",
+    "type": "color",
+    "value": "#FF8A94A6"
+   },
+   {
+    "name": "onSurface",
+    "type": "color",
+    "value": "#FFE6EAF2"
+   },
+   {
+    "name": "primary",
+    "type": "color",
+    "value": "#FF4DA3FF"
+   },
+   {
+    "name": "progress",
+    "type": "float",
+    "value": 0.419999987
+   },
+   {
+    "name": "route_1_x",
+    "type": "float_array",
+    "value": [
+     832.299988,
+     819,
+     805.5,
+     791.700012,
+     777.900024,
+     763.799988,
+     749.700012,
+     735.400024,
+     721,
+     706.5,
+     691.900024,
+     677.299988,
+     662.599976,
+     647.900024,
+     633.200012,
+     618.5,
+     603.799988,
+     589.099976,
+     574.599976,
+     560.099976,
+     545.700012,
+     531.400024,
+     517.299988,
+     503.200012,
+     489.399994,
+     475.700012,
+     462.100006,
+     448.799988,
+     435.700012,
+     422.700012,
+     410,
+     397.399994,
+     385.100006,
+     373,
+     361.100006,
+     349.399994,
+     338,
+     326.700012,
+     315.700012,
+     304.899994,
+     294.299988,
+     283.899994,
+     273.700012,
+     263.700012,
+     253.899994,
+     244.300003,
+     234.899994,
+     225.699997,
+     216.699997
+    ]
+   },
+   {
+    "name": "route_1_y",
+    "type": "float_array",
+    "value": [
+     152.600006,
+     149,
+     145.600006,
+     142.600006,
+     139.699997,
+     137.199997,
+     134.899994,
+     132.899994,
+     131.199997,
+     129.699997,
+     128.600006,
+     127.699997,
+     127.099998,
+     126.800003,
+     126.800003,
+     127.099998,
+     127.699997,
+     128.600006,
+     129.800003,
+     131.300003,
+     133,
+     135,
+     137.300003,
+     139.899994,
+     142.800003,
+     145.899994,
+     149.199997,
+     152.800003,
+     156.699997,
+     160.699997,
+     165.100006,
+     169.600006,
+     174.399994,
+     179.300003,
+     184.5,
+     189.800003,
+     195.399994,
+     201.100006,
+     207,
+     213.100006,
+     219.399994,
+     225.699997,
+     232.300003,
+     239,
+     245.800003,
+     252.800003,
+     259.899994,
+     267.100006,
+     274.399994
+    ]
+   },
+   {
+    "name": "track",
+    "type": "color",
+    "value": "#FF2A3342"
+   }
+  ],
+  "render_findings": [],
+  "audit": {
+   "error": 0,
+   "warning": 0,
+   "info": 0
+  },
+  "audit_findings": [],
+  "repaint": "idle",
+  "interaction_targets": {
+   "total": 1,
+   "click": 0,
+   "area": 0,
+   "touch": 1
+  },
+  "java_identical": true,
+  "renders": {
+   "light": {
+    "theme": "light",
+    "render": "render-light.png",
+    "render_findings": []
+   },
+   "dark": {
+    "theme": "dark",
+    "render": "render-dark.png",
+    "render_findings": []
+   },
+   "mono-dark": {
+    "componentTheme": "mono-dark",
+    "bytes": 14849,
+    "component_modes": {
+     "Slider": "expand"
+    },
+    "op_count": 120,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "progress",
+      "type": "float",
+      "value": 0.419999987
+     },
+     {
+      "name": "route_1_x",
+      "type": "float_array",
+      "value": [
+       832.299988,
+       819,
+       805.5,
+       791.700012,
+       777.900024,
+       763.799988,
+       749.700012,
+       735.400024,
+       721,
+       706.5,
+       691.900024,
+       677.299988,
+       662.599976,
+       647.900024,
+       633.200012,
+       618.5,
+       603.799988,
+       589.099976,
+       574.599976,
+       560.099976,
+       545.700012,
+       531.400024,
+       517.299988,
+       503.200012,
+       489.399994,
+       475.700012,
+       462.100006,
+       448.799988,
+       435.700012,
+       422.700012,
+       410,
+       397.399994,
+       385.100006,
+       373,
+       361.100006,
+       349.399994,
+       338,
+       326.700012,
+       315.700012,
+       304.899994,
+       294.299988,
+       283.899994,
+       273.700012,
+       263.700012,
+       253.899994,
+       244.300003,
+       234.899994,
+       225.699997,
+       216.699997
+      ]
+     },
+     {
+      "name": "route_1_y",
+      "type": "float_array",
+      "value": [
+       152.600006,
+       149,
+       145.600006,
+       142.600006,
+       139.699997,
+       137.199997,
+       134.899994,
+       132.899994,
+       131.199997,
+       129.699997,
+       128.600006,
+       127.699997,
+       127.099998,
+       126.800003,
+       126.800003,
+       127.099998,
+       127.699997,
+       128.600006,
+       129.800003,
+       131.300003,
+       133,
+       135,
+       137.300003,
+       139.899994,
+       142.800003,
+       145.899994,
+       149.199997,
+       152.800003,
+       156.699997,
+       160.699997,
+       165.100006,
+       169.600006,
+       174.399994,
+       179.300003,
+       184.5,
+       189.800003,
+       195.399994,
+       201.100006,
+       207,
+       213.100006,
+       219.399994,
+       225.699997,
+       232.300003,
+       239,
+       245.800003,
+       252.800003,
+       259.899994,
+       267.100006,
+       274.399994
+      ]
+     },
+     {
+      "name": "track",
+      "type": "color",
+      "value": "#FF9E9E9E"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-dark.png",
+    "render_findings": []
+   },
+   "mono-light": {
+    "componentTheme": "mono-light",
+    "bytes": 14849,
+    "component_modes": {
+     "Slider": "expand"
+    },
+    "op_count": 120,
+    "host_variables": [
+     {
+      "name": "background",
+      "type": "color",
+      "value": "#FFFFFFFF"
+     },
+     {
+      "name": "muted",
+      "type": "color",
+      "value": "#FF616161"
+     },
+     {
+      "name": "onSurface",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "primary",
+      "type": "color",
+      "value": "#FF000000"
+     },
+     {
+      "name": "progress",
+      "type": "float",
+      "value": 0.419999987
+     },
+     {
+      "name": "route_1_x",
+      "type": "float_array",
+      "value": [
+       832.299988,
+       819,
+       805.5,
+       791.700012,
+       777.900024,
+       763.799988,
+       749.700012,
+       735.400024,
+       721,
+       706.5,
+       691.900024,
+       677.299988,
+       662.599976,
+       647.900024,
+       633.200012,
+       618.5,
+       603.799988,
+       589.099976,
+       574.599976,
+       560.099976,
+       545.700012,
+       531.400024,
+       517.299988,
+       503.200012,
+       489.399994,
+       475.700012,
+       462.100006,
+       448.799988,
+       435.700012,
+       422.700012,
+       410,
+       397.399994,
+       385.100006,
+       373,
+       361.100006,
+       349.399994,
+       338,
+       326.700012,
+       315.700012,
+       304.899994,
+       294.299988,
+       283.899994,
+       273.700012,
+       263.700012,
+       253.899994,
+       244.300003,
+       234.899994,
+       225.699997,
+       216.699997
+      ]
+     },
+     {
+      "name": "route_1_y",
+      "type": "float_array",
+      "value": [
+       152.600006,
+       149,
+       145.600006,
+       142.600006,
+       139.699997,
+       137.199997,
+       134.899994,
+       132.899994,
+       131.199997,
+       129.699997,
+       128.600006,
+       127.699997,
+       127.099998,
+       126.800003,
+       126.800003,
+       127.099998,
+       127.699997,
+       128.600006,
+       129.800003,
+       131.300003,
+       133,
+       135,
+       137.300003,
+       139.899994,
+       142.800003,
+       145.899994,
+       149.199997,
+       152.800003,
+       156.699997,
+       160.699997,
+       165.100006,
+       169.600006,
+       174.399994,
+       179.300003,
+       184.5,
+       189.800003,
+       195.399994,
+       201.100006,
+       207,
+       213.100006,
+       219.399994,
+       225.699997,
+       232.300003,
+       239,
+       245.800003,
+       252.800003,
+       259.899994,
+       267.100006,
+       274.399994
+      ]
+     },
+     {
+      "name": "track",
+      "type": "color",
+      "value": "#FF616161"
+     }
+    ],
+    "java_identical": true,
+    "repaint": "idle",
+    "render": "render-mono-light.png",
+    "render_findings": []
+   },
+   "small": {
+    "render": "render-small.png",
+    "render_findings": [],
+    "size": [
+     240,
+     260
+    ],
+    "audit_findings": []
+   },
+   "landscape": {
+    "render": "render-landscape.png",
+    "render_findings": [],
+    "size": [
+     640,
+     360
+    ],
+    "audit_findings": []
+   },
+   "large": {
+    "render": "render-large.png",
+    "render_findings": [],
+    "size": [
+     1000,
+     700
+    ],
+    "audit_findings": []
+   },
+   "arrival": {
+    "render": "render-arrival.png",
+    "render_findings": []
+   },
+   "home-light": {
+    "theme": "light",
+    "render": "render-home-light.png",
+    "render_findings": []
+   },
+   "home-arrival": {
+    "theme": "dark",
+    "render": "render-home-arrival.png",
+    "render_findings": []
+   }
+  },
+  "json_keys": [
+   "$map",
+   "$mapHeight",
+   "$mapPoint",
+   "$mapRoute",
+   "Slider",
+   "apiLevel",
+   "at",
+   "axis",
+   "background",
+   "bottom",
+   "box",
+   "canvas",
+   "children",
+   "clipRect",
+   "color",
+   "colors",
+   "column",
+   "commands",
+   "componentValue",
+   "contentDescription",
+   "count",
+   "cx",
+   "cy",
+   "dark",
+   "decimal",
+   "defaultValue",
+   "detail",
+   "drawCircle",
+   "drawLine",
+   "drawPath",
+   "dx",
+   "dy",
+   "end",
+   "export",
+   "expression",
+   "expressionX",
+   "expressionY",
+   "flags",
+   "floatArrays",
+   "fontSize",
+   "fontWeight",
+   "from",
+   "hLeft",
+   "header",
+   "height",
+   "id",
+   "id1",
+   "id2",
+   "label",
+   "layer",
+   "left",
+   "light",
+   "mLeft",
+   "map_box_land_medium",
+   "max",
+   "mh",
+   "min",
+   "minutesLeft",
+   "modifiers",
+   "muted",
+   "name",
+   "onSurface",
+   "ops",
+   "padding",
+   "paint",
+   "path",
+   "pathExpression",
+   "paths",
+   "primary",
+   "profiles",
+   "progress",
+   "px",
+   "py",
+   "radius",
+   "region",
+   "resources",
+   "right",
+   "root",
+   "route_1_path",
+   "route_1_x",
+   "route_1_y",
+   "row",
+   "save",
+   "scale",
+   "semantics",
+   "slider1_x0",
+   "start",
+   "stateDescription",
+   "stateText",
+   "strokeCap",
+   "strokeWidth",
+   "style",
+   "sx",
+   "sy",
+   "text",
+   "to",
+   "top",
+   "touchExpression",
+   "touchMode",
+   "track",
+   "translate",
+   "type",
+   "value",
+   "valueType",
+   "variable",
+   "variables",
+   "verticalAlignment",
+   "verticalWeight",
+   "weight",
+   "whole",
+   "width",
+   "wrap",
+   "x",
+   "x0",
+   "x1",
+   "x2",
+   "y",
+   "y0",
+   "y1",
+   "y2"
+  ],
+  "evidence": {
+   "map.marker": [
+    "$mapPoint"
+   ],
+   "map.region": [
+    "region"
+   ],
+   "map.route": [
+    "$mapRoute"
+   ],
+   "input.drag": [
+    "touchExpression"
+   ],
+   "draw.path": [
+    "drawPath"
+   ],
+   "host.variables": [
+    "export",
+    "colors"
+   ],
+   "text.dynamic": [
+    "textFromFloat",
+    "textMerge"
+   ],
+   "data.expression": [
+    "expression",
+    "pathExpression",
+    "<arithmetic>"
+   ]
+  },
+  "built_at": "2026-11-06T15:49:25.921Z"
+ },
+ "snippets": [
+  {
+   "pointer": "/root/column/children/1/row/children/0",
+   "shows": "input.drag",
+   "note": "the Slider bound to @progress: the map and the time left after it follow the drag"
+  },
+  {
+   "pointer": "/resources/variables/x0",
+   "shows": "map.marker",
+   "note": "a city's x from {\"$mapPoint\"}, a number fixed when the document is built"
+  },
+  {
+   "pointer": "/root/column/children/3/canvas/commands/0/save/2",
+   "shows": "map.region",
+   "note": "the North Atlantic from a lon/lat box with {\"$map\"}"
+  },
+  {
+   "pointer": "/resources/variables/px",
+   "shows": "map.marker",
+   "note": "the plane at the progress: arraySpline over the route's x samples from {\"$mapRoute\"}"
+  },
+  {
+   "pointer": "/resources/variables/px",
+   "shows": "map.route",
+   "note": "the plane at the progress along the great circle: {\"$mapRoute\"} x samples through arraySpline"
+  }
+ ],
+ "components": [
+  "Slider"
+ ]
+}
