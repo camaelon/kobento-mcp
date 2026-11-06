@@ -141,6 +141,32 @@ test("stream: post, list, vote, sort, remove", async (t) => {
     assert.equal((await s.post(`/stream/${P2}/vote`, { csrf: csrfFor(ann), value: "1" }, ann, { Origin: "https://evil.example" })).status, 403);
     assert.equal((await s.post(`/stream/${P2}/vote`, { csrf: csrfFor(ann), value: "5" }, ann)).status, 400);
 
+    // For an app: items.json (search, tag, sort) and votes with a bearer token instead of cookie + CSRF.
+    const tok = await (async () => { const st = await openAccounts(path.join(s.root, "rc.db")); const t = st.issueToken(ids[0], "app").token; st.close(); return t; })();
+    const auth = { Authorization: `Bearer ${tok}` };
+    let j = await (await fetch(`${s.base}/stream/items.json`)).json();
+    assert.equal(j.account, null);
+    assert.deepEqual(j.items.map((x) => x.title), ["Weather <b>now</b>", "My clock"]);
+    assert.equal(j.items[0].my_vote, null, "no vote signed out");
+    assert.equal(j.items[1].rc_url, `${s.base}/pages/${P1}/document.rc`);
+    assert.equal(j.items[1].preview_url, `${s.base}/pages/${P1}/preview.png`);
+    assert.deepEqual(j.items[1].document, { width: 320, height: 200 });
+    assert.ok(j.tags.some((t) => t.tag === "clock"));
+    j = await (await fetch(`${s.base}/stream/items.json?sort=top`)).json();
+    assert.deepEqual(j.items.map((x) => [x.title, x.score]), [["My clock", 1], ["Weather <b>now</b>", -1]]);
+    assert.deepEqual((await (await fetch(`${s.base}/stream/items.json?q=CLOCK`)).json()).items.map((x) => x.page_id), [P1]);
+    assert.deepEqual((await (await fetch(`${s.base}/stream/items.json?q=ann+weather`)).json()).items.map((x) => x.page_id), [P2]);
+    assert.deepEqual((await (await fetch(`${s.base}/stream/items.json?tag=time`)).json()).items.map((x) => x.page_id), [P1]);
+    j = await (await fetch(`${s.base}/stream/items.json`, { headers: auth })).json();
+    assert.equal(j.account.email, "ann@example.com");
+    assert.equal(j.items[0].my_vote, 0);
+    r = await fetch(`${s.base}/stream/${P2}/vote`, { method: "POST", headers: { ...auth, Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body: "value=1" });
+    assert.deepEqual(await r.json(), { score: 0, ups: 1, downs: 1, my_vote: 1 }, "no Origin, no CSRF: the token is enough");
+    await fetch(`${s.base}/stream/${P2}/vote`, { method: "POST", headers: { ...auth, Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body: "value=0" });
+    r = await fetch(`${s.base}/stream/items.json`, { headers: { Authorization: "Bearer rc_wrong" } });
+    assert.equal(r.status, 401, "a wrong token is refused, not taken as signed out");
+    assert.equal((await fetch(`${s.base}/stream/${P2}/vote`, { method: "POST", headers: { Authorization: "Bearer rc_wrong", Accept: "application/json" }, body: "value=1" })).status, 401);
+
     // Top: by score.
     page = await (await s.get("/stream/?sort=top", bob)).text();
     assert.ok(page.indexOf("My clock") < page.indexOf("Weather"), "highest score first");

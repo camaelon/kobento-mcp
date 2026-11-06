@@ -547,6 +547,15 @@ access token (`rco_`, what the Android app holds) or an account token (`rc_`), o
 website's session cookie; anything else gets a 401. Only the caller's own pages, even for an
 admin. The pages and their `.rc` stay public as before.
 
+**The stream, for an app.** The examples site's `stream/items.json` is the stream as JSON:
+`?sort=new|top`, `?tag=`, and `?q=` (words matched against titles, authors and tags, all of
+them), at most 200 items, each with `page_id`, title, author, tags, score, ups, downs, the
+viewer's `my_vote` (null signed out), `showcase`, `url`, `rc_url`, `preview_url`, `rc_bytes` and
+document size; plus the tags in use and who is asking. It is public; with a bearer token (as
+above) it adds the caller's votes, and a wrong token gets a 401. `POST stream/<page id>/vote`
+(`value=1|-1|0`, `Accept: application/json`) takes the bearer token in place of the session
+cookie and CSRF field.
+
 **Page index.** `https://DOMAIN/pages` (also `MCP_PUBLIC_URL/pages/`) is a public,
 token-free list of every published page: title, source, kind (playground or bare player),
 document (`.rc`) and page sizes, and date, each linking to its page. This makes every published page discoverable,

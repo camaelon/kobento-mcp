@@ -6,6 +6,13 @@
 //   POST <base>/stream/<page id>/vote    value=1|-1|0 (0 takes the vote back); signed in, CSRF.
 //                                        With Accept: application/json it answers the item's new
 //                                        score instead of redirecting (the page's script uses it)
+//   GET  <base>/stream/items.json[?sort=new|top][&tag=t][&q=words]  the same items as JSON, for an
+//                                        app: each with its page, .rc and preview URLs, score and the
+//                                        viewer's vote; q matches titles, authors and tags (all words).
+//                                        Signed in by the session cookie or "Authorization: Bearer"
+//                                        (an OAuth access token or an account token).
+//                                        A vote may also carry the bearer token instead of the cookie
+//                                        and CSRF field (a header no other site can make a browser send).
 //   POST <base>/stream/<page id>/remove  admins: take an item out (owners do it from their account)
 //   POST <base>/stream/<page id>/feature value=1|0: admins mark an item as a showcase, or not;
 //                                        the Showcases page lists marked items (featuredSection)
@@ -15,7 +22,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { siteFooter } from "./privacy-web.mjs";
-import { Accounts, accounts, accountsEnabled, csrfFor, readCookie } from "./accounts.mjs";
+import { Accounts, accounts, accountsEnabled, bearerAccount, csrfFor, readCookie } from "./accounts.mjs";
 import { esc, readForm, sameOrigin } from "./account-web.mjs";
 import { formatBytes } from "./web-page.mjs";
 import { workspaceRoot } from "./workspace.mjs";
@@ -172,9 +179,34 @@ export async function streamRoute(req, url, res, site) {
     if (p === "/stream") { res.writeHead(301, { Location: `stream/${url.search}` }); res.end(); return true; }
     const store = await accounts();
     const sid = readCookie(req);
-    const acct = sid ? store.sessionAccount(sid) : null;
+    // An app signs in with a bearer token; a wrong one is refused rather than taken as signed out.
+    const bearer = /^Bearer\s/i.test(String(req.headers.authorization ?? ""));
+    const viaBearer = bearer ? await bearerAccount(req) : null;
+    if (bearer && !viaBearer?.account) {
+        return reply(res, 401, "application/json", JSON.stringify({ error: viaBearer?.disabled ?? "invalid or expired token" }),
+            { "WWW-Authenticate": 'Bearer realm="stream"' });
+    }
+    const acct = bearer ? viaBearer.account : sid ? store.sessionAccount(sid) : null;
     const sort = url.searchParams.get("sort") === "top" ? "top" : "new";
     const tag = url.searchParams.get("tag") ? Accounts.normalizeTags([url.searchParams.get("tag")])[0] ?? null : null;
+    if (p === "/stream/items.json") {
+        if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405, { Allow: "GET, HEAD" }); res.end(); return true; }
+        const words = String(url.searchParams.get("q") ?? "").toLowerCase().split(/\s+/).filter(Boolean).map((w) => w.replace(/^#/, ""));
+        const items = store.streamItems({ sort, tag, viewerId: acct?.id ?? null, limit: 1000 })
+            .filter((x) => words.every((w) => `${x.title} ${x.author} ${x.tags.join(" ")}`.toLowerCase().includes(w)))
+            .map((it) => ({ ...it, meta: pageMeta(it.page_id) })).filter((it) => it.meta && it.url)
+            .slice(0, 200)
+            .map((it) => ({
+                page_id: it.page_id, title: it.title, author: it.author, tags: it.tags, created: it.created,
+                score: it.score, ups: it.ups, downs: it.downs, my_vote: acct ? it.my_vote : null, showcase: !!it.featured,
+                url: it.url, rc_url: it.url + "document.rc", preview_url: it.meta.preview ? it.url + "preview.png" : null,
+                rc_bytes: it.meta.rc_bytes ?? null, document: it.meta.document ?? null,
+            }));
+        return reply(res, 200, "application/json", JSON.stringify({
+            account: acct ? { email: acct.email, name: acct.name ?? null } : null,
+            sort, tag, tags: store.streamTags(), items,
+        }), { Vary: "Authorization, Cookie" });
+    }
     if (p === "/stream/") {
         if (req.method !== "GET" && req.method !== "HEAD") { res.writeHead(405, { Allow: "GET, HEAD" }); res.end(); return true; }
         const items = store.streamItems({ sort, tag, viewerId: acct?.id ?? null })
@@ -190,11 +222,11 @@ export async function streamRoute(req, url, res, site) {
         res.end();
         return true;
     };
-    if (!sameOrigin(req)) return reply(res, 403, "text/plain", "Refused: this form must be sent from this site's own pages.\n");
+    if (!bearer && !sameOrigin(req)) return reply(res, 403, "text/plain", "Refused: this form must be sent from this site's own pages.\n");
     if (!acct) return wantsJson ? reply(res, 401, "application/json", JSON.stringify({ error: "sign in to vote" })) : back();
     let form;
     try { form = await readForm(req); } catch (e) { return reply(res, e.status ?? 400, "text/plain", "Bad request.\n"); }
-    if (form.get("csrf") !== csrfFor(sid)) return reply(res, 403, "text/plain", "Refused: the page is stale. Reload it and try again.\n");
+    if (!bearer && form.get("csrf") !== csrfFor(sid)) return reply(res, 403, "text/plain", "Refused: the page is stale. Reload it and try again.\n");
     if (m[2] === "remove" || m[2] === "feature") {
         if (!acct.admin) return reply(res, 403, "text/plain", "Admins only.\n");
         if (m[2] === "remove") store.streamRemove(m[1]);
