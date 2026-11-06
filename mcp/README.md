@@ -554,7 +554,11 @@ viewer's `my_vote` (null signed out), `showcase`, `url`, `rc_url`, `preview_url`
 document size; plus the tags in use and who is asking. It is public; with a bearer token (as
 above) it adds the caller's votes, and a wrong token gets a 401. `POST stream/<page id>/vote`
 (`value=1|-1|0`, `Accept: application/json`) takes the bearer token in place of the session
-cookie and CSRF field.
+cookie and CSRF field. So do `POST stream/<page id>/post` (the owner posts a page, or renames
+and retags it: `title`, `tags` as "a, b", left out they stay, and `name`, the account's public
+name, set first when given: posting needs one; JSON `{item}` or `{error}`) and `POST
+stream/<page id>/remove` (the owner or an admin takes it out). `pages.json` gives each page's
+`stream` entry and the account's `name`.
 
 **Page index.** `https://DOMAIN/pages` (also `MCP_PUBLIC_URL/pages/`) is a public,
 token-free list of every published page: title, source, kind (playground or bare player),

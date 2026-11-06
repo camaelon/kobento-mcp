@@ -13,7 +13,12 @@
 //                                        (an OAuth access token or an account token).
 //                                        A vote may also carry the bearer token instead of the cookie
 //                                        and CSRF field (a header no other site can make a browser send).
-//   POST <base>/stream/<page id>/remove  admins: take an item out (owners do it from their account)
+//   POST <base>/stream/<page id>/post    the page's owner (or an admin): post it, or rename and retag
+//                                        it: title, tags ("a, b"; left out, they stay), and name, the
+//                                        account's public name, set first when given (posting needs
+//                                        one). JSON: {item} or {error}. For an app (bearer token).
+//   POST <base>/stream/<page id>/remove  the item's owner or an admin: take it out (votes go too);
+//                                        JSON with Accept: application/json
 //   POST <base>/stream/<page id>/feature value=1|0: admins mark an item as a showcase, or not;
 //                                        the Showcases page lists marked items (featuredSection)
 // Posting, renaming and removing one's own items, and the account's name, are on the account page
@@ -213,7 +218,7 @@ export async function streamRoute(req, url, res, site) {
             .map((it) => ({ ...it, meta: pageMeta(it.page_id) })).filter((it) => it.meta && it.url);
         return reply(res, 200, "text/html; charset=utf-8", streamPage({ site, items, sort, tag, tags: store.streamTags(), acct, sid, total: items.length }));
     }
-    const m = /^\/stream\/([A-Za-z0-9_-]{22})\/(vote|remove|feature)$/.exec(p);
+    const m = /^\/stream\/([A-Za-z0-9_-]{22})\/(vote|post|remove|feature)$/.exec(p);
     if (!m) return reply(res, 404, "text/plain", "not found\n");
     if (req.method !== "POST") { res.writeHead(405, { Allow: "POST" }); res.end(); return true; }
     const wantsJson = /application\/json/.test(String(req.headers.accept ?? ""));
@@ -227,10 +232,25 @@ export async function streamRoute(req, url, res, site) {
     let form;
     try { form = await readForm(req); } catch (e) { return reply(res, e.status ?? 400, "text/plain", "Bad request.\n"); }
     if (!bearer && form.get("csrf") !== csrfFor(sid)) return reply(res, 403, "text/plain", "Refused: the page is stale. Reload it and try again.\n");
-    if (m[2] === "remove" || m[2] === "feature") {
+    const json = (status, body) => reply(res, status, "application/json", JSON.stringify(body));
+    if (m[2] === "post") {
+        try {
+            if (form.has("name") && String(form.get("name")).trim() !== (acct.name ?? "")) store.setName(acct.id, form.get("name"));
+            const who = store.getAccount(acct.id) ?? acct;
+            store.streamPost({ pageId: m[1], account: { ...who, admin: acct.admin }, title: form.get("title"), tags: form.has("tags") ? form.get("tags") : null });
+        } catch (e) { return json(400, { error: e.message }); }
+        const it = store.streamItem(m[1], acct.id);
+        return json(200, { item: { page_id: it.page_id, title: it.title, author: it.author, tags: it.tags, score: it.score, ups: it.ups, downs: it.downs } });
+    }
+    if (m[2] === "remove") {
+        const it = store.streamItem(m[1]);
+        if (it && it.account_id !== acct.id && !acct.admin) return wantsJson ? json(403, { error: "not your item" }) : reply(res, 403, "text/plain", "Admins only.\n");
+        if (it) store.streamRemove(m[1]);
+        return wantsJson ? json(200, { removed: !!it }) : back();
+    }
+    if (m[2] === "feature") {
         if (!acct.admin) return reply(res, 403, "text/plain", "Admins only.\n");
-        if (m[2] === "remove") store.streamRemove(m[1]);
-        else store.streamFeature(m[1], form.get("value") !== "0");
+        store.streamFeature(m[1], form.get("value") !== "0");
         return back();
     }
     let ok;

@@ -167,6 +167,33 @@ test("stream: post, list, vote, sort, remove", async (t) => {
     assert.equal(r.status, 401, "a wrong token is refused, not taken as signed out");
     assert.equal((await fetch(`${s.base}/stream/${P2}/vote`, { method: "POST", headers: { Authorization: "Bearer rc_wrong", Accept: "application/json" }, body: "value=1" })).status, 401);
 
+    // An app posts, renames, retags and takes out its own pages with the token.
+    const appPost = (id, form, t = tok) => fetch(`${s.base}/stream/${id}/${form ? "post" : "remove"}`, { method: "POST",
+        headers: { Authorization: `Bearer ${t}`, Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(form ?? {}) });
+    r = await appPost(P1, { title: "My clock, renamed", tags: "clock, Time" });
+    assert.equal(r.status, 200);
+    assert.deepEqual((await r.json()).item.tags, ["clock", "time"]);
+    r = await appPost(P1, { title: "My clock" });
+    assert.deepEqual((await r.json()).item, { page_id: P1, title: "My clock", author: "Ann K", tags: ["clock", "time"], score: 1, ups: 1, downs: 0 }, "tags left out stay");
+    r = await appPost(PB, { title: "Not mine" });
+    assert.equal(r.status, 400);
+    assert.match((await r.json()).error, /only post your own/);
+    r = await fetch(`${s.base}/stream/${P2}/remove`, { method: "POST", headers: { Authorization: `Bearer ${tok}`, Accept: "application/json" } });
+    assert.deepEqual(await r.json(), { removed: true });
+    assert.ok(!(await (await fetch(`${s.base}/stream/items.json`)).json()).items.some((x) => x.page_id === P2));
+    r = await appPost(P2, { title: "Weather <b>now</b>", tags: "" });
+    assert.equal(r.status, 200, "posted again");
+    // Someone else's item: refused. A first post from an account with no name sets one.
+    const carol = await reg("carol@example.com");
+    const carolTok = await (async () => { const st = await openAccounts(path.join(s.root, "rc.db")); const id = st.findAccount("carol@example.com").id; st.close(); await publish(s, id, "d".repeat(22), "Carol's"); const st2 = await openAccounts(path.join(s.root, "rc.db")); const t = st2.issueToken(id, "app").token; st2.close(); return t; })();
+    assert.ok(carol);
+    assert.equal((await fetch(`${s.base}/stream/${P1}/remove`, { method: "POST", headers: { Authorization: `Bearer ${carolTok}`, Accept: "application/json" } })).status, 403);
+    r = await appPost("d".repeat(22), { title: "Carol's page" }, carolTok);
+    assert.match((await r.json()).error, /Set your name first/);
+    r = await appPost("d".repeat(22), { title: "Carol's page", name: "Carol" }, carolTok);
+    assert.equal((await r.json()).item.author, "Carol");
+    assert.equal((await fetch(`${s.base}/stream/${"d".repeat(22)}/remove`, { method: "POST", headers: { Authorization: `Bearer ${carolTok}`, Accept: "application/json" } })).status, 200);
+
     // Top: by score.
     page = await (await s.get("/stream/?sort=top", bob)).text();
     assert.ok(page.indexOf("My clock") < page.indexOf("Weather"), "highest score first");
