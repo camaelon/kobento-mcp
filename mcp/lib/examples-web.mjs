@@ -263,7 +263,11 @@ nav a.brand { color:var(--ink); font-weight:700; gap:6px; }
 nav a.end { margin-left:auto; }
 nav .mark { width:18px; height:18px; flex:none; }
 nav a[aria-current] { color:var(--ink); font-weight:600; }
+nav .subnav { flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px 18px; padding-top:6px; margin-top:2px; border-top:1px solid var(--line); font-size:13px; }
 .sub { color:var(--muted); margin:4px 0 12px; }
+.sub details { margin-top:6px; font-size:13px; }
+.sub summary { cursor:pointer; color:var(--accent); }
+.sub details p { margin:6px 0; }
 .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0 4px; }
 .bar input { flex:1 1 240px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font:inherit; }
 .bar button { padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--ink); font:inherit; font-size:12px; cursor:pointer; }
@@ -367,12 +371,33 @@ const FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com"><link 
 
 
 /** The site's sections: the landing page is at the root, every other one a folder below it. */
+// The site's sections. Examples and Catalog each group pages a newcomer would confuse; inside
+// one, a second row names its pages, each with what it holds (the link's title).
+const NAV_GROUPS = {
+    examples: { label: "Examples", pages: [
+        ["showcases", "Showcases", "showcases/", "What the format can do: 3D, shaders, physics, live data"],
+        ["demos", "Demos", "demos/", "One technique or screen each, with its JSON"],
+        ["stream", "Stream", "stream/", "Pages people made and shared"]] },
+    catalog: { label: "Catalog", pages: [
+        ["components", "Components", "components/", "The basic parts: buttons, switches, sliders, tabs, cards"],
+        ["advanced", "Advanced", "advanced/", "Charts, clocks, maps, 3D"],
+        ["layouts", "Layouts", "layouts/", "Components that arrange others: list and detail, dashboards"],
+        ["structures", "Structures", "structures/", "Recurring screen shapes, and where to start each"]] },
+};
 function siteNav(current) {
-    const items = [["home", `${MARK}Kobento`, ""], ["showcases", "Showcases", "showcases/"], ["components", "Components", "components/"],
-        ["advanced", "Advanced", "advanced/"], ["layouts", "Layouts", "layouts/"], ["structures", "Structures", "structures/"],
-        ["demos", "Demos", "demos/"], ...(accountsEnabled() ? [["stream", "Stream", "stream/"], ["account", "Account", "account/"]] : [])];
-    return items.map(([k, label, href]) =>
-        `<a href="${current === "home" ? (href || "./") : "../" + (href || "")}"${current === k ? ' aria-current="page"' : ""}${k === "home" ? ' class="brand"' : ""}${k === "account" ? ' class="end"' : ""}>${label}</a>`).join("");
+    const up = (href) => (current === "home" ? (href || "./") : "../" + (href || ""));
+    const pagesOf = (g) => NAV_GROUPS[g].pages.filter(([k]) => k !== "stream" || accountsEnabled());
+    const group = Object.keys(NAV_GROUPS).find((g) => pagesOf(g).some(([k]) => k === current));
+    const a = (k, label, href, { title = "", cls = "", on = current === k } = {}) =>
+        `<a href="${up(href)}"${on ? ' aria-current="page"' : ""}${cls ? ` class="${cls}"` : ""}${title ? ` title="${esc(title)}"` : ""}>${label}</a>`;
+    const main = [
+        a("home", `${MARK}Kobento`, "", { cls: "brand" }),
+        ...Object.entries(NAV_GROUPS).map(([g, { label }]) => a(g, label, pagesOf(g)[0][2], { on: group === g, title: pagesOf(g).map(([, l]) => l).join(", ") })),
+        a("tools", "Tools", "tools/"), a("status", "Status", "status/"), a("about", "About", "about/"),
+        ...(accountsEnabled() ? [a("account", "Account", "account/", { cls: "end" })] : []),
+    ];
+    const sub = group ? `<span class="subnav">${pagesOf(group).map(([k, label, href, title]) => a(k, label, href, { title })).join("")}</span>` : "";
+    return main.join("") + sub;
 }
 
 function page({ title, sub, current, families, cards, modes = false, generated = 0, kinds = false, sizes = false, lead = "" }) {
@@ -383,12 +408,12 @@ function page({ title, sub, current, families, cards, modes = false, generated =
     }
     return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)}</title>${FONTS}<style>${CSS}${lead ? STREAM_CSS : ""}</style></head>
+<title>${esc(title)}</title><meta name="description" content="${esc(sub.replace(/<details[\s\S]*<\/details>/, "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())}">${FONTS}<style>${CSS}${lead ? STREAM_CSS : ""}</style></head>
 <body>
 <header>
 <nav>${siteNav(current)}</nav>
 <h1>${esc(title)}</h1>
-<p class="sub">${sub}</p>
+<div class="sub">${sub}</div>
 <div class="bar"><input id="q" type="search" placeholder="Filter by name, tag or keyword" aria-label="Filter">
 ${families.map((f) => `<button type="button" data-family="${esc(f)}" aria-pressed="false">${esc(f)}</button>`).join("")}
 ${kinds ? `<select id="kind" aria-label="How it is built"><option value="">Any build</option><option value="library">Uses library components</option><option value="own">Defines its own components</option><option value="plain">Plain JSON, no components</option></select>` : ""}
@@ -476,13 +501,16 @@ function examplesPage(showcases = false, { generated: withGenerated = true, lead
         links: g.run ? `<span>${g.run.calls} calls</span>` : "",
     }));
     if (gen.length && !families.includes("GEN")) families.push("GEN");
-    const badge = "The badge is the size of the .rc document a device downloads (green under 8 KB, amber under 24 KB, red above). Click one to open it in the playground.";
+    // What the size badge and the build labels on the cards mean (sizeBadge, buildKind).
+    const legend = `<details class="legend"><summary>What the badges and labels mean</summary>
+<p>The badge is the size of the .rc document a device downloads: green under 8 KB, amber under 24 KB, red above.</p>
+<p>Under it, how each is built: <b>Library</b> (from the component library), <b>Own components</b> (components it defines itself), <b>Library + own</b> (both), <b>Plain JSON</b> (no components), or <b>Hand-built on purpose</b> (plain JSON where a library component exists, to show the technique; hover over the label for why).</p></details>`;
     return page({
         title: showcases ? "Kobento showcases" : "Kobento demos", current: showcases ? "showcases" : "demos", families, cards,
         modes: list.some((e) => e.derived?.renders), generated: gen.length, kinds: !showcases, sizes: true, lead,
         sub: showcases
-            ? `${list.length} showcases: what the format can do (3D, shaders, particles, physics, morphing, live data), each in light, dark and both monochrome looks. ${badge} To remix one, ask an agent connected to Kobento's MCP server: “Get SHW-23 from Kobento and turn it into a pinball table.”`
-            : `${list.length} focused demos, one technique or screen each, every one byte-identical to the Java parser's output. ${badge}`,
+            ? `${list.length} showcases: what the format can do (3D, shaders, particles, physics, morphing, live data), each in light, dark and both monochrome looks. Click one to play it. To remix one, ask an assistant connected to Kobento: “Get SHW-23 from Kobento and turn it into a pinball table.”${legend}`
+            : `${list.length} focused demos, one technique or screen each, every one byte-identical to the Java parser's output. Click one to play it.${legend}`,
     });
 }
 
@@ -547,6 +575,8 @@ const INSPECTOR_DIR = path.join(INSPECTOR, "dist");
 
 // The landing page's header plays this document (the animated logo) in the web player.
 const LOGO_DOC = "SHW-32";
+// The document quoted under "Or write it by hand": the smallest there is.
+const HELLO_DOC = "TXT-01";
 
 /** The landing page: what Kobento is, in plain words, under its animated logo. */
 async function landingPage() {
@@ -571,6 +601,11 @@ async function landingPage() {
 </script>`
         : `<div class="hero-logo static">${MARK}<span>Kobento</span></div>`;
     const link = (href, text) => `<a href="${href}" rel="noopener">${text}</a>`;
+    // The smallest document, quoted under "Or write it by hand".
+    const hello = (() => {
+        const e = loadCatalog().byId.get(HELLO_DOC);
+        try { return { json: readFileSync(path.join(EXAMPLES_DIR, e.folder, "doc.json"), "utf8").trim(), bytes: e.derived?.bytes ?? statSync(path.join(EXAMPLES_DIR, e.folder, "doc.rc")).size }; } catch { return null; }
+    })();
     // One request and what comes back: the flight tracker with its slider, mid-flight and about to land.
     const ex = homeExample();
     const shot = (name) => {
@@ -609,6 +644,8 @@ code { font:13px ui-monospace,Menlo,monospace; background:var(--chip); padding:2
 .shots figure { margin:0; }
 .shots img { width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--line); }
 .shots figcaption { color:var(--muted); font-size:14px; margin-top:6px; }
+.landing pre { background:var(--chip); padding:12px 14px; border-radius:10px; overflow-x:auto; }
+.landing pre code { background:none; padding:0; font-size:13px; line-height:1.5; }
 </style></head>
 <body>
 <header><nav>${siteNav("home")}</nav></header>
@@ -616,11 +653,10 @@ code { font:13px ui-monospace,Menlo,monospace; background:var(--chip); padding:2
 ${hero}
 <h1>Interfaces for RemoteCompose, built with AI.</h1>
 <p class="lead">Kobento is an independent implementation of RemoteCompose. It gives you ready-made components and AI tools to build RemoteCompose screens, and players that show them beyond Android, down to microcontrollers.</p>
-<p class="sub">Kobento is not affiliated with, endorsed or supported by Google.</p>
+<p class="sub">An independent project, not affiliated with Google.</p>
 <div class="go">
-  <a class="primary" href="showcases/">See the showcases</a>
+  <a class="primary" href="showcases/">Play with a showcase</a>
   <a href="components/">Browse the components</a>
-  <a href="account/">Create an account</a>
 </div>
 
 <h2>What is RemoteCompose?</h2>
@@ -631,31 +667,38 @@ ${hero}
 <ul>
   <li><strong>Components.</strong> ${count("basic")} basic parts (buttons, switches, sliders, tabs, cards) and ${count("advanced")} advanced ones (charts, clocks, maps, 3D). Each works in light, dark and two monochrome looks.</li>
   <li><strong>Layouts.</strong> ${count("layout")} layouts, such as a list with its detail or a dashboard grid. They adapt from a phone to a tablet.</li>
-  <li><strong>AI tools.</strong> MCP servers that let Claude, ChatGPT or another assistant find the right parts (<code>build_kit</code>), write the document, render it (<code>render_rc</code>), check it (<code>audit</code>, <code>try_controls</code>) and publish it as a page (<code>package_web</code>). <a href="tools/">Every tool</a>.</li>
+  <li><strong>AI tools.</strong> An MCP server that lets Claude, ChatGPT or another assistant find the right parts (<code>build_kit</code>), write the document, render and check it (<code>convert</code>, <code>render</code>, <code>audit</code>, <code>inspect</code>) and publish it as a page (<code>publish</code>). <a href="tools/">Every tool</a>.</li>
   <li><strong>Players.</strong> A web player, a desktop player and apps for Android and iOS that draw the same documents, and an <a href="inspector/">inspector</a> that shows what is inside one.</li>
-  <li><strong>Microcontrollers.</strong> A player for ESP32 boards that draws the same documents on small screens: M5Stack's Tab5, Core2 and PaperS3, Waveshare's round LCD and AMOLED, Elecrow's CrowPanels. It handles touch, knobs and buttons, and e-paper as well as colour. It also runs on an STM32U5 and on a Raspberry Pi.</li>
+  <li><strong>Microcontrollers.</strong> The same documents on ESP32 boards, e-paper included. <a href="#mcu">More below</a>.</li>
 </ul>
 <p>The ${showcases} showcases show what the format can do: 3D, physics, live data, morphing shapes.</p>
 
 <h2 id="how">How to use it</h2>
 <ol>
-  <li><a href="account/">Create an account</a>. We email you a link to confirm your address, and you get access to the MCP servers.</li>
+  <li><a href="account/">Create an account</a>. We email you a link to confirm your address, and you get access to the MCP server. Accounts are free and tool calls have no quota. The service is best-effort: it runs on one server, with no uptime guarantee, and can change before 1.0.</li>
   <li>Add Kobento to your assistant. In claude.ai or ChatGPT, add a custom connector with the URL <code>${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then sign in when asked. In Claude Code, run <code>claude mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>. In the Gemini CLI, run <code>gemini mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then <code>/mcp auth kobento</code> to sign in.</li>
   <li>Describe the screen you want. The assistant builds it from the components, checks it and shows you a picture of it.</li>
 </ol>
 ${example}
-<div class="go"><a class="primary" href="account/">Create an account</a></div>
+<div class="go"><a class="primary" href="showcases/">Play with a showcase</a><a href="account/">Create a free account</a></div>
 
 <h2 id="by-hand">Or write it by hand</h2>
-<p>A document is JSON that converts to a <code>.rc</code> file. Every example on this site shows its JSON: open one and press <b>Expanded JSON</b> for the plain JSON the converter reads (the <b>JSON</b> button shows it as written, with calls to library components). Change it, then convert it with json2rc:</p>
+<p>A document is JSON that converts to a <code>.rc</code> file. This one is ${hello ? `${hello.bytes} bytes` : "a few hundred bytes"} once converted (<a href="play/${HELLO_DOC}/">play it</a>):</p>
+${hello ? `<pre><code>${esc(hello.json)}</code></pre>` : ""}
+<p>Every example on this site shows its JSON: open one and press <b>Expanded JSON</b> for the plain JSON the converter reads (the <b>JSON</b> button shows it as written, with calls to library components). Change it, then convert it with json2rc:</p>
 <pre><code>git clone https://github.com/camaelon/kobento-tools
 node kobento-tools/json2rc/build/cli.js screen.json screen.rc</code></pre>
+<p>The converter is checked in built: Node.js is all it needs, with no install step.</p>
 <p>Open the <code>.rc</code> in the <a href="inspector/">inspector</a>, which plays it and shows what is inside, or in the desktop player. To write components of your own, read ${link("https://github.com/camaelon/kobento-mcp/blob/main/docs/COMPONENT_AUTHORING.md", "the component guide")}; for 3D, ${link("https://github.com/camaelon/kobento-mcp/blob/main/docs/GUIDE_3D.md", "the 3D guide")}.</p>
+
+<h2 id="mcu">On microcontrollers</h2>
+<p>The C++ engine also runs on microcontrollers, with ThorVG for drawing. ${link("https://github.com/hoford/kobento-mcu", "kobento-mcu")} has a player for ESP32 boards: M5Stack's Tab5, Core2 and PaperS3, Waveshare's round LCD and AMOLED, Elecrow's CrowPanels. It handles touch, knobs and buttons, and e-paper as well as colour. It also runs on an STM32U5 and on a Raspberry Pi.</p>
+<p>A watch face or a dashboard made here plays on those boards unchanged. For now a board shows documents built into its firmware; sending them over the network is planned. <a href="status/">What works on each</a>.</p>
 
 <h2>Open source</h2>
 <p>The code is on GitHub, under the Apache 2.0 license, in seven repositories: the engines, the players, the tools, and the MCP servers with this site. <a href="about/">How they fit together</a>.</p>
 
-<h2>Not from Google</h2>
+<h2>An independent project</h2>
 <p>RemoteCompose is a format defined by Android, and Kobento follows its spec. Kobento is an independent project. It is not affiliated with, endorsed or supported by Google. Google's own RemoteCompose code is in ${link("https://github.com/androidx/androidx/tree/androidx-main/compose/remote", "androidx")}. Kobento is provided as is, with no support or warranty.</p>
 <p>It is pre-1.0. <a href="status/">What is measured, and what does not work yet</a>.</p>
 </main>

@@ -135,52 +135,78 @@ happens in the repositories above.</p>
     return shell(site, { current: "about", title: "How Kobento fits together", sub: "From the format to the apps, and which repository holds what.", body });
 }
 
+/**
+ * What each tool of the front door (remotecompose-server.mjs, the URL people configure) does, for
+ * people: the servers' own descriptions are written for a model. A tool missing here shows the
+ * first sentence of its description (the test lists the front door's tools against these).
+ */
+export const TOOL_SUMMARIES = {
+    build_kit: "Start here. For a request in plain words: the components to call, the closest verified examples with their JSON, the design rules, and what the library has no component for.",
+    find: "Search the catalog: examples, components, Material Symbols icons, capabilities, and the public stream.",
+    get: "Fetch one example, component or published page, with its JSON, notes and renders.",
+    check_component: "Check a component you are writing: lint it, then expand, convert and render it across its parameters.",
+    convert: "Convert JSON to a .rc file. With check, it also renders it in several looks and sizes and audits it.",
+    render: "Render a document to a PNG with the C++ engine, at the sizes, themes, times and data you give.",
+    audit: "List a document's problems and possible improvements: layout, dead code, accessibility, repaints, size, and expressions Android rejects.",
+    inspect: "Answer a question about a document (layout, variables, accessibility, interactions, bytes, per-frame work), or try every control once and report what each changed.",
+    publish: "Package a document as a web page that plays it with the TypeScript engine, at a public URL.",
+    pages: "List your published pages, update one in place, share it to the stream or take it out, or unpublish it.",
+    reference: "The workflow, the JSON format, expressions, the component guide, and every tool's full documentation.",
+    map_info: "What a map region holds: its countries, its largest cities, and how coarse its outlines are.",
+};
+
 let toolsCache = null;
-/** The servers and their tools, from the definitions the servers run with. */
+/** The front door's tools, and the single-purpose servers', from the definitions the servers run with. */
 async function serverTools() {
     if (toolsCache) return toolsCache;
+    const { definition: front } = await import("../remotecompose-server.mjs");
     const servers = [
-        ["guide", "Guide", "Which server and tool fits a task, and every option of each."],
-        ["examples", "Examples and components", "The catalog and the component library: where an assistant starts a new document."],
-        ["json2rc", "Converter", "RemoteCompose JSON to a binary .rc."],
-        ["rc-render", "Renderer", "Pictures of a document with the C++ engine, and validation."],
-        ["inspect", "Inspector", "What is inside a document and how it behaves, run headless with the TypeScript engine."],
-        ["deploy", "Publishing", "Web pages for documents, and the stream."],
+        ["guide", "guide", "Guide", "Which server and tool fits a task, and every option of each."],
+        ["examples", "examples", "Examples and components", "The catalog and the component library."],
+        ["json2rc", "json2rc", "Converter", "RemoteCompose JSON to a binary .rc."],
+        ["rc-render", "rc-render", "Renderer", "Pictures of a document with the C++ engine, and validation."],
+        ["inspect", "inspect", "Inspector", "What is inside a document and how it behaves, run headless with the TypeScript engine."],
+        ["deploy", "deploy", "Publishing", "Web pages for documents, and the stream."],
     ];
-    const out = [];
-    for (const [file, title, about] of servers) {
+    const single = [];
+    for (const [file, mount, title, about] of servers) {
         const { definition } = await import(`../${file}-server.mjs`);
-        out.push({ title, about, name: definition.name, tools: definition.tools.map((t) => ({ name: t.name, text: firstSentence(t.description ?? "") })) });
+        single.push({ title, about, mount, name: definition.name, tools: definition.tools.map((t) => ({ name: t.name, text: t.annotations?.title ?? firstSentence(t.description ?? "") })) });
     }
-    return (toolsCache = out);
+    const tools = front.tools.map((t) => ({ name: t.name, text: TOOL_SUMMARIES[t.name] ?? firstSentence(t.description ?? "") }));
+    return (toolsCache = { tools, single });
 }
 
-/** A tool's description cut to its first sentence, and that to about 170 characters at a clause. */
+/** A description's first sentence, whole. */
 function firstSentence(s) {
     const text = s.replace(/\s+/g, " ").trim().replace(/\b(e\.g|i\.e|etc)\./g, "$1\u0000");
     const m = /^(.+?[.!?])(\s|$)/.exec(text);
-    let out = (m ? m[1] : text).replace(/\u0000/g, ".");
-    if (out.length > 170) {
-        const head = out.slice(0, 170);
-        const cut = Math.max(head.lastIndexOf(": "), head.lastIndexOf("; "), head.lastIndexOf(", "), head.lastIndexOf(" ("));
-        out = (cut > 60 ? head.slice(0, cut) : head.slice(0, head.lastIndexOf(" "))).replace(/[,;:(]$/, "") + "…";
-    }
-    return out;
+    return (m ? m[1] : text).replace(/\u0000/g, ".");
 }
 
-/** Every MCP server and tool, so what an assistant can do is concrete before signing up. */
+const toolRows = (tools) => `<table><tbody>${tools.map((t) => `<tr><td><code>${esc(t.name)}</code></td><td>${esc(t.text).replace(/`([^`]+)`/g, "<code>$1</code>")}</td></tr>`).join("")}</tbody></table>`;
+
+/** The MCP tools, so what an assistant can do is concrete before signing up. */
 export async function toolsPage(site, mcpUrl) {
-    const servers = await serverTools();
-    const count = servers.reduce((n, s) => n + s.tools.length, 0);
+    const { tools, single } = await serverTools();
+    const base = mcpUrl.replace(/\/mcp$/, "");
     const body = `
-<p>Kobento's MCP server at <code>${esc(mcpUrl)}</code> gives an assistant ${count} tools, in ${servers.length} groups.
-An assistant usually starts with <code>build_kit</code>, writes the document, checks it with <code>render_rc</code>,
-<code>audit</code> and <code>try_controls</code>, and publishes it with <code>package_web</code>. You need an
-<a href="../account/">account</a> to use them.</p>
-${servers.map((s) => `<section class="tools-server"><h2>${esc(s.title)} <span class="repo">${esc(s.name)}</span></h2><p>${esc(s.about)}</p>
-<table><tbody>${s.tools.map((t) => `<tr><td><code>${esc(t.name)}</code></td><td>${esc(t.text).replace(/`([^`]+)`/g, "<code>$1</code>")}</td></tr>`).join("")}</tbody></table></section>`).join("\n")}
-<p>The <code>describe</code> tool gives each one's full options with examples. The servers' code is in ${repo("kobento-mcp")}.</p>`;
-    return shell(site, { current: "tools", title: "The MCP tools", sub: `The ${count} tools an assistant gets, and what each one does.`, body });
+<p>Kobento is one MCP server: add <code>${esc(mcpUrl)}</code> to your assistant and it gets these ${tools.length} tools.
+You need an <a href="../account/">account</a> (free) to use them.</p>
+<p>An assistant usually starts with <code>build_kit</code>, writes the document, checks it with <code>convert</code>
+(which renders and audits it) and <code>inspect</code>, and publishes it with <code>publish</code>.</p>
+${toolRows(tools)}
+<p><b>Two engines.</b> <code>render</code> and <code>convert</code>'s pictures come from the C++ engine; a page made with
+<code>publish</code> plays with the TypeScript engine. They can differ, so check the page itself. <a href="../status/">Status</a>.</p>
+
+<h2>The single-purpose servers</h2>
+<p>The tools above regroup the tools of six smaller servers. Most people never need these. They are there
+for a client that wants only one part (just the converter, say), and they take the same account. Each has its own URL.</p>
+${single.map((s) => `<section class="tools-server"><h3>${esc(s.title)} <span class="repo">${esc(`${base}/${s.mount}/mcp`)}</span></h3><p>${esc(s.about)}</p>
+${toolRows(s.tools)}</section>`).join("\n")}
+<p>Ask the <code>reference</code> tool (or the guide server's <code>describe</code>) for each tool's full options with examples.
+The servers' code is in ${repo("kobento-mcp")}.</p>`;
+    return shell(site, { current: "tools", title: "The MCP tools", sub: `The ${tools.length} tools an assistant gets from Kobento's MCP server, and what each one does.`, body });
 }
 
 /** What is solid, the measured parity, and the known gaps. catalog: {examples, javaIdentical}. */

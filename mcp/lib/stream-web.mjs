@@ -264,7 +264,7 @@ export async function streamRoute(req, url, res, site) {
 }
 
 /**
- * The Showcases page's "From the stream" section: the items an admin marked, as stream cards
+ * The Showcases page's "Made with Kobento" section: the items an admin marked, as stream cards
  * without votes (a card opens the page's playground). Empty when there are none or accounts
  * are off. `base` is the way from the page to the site's root ("../").
  */
@@ -281,8 +281,8 @@ export async function featuredSection(base = "../") {
 <div class="body"><span class="title">${esc(it.title)}</span><span class="by">by ${esc(it.author)}</span>
 <span class="meta">${facts.map(esc).join(" · ")}</span></div></a></article>`;
     }).join("\n");
-    return `<section class="lead"><h2>From the stream</h2>
-<p>Made by people with Kobento and chosen for the showcases. More in the <a href="${base}stream/">stream</a>.</p>
+    return `<section class="lead"><h2>Made with Kobento</h2>
+<p>Pages built with Kobento's tools and picked for this page. More in the <a href="${base}stream/">stream</a>.</p>
 <div class="grid">${cards}</div></section>`;
 }
 

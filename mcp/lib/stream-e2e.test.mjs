@@ -73,7 +73,7 @@ test("stream: post, list, vote, sort, remove", async (t) => {
     // Empty, and the nav has the tab.
     let page = await (await s.get("/stream/")).text();
     assert.match(page, /Nothing in the stream yet/);
-    assert.match(page, /href="\.\.\/stream\/" aria-current="page">Stream/);
+    assert.match(page, /href="\.\.\/stream\/" aria-current="page"[^>]*>Stream/);
     assert.match(page, /Sign in<\/a> to vote/);
 
     // Posting needs a name (registration left it empty); the account page says so.
@@ -233,14 +233,14 @@ test("showcases: an admin marks a stream item; the Showcases page shows it first
     await s.post("/account/stream", { csrf: csrfFor(ann), page_id: P, title: "Orbits, live" }, ann);
 
     let show = await (await s.get("/showcases/")).text();
-    assert.ok(!show.includes("From the stream"), "nothing marked yet");
+    assert.ok(!show.includes("Made with Kobento"), "nothing marked yet");
     assert.match(await (await s.get("/stream/", boss)).text(), /Make showcase<\/button>/);
     assert.ok(!(await (await s.get("/stream/", ann)).text()).includes("Make showcase"), "not offered to others");
     assert.equal((await s.post(`/stream/${P}/feature`, { csrf: csrfFor(ann), value: "1" }, ann)).status, 403);
     assert.equal((await s.post(`/stream/${P}/feature`, { csrf: csrfFor(boss), value: "1" }, boss)).status, 303);
 
     show = await (await s.get("/showcases/")).text();
-    assert.match(show, /From the stream/);
+    assert.match(show, /Made with Kobento/);
     assert.ok(show.indexOf("Orbits, live") < show.indexOf('<h2 class="cat">Showcases</h2>'), "before the catalog's");
     assert.match(show, /by Ann/);
     assert.match(show, new RegExp(`href="${s.base}/pages/${P}/"`));
@@ -249,9 +249,9 @@ test("showcases: an admin marks a stream item; the Showcases page shows it first
     assert.match(stream, /Unshowcase<\/button>/);
 
     await s.post(`/stream/${P}/feature`, { csrf: csrfFor(boss), value: "0" }, boss);
-    assert.ok(!(await (await s.get("/showcases/")).text()).includes("From the stream"));
+    assert.ok(!(await (await s.get("/showcases/")).text()).includes("Made with Kobento"));
     // Marked, then taken out of the stream by its owner: off the Showcases page too.
     await s.post(`/stream/${P}/feature`, { csrf: csrfFor(boss), value: "1" }, boss);
     await s.post(`/account/stream/${P}/remove`, { csrf: csrfFor(ann) }, ann);
-    assert.ok(!(await (await s.get("/showcases/")).text()).includes("From the stream"));
+    assert.ok(!(await (await s.get("/showcases/")).text()).includes("Made with Kobento"));
 });
