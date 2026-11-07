@@ -308,10 +308,10 @@ export async function featuredSection(base = "../") {
 }
 
 /**
- * The home page's strip: the stream's top pages, then links to the whole stream and to share
+ * The home page's strip: the stream's top three pages, then links to the whole stream and to share
  * one. Empty when accounts are off or nothing is shared. `base` is the way to the site's root ("").
  */
-export async function homeStreamStrip(base = "", limit = 6) {
+export async function homeStreamStrip(base = "", limit = 3) {
     if (!accountsEnabled()) return "";
     const store = await accounts();
     const items = store.streamItems({ sort: "top", limit: limit * 2 }).map((it) => ({ ...it, meta: pageMeta(it.page_id) }))
