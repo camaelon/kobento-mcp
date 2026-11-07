@@ -31,6 +31,7 @@ import { checkReport, runRc2image } from "./lib/rc2image.mjs";
 import { keptPng } from "./lib/trace-images.mjs";
 import { PAGE_CARD_CSS, pageCards } from "./lib/page-cards.mjs";
 import { buildPage } from "./lib/web-page.mjs";
+import { HOME } from "./lib/brand.mjs";
 import { APP_VAR, checkAppScript, compileAppScript, describeCheck, documentActions, embedAppScript, embeddedAppScript, SCRIPT_NOTE, SCRIPT_PROPS, scriptsAllowed, scriptsOffMessage } from "./lib/app-script.mjs";
 import { blockingFindings } from "./lib/design-audit.mjs";
 import { playerBundle } from "./lib/web-player.mjs";
@@ -407,16 +408,24 @@ function pageDocument(file) {
 // includes this one). A page that cannot be
 // rebuilt (an old side-loaded app script, or no config) is served as it is, with only its
 // player reference brought up to date.
+// This server's path inside the site (RC_MOUNT, "/deploy" on the VPS; "" when it is the site
+// or the front door includes it). Mounted inside the Kobento site, its pages get the site's
+// Inspect button and logo too, unless RC_INSPECTOR=0: the site (the front door) serves the
+// inspector at its root, which pages under the mount reach one level further up.
+const MOUNT = String(process.env.RC_MOUNT ?? "").replace(/\/+$/, "").replace(/^(?=[^/])/, "/");
+const IN_SITE = MOUNT !== "" && process.env.RC_INSPECTOR !== "0";
+
 async function pageRewrite(id) {
     let name = null;
     try { name = sharedBundle(await playerBundle()); } catch {}
-    const inspector = definition.inspector === true;
+    const inspector = definition.inspector === true || IN_SITE;
+    const home = definition.home ?? (IN_SITE ? HOME : null);
     return {
         key: `${name}|${inspector}`,
         apply: (buf) => {
             const s = buf.toString("utf8");
             try {
-                const out = rebuildPage(s, { id, player: name, inspector, home: definition.home ?? null });
+                const out = rebuildPage(s, { id, player: name, inspector, home, mount: definition.inspector === true ? "" : MOUNT });
                 if (out) return Buffer.from(out, "utf8");
             } catch {}
             const out = name ? s.replace(/\.\.\/_player\/[0-9a-f]{16}\.js/g, () => `../_player/${name}`) : s;
@@ -426,7 +435,7 @@ async function pageRewrite(id) {
 }
 
 /** The page HTML rebuilt from its stored config and document, or null when it cannot be. */
-export function rebuildPage(html, { id, player, inspector, home = null }) {
+export function rebuildPage(html, { id, player, inspector, home = null, mount = "" }) {
     const c = /\n {2}var C = (\{.*\});\n {2}var DATA = "([A-Za-z0-9+/=]*)";\n/.exec(html);
     const src = player ? `../_player/${player}` : /<script src="(\.\.\/_player\/[0-9a-f]{16}\.js)"><\/script>/.exec(html)?.[1];
     if (!c || !src) return null;
@@ -434,7 +443,10 @@ export function rebuildPage(html, { id, player, inspector, home = null }) {
     if (config.app && !config.app.embedded) return null;   // a side-loaded script: kept as published
     if (config.controls && home && !config.home) config = { ...config, home };
     if (config.controls && inspector && !config.inspectHref) {
-        config = { ...config, inspectHref: `../../inspector/?url=${encodeURIComponent(`../pages/${id}/${config.fileName || "document.rc"}`)}` };
+        // The page is <mount>/pages/<id>/ and the inspector <site>/inspector/: up past pages,
+        // the id and each segment of the mount; the document's URL is relative to the inspector.
+        const up = "../".repeat(2 + mount.split("/").filter(Boolean).length);
+        config = { ...config, inspectHref: `${up}inspector/?url=${encodeURIComponent(`..${mount}/pages/${id}/${config.fileName || "document.rc"}`)}` };
     }
     return buildPage({ bundle: { src }, rcBase64: c[2], config });
 }
