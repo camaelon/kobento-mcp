@@ -1,0 +1,10 @@
+{
+ "doc": "The square set's tokens, merged over the library's theme: smaller radii, and the inner radius and padding of a 1.5 dp ring to match.",
+ "numbers": {
+  "radius_sm": 2,
+  "radius_md": 4,
+  "radius_lg": 6,
+  "radius_outline_inner": 2.5,
+  "space_outline_inner": 14.5
+ }
+}

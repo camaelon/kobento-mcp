@@ -260,6 +260,13 @@ export const THREE_D_EXAMPLES = ["DRW-17", "CMP-35", "CMP-36", "CMP-37", "CMP-38
 const HIDDEN_VERTICALS = new Set([...(process.env.RC_HIDE_VERTICALS ? VERTICAL_COMPONENTS : []), ...(process.env.RC_HIDE_BATCH ? BATCH_COMPONENTS : []), ...(process.env.RC_HIDE_BATCH2 ? BATCH2_COMPONENTS : []), ...(process.env.RC_HIDE_3D ? THREE_D_COMPONENTS : [])]);
 export function loadLibrary(dir = LIBRARY_DIR) {
     if (cached && cached.dir === dir) return cached;
+    const { components, theme } = readComponentDir(dir);
+    cached = { dir, components, theme: theme ?? { colors: {}, numbers: {} } };
+    return cached;
+}
+
+/** A folder of <Name>/component.json definitions and an optional theme/default.json. */
+function readComponentDir(dir) {
     const components = new Map();
     if (existsSync(dir)) {
         for (const d of readdirSync(dir, { withFileTypes: true })) {
@@ -271,14 +278,128 @@ export function loadLibrary(dir = LIBRARY_DIR) {
         }
     }
     const themeFile = path.join(dir, "theme", "default.json");
-    const theme = existsSync(themeFile) ? JSON.parse(readFileSync(themeFile, "utf8")) : { colors: {}, numbers: {} };
-    cached = { dir, components, theme };
-    return cached;
+    return { components, theme: existsSync(themeFile) ? JSON.parse(readFileSync(themeFile, "utf8")) : null };
+}
+
+// ---- component sets -------------------------------------------------------------------------
+//
+// A component set is another look for the library: examples/component-sets/<name>/ holds the
+// components it implements differently (<Name>/component.json, called exactly as the library's)
+// and, optionally, theme/default.json with the tokens it changes (colours, numbers, mono
+// palettes: merged over the library's, key by key). Everything it does not define comes from
+// the library, so a set can start with one component or only a theme. set.json may give a
+// summary. A document picks one with "componentSet": "<name>" at the top (removed by the
+// expansion, like componentTheme), or the expansion's componentSet option: the call sites stay
+// the same, the implementation changes. A set's component must keep the library component's
+// interface (params, their types and enum values, slots) so every document that calls it still
+// expands: checkComponentSet says where it does not.
+
+export const SETS_DIR = process.env.RC_COMPONENT_SETS_DIR
+    ?? path.join(HERE, "..", "..", "examples", "component-sets");
+const SET_NAME = /^[a-z0-9][a-z0-9-]*$/;
+
+/** The sets there are: [{name, summary, components (the ones it defines), theme (whether it changes tokens)}]. */
+export function componentSets(dir = SETS_DIR) {
+    if (!existsSync(dir)) return [];
+    return readdirSync(dir, { withFileTypes: true }).filter((d) => d.isDirectory() && SET_NAME.test(d.name)).map((d) => {
+        const own = readComponentDir(path.join(dir, d.name));
+        let summary = "";
+        try { summary = JSON.parse(readFileSync(path.join(dir, d.name, "set.json"), "utf8")).summary ?? ""; } catch {}
+        return { name: d.name, summary, components: [...own.components.keys()].sort(), theme: !!own.theme };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Objects merged key by key, the second winning; anything else is replaced. */
+function mergeDeep(a, b) {
+    if (!b || typeof b !== "object" || Array.isArray(b) || !a || typeof a !== "object" || Array.isArray(a)) return b ?? a;
+    const out = { ...a };
+    for (const [k, v] of Object.entries(b)) out[k] = mergeDeep(a[k], v);
+    return out;
+}
+
+const setCache = new Map();
+/**
+ * The library as a set sees it: the set's components over the library's, its theme over the
+ * library's theme. "default" (or none) is the library itself. Throws for a set that does not
+ * exist, naming the ones that do.
+ */
+export function loadComponentSet(name, { base, dir = SETS_DIR } = {}) {
+    const library = base ?? loadLibrary();
+    if (!name || name === "default") return library;
+    if (typeof name !== "string" || !SET_NAME.test(name) || !existsSync(path.join(dir, name))) {
+        const known = componentSets(dir).map((s) => s.name);
+        throw new Error(`componentSet: no set named ${JSON.stringify(name)} (${known.length ? `there are: default, ${known.join(", ")}` : "only \"default\" exists"})`);
+    }
+    const key = `${dir}|${name}|${library.dir}`;
+    if (!base && setCache.has(key)) return setCache.get(key);
+    const own = readComponentDir(path.join(dir, name));
+    const components = new Map(library.components);
+    for (const [n, def] of own.components) components.set(n, { ...def, set: name });
+    const set = { ...library, components, theme: own.theme ? mergeDeep(library.theme, own.theme) : library.theme,
+        set: name, overrides: [...own.components.keys()].filter((n) => library.components.has(n)).sort(),
+        added: [...own.components.keys()].filter((n) => !library.components.has(n)).sort() };
+    if (!base) setCache.set(key, set);
+    return set;
+}
+
+/** A component's interface: what a call can pass. {params: {name: {type, required?, default?, static?, values?}}, slots: {name: {optional}}}. */
+export function componentInterface(def) {
+    const params = {};
+    for (const [n, p] of Object.entries(def?.params ?? {})) {
+        const q = p && typeof p === "object" ? p : { type: typeof p };
+        params[n] = { type: q.type, ...(q.required ? { required: true } : {}), ...(q.default !== undefined ? { default: q.default } : {}),
+            ...(q.static ? { static: true } : {}), ...(q.values ? { values: q.values } : {}) };
+    }
+    const slots = {};
+    for (const [n, sl] of Object.entries(def?.slots ?? {})) slots[n] = { optional: !!sl?.optional };
+    return { params, slots };
+}
+
+/**
+ * Where a set's components break the library's interface, so a document written against the
+ * library would not expand (errors) or would change meaning (warnings), per component:
+ * {set, ok, components: [{component, errors, warnings}], added, theme}.
+ */
+export function checkComponentSet(name, { dir = SETS_DIR } = {}) {
+    const base = loadLibrary();
+    const set = loadComponentSet(name, { dir });
+    const out = [];
+    for (const n of set.added) {
+        const lint = lintComponent(set.components.get(n), n, { library: set });
+        if (lint.errors.length || lint.warnings.length) out.push({ component: n, added: true, errors: lint.errors, warnings: lint.warnings });
+    }
+    for (const n of set.overrides) {
+        const a = componentInterface(base.components.get(n)), b = componentInterface(set.components.get(n));
+        const errors = [], warnings = [];
+        for (const [p, pa] of Object.entries(a.params)) {
+            const pb = b.params[p];
+            if (!pb) { errors.push(`param '${p}' is missing (the library's ${n} takes it: a call passing it fails)`); continue; }
+            if (pa.type !== pb.type) errors.push(`param '${p}' is ${pb.type}, the library's is ${pa.type}`);
+            if (pb.required && !pa.required) errors.push(`param '${p}' is required here, optional in the library (a call without it fails)`);
+            if (pa.values && pb.values) {
+                const lost = pa.values.filter((v) => !pb.values.includes(v));
+                if (lost.length) errors.push(`param '${p}' lost the value${lost.length > 1 ? "s" : ""} ${lost.map((v) => JSON.stringify(v)).join(", ")}`);
+            }
+            if (pb.static && !pa.static) errors.push(`param '${p}' is static here: a call that binds it to a runtime "@variable" in the library cannot here`);
+            if (JSON.stringify(pa.default) !== JSON.stringify(pb.default) && pa.default !== undefined) warnings.push(`param '${p}' defaults to ${JSON.stringify(pb.default)}, the library's to ${JSON.stringify(pa.default)}: calls that leave it out change`);
+        }
+        for (const [p, pb] of Object.entries(b.params)) if (!a.params[p] && pb.required) errors.push(`param '${p}' is new and required: calls written for the library do not pass it`);
+        for (const [sl, sa] of Object.entries(a.slots)) {
+            const sb = b.slots[sl];
+            if (!sb) errors.push(`slot '${sl}' is missing: content a call puts there is lost`);
+            else if (sa.optional && !sb.optional) errors.push(`slot '${sl}' is required here, optional in the library`);
+        }
+        // And the definition itself, as check_component lints one.
+        const lint = lintComponent(set.components.get(n), n, { library: set });
+        out.push({ component: n, errors: [...errors, ...lint.errors], warnings: [...warnings, ...lint.warnings] });
+    }
+    return { set: name, ok: out.every((c) => !c.errors.length), components: out, added: set.added,
+        theme: set.theme !== base.theme };
 }
 
 /** Whether `doc` defines components or calls any library component (walks the JSON once). */
 export function usesComponents(doc, library = loadLibrary()) {
-    if (localDefinitions(doc) || doc?.componentMode !== undefined || doc?.componentTheme !== undefined) return true;
+    if (localDefinitions(doc) || doc?.componentMode !== undefined || doc?.componentTheme !== undefined || doc?.componentSet !== undefined) return true;
     let found = false;
     walk(doc, (node) => { if (callOf(node, library)) found = true; });
     if (found) return true;
@@ -342,8 +463,12 @@ function callOf(node, library, patterns = new Set()) {
  * auto; the default converts with json2rc, without bitmap files), traps (the PATTERN_TRAPS
  * honoured, default all: leave one out once the players handle it).
  */
-export function expandComponents(doc, { library = loadLibrary(), mode, theme, measure, traps } = {}) {
+export function expandComponents(doc, { library, componentSet, mode, theme, measure, traps } = {}) {
     const src = structuredClone(doc);
+    // The component set the calls expand with: the option, else the document's "componentSet".
+    const setName = componentSet ?? src.componentSet;
+    delete src.componentSet;
+    library = setName ? loadComponentSet(setName, library ? { base: library } : {}) : (library ?? loadLibrary());
     // The traps honoured: the option, else the document's "componentTraps", else DEFAULT_TRAPS.
     traps ??= src.componentTraps ?? DEFAULT_TRAPS;
     delete src.componentTraps;

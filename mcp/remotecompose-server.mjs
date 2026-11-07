@@ -1007,7 +1007,8 @@ const tools = [
         description:
             "Search the verified catalog. kind \"examples\" (default): rank examples for a query and/or " +
             "capability, use-case, component ids, each with why it matched and its snippets. kind " +
-            "\"components\": library components for a query or capabilities. kind \"icons\": Material Symbols " +
+            "\"components\": library components for a query or capabilities (no query: every one, and the component sets, other looks a document " +
+            "picks with \"componentSet\"; interface: true adds each one's params and slots; set: the library as that set has it). kind \"icons\": Material Symbols " +
             "icons (4,157) by name, tag or category, each with its {\"Icon\": ...} call. kind \"capabilities\": the " +
             "capability ids (optionally under a prefix) with example counts. kind \"terms\": how words " +
             "resolve to capabilities, use cases and components. kind \"stream\": documents people made and shared " +

@@ -13,7 +13,7 @@ import {
     EXAMPLES_DIR, buildKit, componentSummary, exampleDoc, findComponents, findExamples,
     listCapabilities, loadCatalog, resolveTerms, summarizeExample, findIcons, canvasOnly, examplesDefining, similarGenerated, loadGenerated } from "./lib/catalog.mjs";
 import { NO_MENU, structureLines } from "./lib/structures.mjs";
-import { lintComponent, loadLibrary } from "./lib/components.mjs";
+import { checkComponentSet, componentInterface, componentSets, lintComponent, loadComponentSet, loadLibrary } from "./lib/components.mjs";
 import { compileComponents, jsonToRc } from "./lib/json2rc.mjs";
 import { definition as renderServer } from "./rc-render-server.mjs";
 import { publicRoute } from "./lib/examples-web.mjs";
@@ -164,9 +164,14 @@ export const definition = {
             annotations: { title: "Search the component library", ...RO },
             description:
                 "Search the component library by name, synonym (\"toggle\", \"seek bar\", \"kpi\"), " +
-                "capability or text. With no arguments, lists every component.",
-            inputSchema: { type: "object", properties: { query: { type: "string" }, capabilities: STR_LIST, limit: { type: "number" } } },
-            handler: async (a) => json(findComponents(a)),
+                "capability or text. With no arguments, lists every component, and the component sets " +
+                "(other looks for the library: a document picks one with \"componentSet\"). `interface: true` adds " +
+                "each component's params (type, default, required, static, enum values) and slots: the contract a " +
+                "set's version of it must keep. `set` lists that set's library, saying which components it changes.",
+            inputSchema: { type: "object", properties: { query: { type: "string" }, capabilities: STR_LIST, limit: { type: "number" },
+                interface: { type: "boolean", description: "Include each component's interface (params and slots)." },
+                set: { type: "string", description: "List the components as this set has them (from: set or library)." } } },
+            handler: async (a) => json(findComponentsWithSets(a)),
         },
         {
             name: "find_icons",
@@ -199,13 +204,14 @@ export const definition = {
                 type: "object",
                 properties: {
                     name: { type: "string" },
+                    set: { type: "string", description: "A component set: its version of the component (its params and definition), when it has one." },
                     definition: { type: "boolean", description: "Include the whole definition: body and locals (default false)." },
                     parts: { ...STR_LIST, description: "Also any of demo_json (the demo document calling it), render (its PNGs: default, light, dark, mono, mono-light)." },
                 },
                 required: ["name"],
             },
-            handler: async ({ name, definition: withDef, parts = [] }) => {
-                const lib = loadLibrary();
+            handler: async ({ name, set, definition: withDef, parts = [] }) => {
+                const lib = loadComponentSet(set);
                 const key = [...lib.components.keys()].find((k) => k.toLowerCase() === String(name).toLowerCase());
                 if (!key) {
                     const node = ["stateLayout", "fitBox", "collapsibleColumn", "collapsibleRow", "column", "row", "box", "canvas", "flow", "verticalScroll", "horizontalScroll"]
@@ -215,7 +221,9 @@ export const definition = {
                     if (owners.length) throw new Error(`${name} is not a library component: ${owners.join(" and ")} define it inside their own doc.json (a \`components\` block). Copy that definition from get ${owners[0]} (parts [\"json\"]), or use the library's ${/panel|card|tile/i.test(String(name)) ? "Card" : "components (find kind \"components\")"}.`);
                     throw new Error(`no component ${name} (the library has ${[...lib.components.keys()].sort().join(", ")})`);
                 }
-                const s = componentSummary(key);
+                const s = componentSummary(key) ?? { name: key, summary: lib.components.get(key).summary };
+                // A set's own version: its interface and summary, saying where it comes from.
+                if (set && lib.components.get(key).set) Object.assign(s, { set, summary: lib.components.get(key).summary, ...componentInterface(lib.components.get(key)) });
                 if (withDef) {
                     const { dir: _, ...def } = lib.components.get(key);
                     s.definition = def;
@@ -275,6 +283,7 @@ export const definition = {
                 properties: {
                     definition: { description: "The component definition (component.json shape: summary, params, slots, locals, body, call). Omit it to check a LIBRARY component by `name` (a sweep over its param, a call with your variables).", anyOf: [{ type: "object" }, { type: "string" }] },
                     name: { type: "string", description: "Its PascalCase name (default definition.component)." },
+                    set: { type: "string", description: "A component set (find kind components lists them): with `name` and no definition, check that set's version of the component, its demo expanded with the set's theme; with neither, check the WHOLE set against the library's interface (params, their types and enum values, slots) so documents written for the library still expand with it." },
                     call: { type: "object", description: "Arguments of one call, {param: value} (default: from definition.call); the wrapped form {\"Name\": {...}} that get returns is accepted too." },
                     doc: { description: "Instead of `call`: a whole document calling it.", anyOf: [{ type: "object" }, { type: "string" }] },
                     expanded: { type: "boolean", description: "Include the expanded demo document (what the call becomes, every icon path included: ~10 KB). Default false." },
@@ -297,7 +306,6 @@ export const definition = {
                         required: ["param", "values"],
                     },
                 },
-                required: ["definition"],
             },
             examples: [{
                 definition: { component: "PriceTag", summary: "A price in a pill", params: { price: { type: "string", required: true, doc: "e.g. 9.99" } },
@@ -444,7 +452,32 @@ function rootWants(body) {
 // The expansion is listed last: the numbers and findings are what is read first.
 function expandedLast(o, keep) { const { expanded, ...rest } = o; return expanded === undefined || !keep ? rest : { ...rest, expanded }; }
 
-async function checkComponent({ definition: def, name, call, doc, variables = {}, width = 360, height = 200, render = true, sweep, clock, system_variables, container, expanded = false }) {
+/**
+ * find_components, plus the component sets: with no query, the sets there are; `interface`
+ * adds each listed component's params and slots; `set` lists the library as that set has it.
+ */
+function findComponentsWithSets({ interface: withInterface = false, set, ...a } = {}) {
+    const lib = loadComponentSet(set);
+    const r = findComponents(a);
+    // A set's own components are not in the catalog's library: list them too.
+    if (set) for (const n of [...lib.components.keys()]) if (lib.components.get(n).set && !r.components.some((c) => c.name === n) && !a.query && !(a.capabilities ?? []).length)
+        r.components.push({ name: n, summary: lib.components.get(n).summary });
+    for (const c of r.components) {
+        const def = lib.components.get(c.name);
+        if (!def) continue;
+        if (set) c.from = def.set ? "set" : "library";
+        if (def.set) c.summary = def.summary;
+        if (withInterface) Object.assign(c, componentInterface(def));
+    }
+    if (set) r.total = r.components.length;
+    if (!a.query && !(a.capabilities ?? []).length) r.sets = [{ name: "default", summary: "The library itself." }, ...componentSets()];
+    if (set) r.set = { name: set, changes: lib.overrides ?? [], adds: lib.added ?? [], theme: lib.theme !== loadLibrary().theme };
+    return r;
+}
+
+async function checkComponent({ definition: def, name, set, call, doc, variables = {}, width = 360, height = 200, render = true, sweep, clock, system_variables, container, expanded = false }) {
+    // A whole component set, against the library's interface (no definition, no name).
+    if (set && def === undefined && name === undefined) return json(checkComponentSet(set));
     // The clock and system variables reach every render below (a clock component is checked
     // at a pinned time, a sunrise one with offsetToUtc pinned).
     const pinned = { ...(clock !== undefined ? { clock } : {}), ...(system_variables ? { system_variables } : {}) };
@@ -452,16 +485,17 @@ async function checkComponent({ definition: def, name, call, doc, variables = {}
     if (typeof def === "string") def = JSON.parse(def);
     // No definition: a library component by name (its own definition, so a sweep or a call
     // with host variables can be checked without pasting it).
+    // (With `set`, that set's version of it: the demo expands with the set's theme too.)
+    const lib = loadComponentSet(set);
     if (def === undefined && typeof name === "string") {
-        const lib = loadLibrary();
         const key = [...lib.components.keys()].find((k) => k.toLowerCase() === name.toLowerCase());
-        if (!key) throw new Error(`no component ${name} in the library (pass a definition for your own; the library has ${[...lib.components.keys()].sort().join(", ")})`);
+        if (!key) throw new Error(`no component ${name} in the ${set ? `set ${set}` : "library"} (pass a definition for your own; it has ${[...lib.components.keys()].sort().join(", ")})`);
         const { dir: _d, ...libDef } = lib.components.get(key);
         def = { component: key, ...libDef };
         name = key;
     }
     name ??= def?.component;
-    const lint = lintComponent(def, name);
+    const lint = lintComponent(def, name, { library: lib });
     const out = { name, errors: lint.errors, warnings: lint.warnings };
     if (lint.errors.length) return json({ ...out, ok: false });
     const { component: _, ...body } = def;
@@ -482,6 +516,7 @@ async function checkComponent({ definition: def, name, call, doc, variables = {}
         if (doc) {
             const d = typeof doc === "string" ? JSON.parse(doc) : structuredClone(doc);
             d.components = { ...(d.components ?? {}), [name]: body };
+            if (set) d.componentSet ??= set;
             return d;
         }
         const vars = Object.fromEntries(refs(args).filter((v) => !textRefs.has(v)).map((v) => [v, variables[v] ?? 0]));
@@ -490,6 +525,7 @@ async function checkComponent({ definition: def, name, call, doc, variables = {}
         const host = container === "row" ? [{ row: { modifiers: ["fillMaxWidth", { spacedBy: 12 }], children: calls } }] : calls;
         return {
             header: { apiLevel: 7, width, height, profiles: 513 },
+            ...(set ? { componentSet: set } : {}),
             components: { [name]: body },
             ...demoResources(vars),
             root: textDecls.length
@@ -551,6 +587,7 @@ async function checkComponent({ definition: def, name, call, doc, variables = {}
                 const sweepVars = Object.fromEntries(refs(args).filter((v) => !textRefs.has(v)).map((v) => [v, variables[v] ?? 0]));
                 const sheet = sweepDoc(name, body, args, sweep, Math.max(width, 360), container, sweepVars, doc);
                 if (textDecls.length) sheet.root = [...textDecls, sheet.root];
+                if (set) sheet.componentSet = set;
                 // The other inline components the document defines (helpers this one calls).
                 const docComps = doc ? (typeof doc === "string" ? JSON.parse(doc) : doc).components : null;
                 if (docComps) sheet.components = { ...docComps, [name]: body };

@@ -1,0 +1,2170 @@
+{
+ "component": "Button",
+ "version": 6,
+ "summary": "The square set's Button: the library's Button with square corners and a 2.5 dp ring. A tappable button: filled, outlined or text style, with an optional leading icon, optionally full width. Labelled for accessibility from its label; enabled (true/false, or a 0/1 variable or expression read at run time) dims it, drops the click and marks it disabled. The 40 dp pill sits in a 48 dp tall touch target.",
+ "params": {
+  "label": {
+   "type": "string",
+   "required": true,
+   "doc": "Button text; also its accessibility label"
+  },
+  "style": {
+   "type": "enum",
+   "values": [
+    "filled",
+    "outlined",
+    "text"
+   ],
+   "default": "filled",
+   "static": true,
+   "doc": "filled: a solid pill (primary action); outlined: a 2.5 dp ring (secondary); text: label only (tertiary)"
+  },
+  "color": {
+   "type": "color",
+   "default": "@colors.primary",
+   "doc": "Fill (filled), or ring and label (outlined, text)"
+  },
+  "surface": {
+   "type": "color",
+   "default": "@colors.background",
+   "doc": "outlined (and, in mono, filled and disabled): the colour the button sits on, which fills the inside of the ring. Pass @colors.surface for a button inside a Card"
+  },
+  "enabled": {
+   "type": "bool",
+   "default": true,
+   "static": true,
+   "doc": "true/false: fixed when expanded. Or a runtime value, \"@canSubmit\" or an expression (\"@a * @b\"), exactly 0 or 1: the button follows it while it plays (0: dimmed, the click does nothing, announced as disabled; 1: normal)"
+  },
+  "fill": {
+   "type": "bool",
+   "default": false,
+   "static": true,
+   "doc": "true: the button spans the width it is given (fillMaxWidth), its label centred: a form or dialog button"
+  },
+  "onClick": {
+   "type": "action",
+   "doc": "Any click action (valueFloatChange, valueFloatExpressionChange, hostNamedAction, ...). Omitted: the button is not clickable"
+  }
+ },
+ "slots": {
+  "icon": {
+   "optional": true,
+   "doc": "A leading icon about 16 dp square, drawn in the label colour (onPrimary for filled). Without it the label is the only child"
+  }
+ },
+ "capabilities": [
+  "input.tap",
+  "layout.decoration",
+  "a11y.labels"
+ ],
+ "call": {
+  "Button": {
+   "label": "Sign in",
+   "enabled": "@canSubmit",
+   "fill": true,
+   "onClick": {
+    "type": "hostNamedAction",
+    "name": "signIn"
+   }
+  }
+ },
+ "pitfalls": [
+  "The outlined ring is two stacked backgrounds, not a border: `border` cannot take a theme colour (json2rc and the Java parser write the @colors id as a literal, transparent, colour). So the inside is painted with `surface`: set it to whatever the button sits on (@colors.surface in a Card), or the ring shows a background-coloured fill",
+  "The height is fixed: a 40 dp pill (control_height) with 4 dp (space_1) of transparent padding above and below, so the button is 48 dp tall and all of it is clickable; the clip and ripple stay on the pill. Leave no extra vertical space between stacked buttons or rows of buttons (the padding is 8 dp of the gap). The width wraps the label, so give a row of buttons room or they overflow; a label under about 16 dp (one or two letters) leaves the target under 48 dp wide",
+  "The label is one line with an ellipsis (maxLines 1): in a slot narrower than the label it ends in … instead of wrapping and being clipped by the pill",
+  "A runtime enabled (\"@var\" or an expression) writes the button twice, a disabled face and an enabled one, each shown by a visibility variable (enabled and 1 - enabled, computed from resources): only the enabled face has the click, ripple and onClick, so at 0 a tap runs nothing and sends no host action. It costs about 490 B more per call than a literal (plus the icon slot, written twice), so use a literal true/false when the state is fixed. The value must be exactly 0 or 1 and must read only resources variables (a host variable, an exported one), not a tree variable. A disabled face has no click to merge its text, so its label is on the text alone, marked disabled: one item for a screen reader, in both states. Its focus box is the text, not the pill",
+  "fill: true spans the width the parent gives (fillMaxWidth) with the label centred; in a row give it a weight instead or it takes the whole row"
+ ],
+ "body": {
+  "$if": "!enabled",
+  "then": {
+   "$if": "theme.mono",
+   "then": {
+    "$if": "style == 'text'",
+    "then": {
+     "box": {
+      "horizontalAlignment": "center",
+      "verticalAlignment": "center",
+      "modifiers": [
+       {
+        "$if": "fill",
+        "then": "fillMaxWidth"
+       },
+       {
+        "padding": [
+         0,
+         "@theme.space_1"
+        ]
+       },
+       {
+        "height": "@theme.control_height"
+       },
+       {
+        "clip": "@theme.radius_md"
+       },
+       {
+        "$if": "style == 'filled'",
+        "then": {
+         "background": "@colors.disabled"
+        }
+       },
+       {
+        "padding": [
+         "@theme.space_4",
+         0
+        ]
+       }
+      ],
+      "children": [
+       {
+        "$if": "icon",
+        "then": {
+         "row": {
+          "verticalAlignment": "center",
+          "modifiers": [
+           {
+            "spacedBy": "@theme.space_2"
+           }
+          ],
+          "children": [
+           {
+            "$slot": "icon"
+           },
+           {
+            "text": {
+             "value": "@label",
+             "maxLines": 1,
+             "overflow": "ellipsis",
+             "fontSize": "@theme.text_md",
+             "color": "@colors.onDisabled",
+             "modifiers": [
+              {
+               "semantics": {
+                "enabled": false
+               }
+              }
+             ]
+            }
+           }
+          ]
+         }
+        },
+        "else": {
+         "text": {
+          "value": "@label",
+          "maxLines": 1,
+          "overflow": "ellipsis",
+          "fontSize": "@theme.text_md",
+          "color": "@colors.onDisabled",
+          "modifiers": [
+           {
+            "semantics": {
+             "enabled": false
+            }
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    },
+    "else": {
+     "box": {
+      "modifiers": [
+       {
+        "$if": "fill",
+        "then": "fillMaxWidth"
+       },
+       {
+        "padding": [
+         0,
+         "@theme.space_1"
+        ]
+       },
+       {
+        "height": "@theme.control_height"
+       },
+       {
+        "clip": "@theme.radius_md"
+       },
+       {
+        "background": "@colors.disabled"
+       },
+       {
+        "padding": 2.5
+       }
+      ],
+      "children": [
+       {
+        "box": {
+         "horizontalAlignment": "center",
+         "verticalAlignment": "center",
+         "modifiers": [
+          {
+           "$if": "fill",
+           "then": "fillMaxSize",
+           "else": "fillMaxHeight"
+          },
+          {
+           "clip": "max(0, @theme.radius_md - 2.5)"
+          },
+          {
+           "background": "@surface"
+          },
+          {
+           "padding": [
+            "@theme.space_4 - 2.5",
+            0
+           ]
+          }
+         ],
+         "children": [
+          {
+           "$if": "icon",
+           "then": {
+            "row": {
+             "verticalAlignment": "center",
+             "modifiers": [
+              {
+               "spacedBy": "@theme.space_2"
+              }
+             ],
+             "children": [
+              {
+               "$slot": "icon"
+              },
+              {
+               "text": {
+                "value": "@label",
+                "maxLines": 1,
+                "overflow": "ellipsis",
+                "fontSize": "@theme.text_md",
+                "color": "@colors.onDisabled",
+                "modifiers": [
+                 {
+                  "semantics": {
+                   "enabled": false
+                  }
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           },
+           "else": {
+            "text": {
+             "value": "@label",
+             "maxLines": 1,
+             "overflow": "ellipsis",
+             "fontSize": "@theme.text_md",
+             "color": "@colors.onDisabled",
+             "modifiers": [
+              {
+               "semantics": {
+                "enabled": false
+               }
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   },
+   "else": {
+    "$if": "style == 'outlined'",
+    "then": {
+     "box": {
+      "modifiers": [
+       {
+        "$if": "fill",
+        "then": "fillMaxWidth"
+       },
+       {
+        "padding": [
+         0,
+         "@theme.space_1"
+        ]
+       },
+       {
+        "height": "@theme.control_height"
+       },
+       {
+        "clip": "@theme.radius_md"
+       },
+       {
+        "background": "@colors.disabled"
+       },
+       {
+        "padding": 2.5
+       }
+      ],
+      "children": [
+       {
+        "box": {
+         "horizontalAlignment": "center",
+         "verticalAlignment": "center",
+         "modifiers": [
+          {
+           "$if": "fill",
+           "then": "fillMaxSize",
+           "else": "fillMaxHeight"
+          },
+          {
+           "clip": "max(0, @theme.radius_md - 2.5)"
+          },
+          {
+           "background": "@surface"
+          },
+          {
+           "padding": [
+            "@theme.space_4 - 2.5",
+            0
+           ]
+          }
+         ],
+         "children": [
+          {
+           "$if": "icon",
+           "then": {
+            "row": {
+             "verticalAlignment": "center",
+             "modifiers": [
+              {
+               "spacedBy": "@theme.space_2"
+              }
+             ],
+             "children": [
+              {
+               "$slot": "icon"
+              },
+              {
+               "text": {
+                "value": "@label",
+                "maxLines": 1,
+                "overflow": "ellipsis",
+                "fontSize": "@theme.text_md",
+                "color": "@colors.onDisabled",
+                "modifiers": [
+                 {
+                  "semantics": {
+                   "enabled": false
+                  }
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           },
+           "else": {
+            "text": {
+             "value": "@label",
+             "maxLines": 1,
+             "overflow": "ellipsis",
+             "fontSize": "@theme.text_md",
+             "color": "@colors.onDisabled",
+             "modifiers": [
+              {
+               "semantics": {
+                "enabled": false
+               }
+              }
+             ]
+            }
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "else": {
+     "box": {
+      "horizontalAlignment": "center",
+      "verticalAlignment": "center",
+      "modifiers": [
+       {
+        "$if": "fill",
+        "then": "fillMaxWidth"
+       },
+       {
+        "padding": [
+         0,
+         "@theme.space_1"
+        ]
+       },
+       {
+        "height": "@theme.control_height"
+       },
+       {
+        "clip": "@theme.radius_md"
+       },
+       {
+        "$if": "style == 'filled'",
+        "then": {
+         "background": "@colors.disabled"
+        }
+       },
+       {
+        "padding": [
+         "@theme.space_4",
+         0
+        ]
+       }
+      ],
+      "children": [
+       {
+        "$if": "icon",
+        "then": {
+         "row": {
+          "verticalAlignment": "center",
+          "modifiers": [
+           {
+            "spacedBy": "@theme.space_2"
+           }
+          ],
+          "children": [
+           {
+            "$slot": "icon"
+           },
+           {
+            "text": {
+             "value": "@label",
+             "maxLines": 1,
+             "overflow": "ellipsis",
+             "fontSize": "@theme.text_md",
+             "color": "@colors.onDisabled",
+             "modifiers": [
+              {
+               "semantics": {
+                "enabled": false
+               }
+              }
+             ]
+            }
+           }
+          ]
+         }
+        },
+        "else": {
+         "text": {
+          "value": "@label",
+          "maxLines": 1,
+          "overflow": "ellipsis",
+          "fontSize": "@theme.text_md",
+          "color": "@colors.onDisabled",
+          "modifiers": [
+           {
+            "semantics": {
+             "enabled": false
+            }
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  },
+  "else": {
+   "$if": "enabled == 'true'",
+   "then": {
+    "$if": "theme.mono",
+    "then": {
+     "$if": "style == 'text'",
+     "then": {
+      "box": {
+       "horizontalAlignment": "center",
+       "verticalAlignment": "center",
+       "modifiers": [
+        {
+         "$if": "fill",
+         "then": "fillMaxWidth"
+        },
+        {
+         "padding": [
+          0,
+          "@theme.space_1"
+         ]
+        },
+        {
+         "height": "@theme.control_height"
+        },
+        {
+         "clip": "@theme.radius_md"
+        },
+        {
+         "$if": "style == 'filled'",
+         "then": {
+          "background": "@color"
+         }
+        },
+        {
+         "padding": [
+          "@theme.space_4",
+          0
+         ]
+        },
+        "ripple",
+        {
+         "semantics": {
+          "contentDescription": "@label",
+          "enabled": true,
+          "clickable": true
+         }
+        },
+        {
+         "onClick": "@onClick"
+        }
+       ],
+       "children": [
+        {
+         "$if": "icon",
+         "then": {
+          "row": {
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "spacedBy": "@theme.space_2"
+            }
+           ],
+           "children": [
+            {
+             "$slot": "icon"
+            },
+            {
+             "text": {
+              "value": "@label",
+              "maxLines": 1,
+              "overflow": "ellipsis",
+              "fontSize": "@theme.text_md",
+              "color": {
+               "$if": "style == 'filled'",
+               "then": "@colors.onPrimary",
+               "else": "@color"
+              }
+             }
+            }
+           ]
+          }
+         },
+         "else": {
+          "text": {
+           "value": "@label",
+           "maxLines": 1,
+           "overflow": "ellipsis",
+           "fontSize": "@theme.text_md",
+           "color": {
+            "$if": "style == 'filled'",
+            "then": "@colors.onPrimary",
+            "else": "@color"
+           }
+          }
+         }
+        }
+       ]
+      }
+     },
+     "else": {
+      "box": {
+       "modifiers": [
+        {
+         "$if": "fill",
+         "then": "fillMaxWidth"
+        },
+        {
+         "padding": [
+          0,
+          "@theme.space_1"
+         ]
+        },
+        {
+         "height": "@theme.control_height"
+        },
+        {
+         "clip": "@theme.radius_md"
+        },
+        {
+         "background": "@color"
+        },
+        {
+         "padding": 2.5
+        },
+        "ripple",
+        {
+         "semantics": {
+          "contentDescription": "@label",
+          "enabled": true,
+          "clickable": true
+         }
+        },
+        {
+         "onClick": "@onClick"
+        }
+       ],
+       "children": [
+        {
+         "box": {
+          "horizontalAlignment": "center",
+          "verticalAlignment": "center",
+          "modifiers": [
+           {
+            "$if": "fill",
+            "then": "fillMaxSize",
+            "else": "fillMaxHeight"
+           },
+           {
+            "clip": "max(0, @theme.radius_md - 2.5)"
+           },
+           {
+            "background": {
+             "$if": "style == 'filled'",
+             "then": "@color",
+             "else": "@surface"
+            }
+           },
+           {
+            "padding": [
+             "@theme.space_4 - 2.5",
+             0
+            ]
+           }
+          ],
+          "children": [
+           {
+            "$if": "icon",
+            "then": {
+             "row": {
+              "verticalAlignment": "center",
+              "modifiers": [
+               {
+                "spacedBy": "@theme.space_2"
+               }
+              ],
+              "children": [
+               {
+                "$slot": "icon"
+               },
+               {
+                "text": {
+                 "value": "@label",
+                 "maxLines": 1,
+                 "overflow": "ellipsis",
+                 "fontSize": "@theme.text_md",
+                 "color": {
+                  "$if": "style == 'filled'",
+                  "then": "@colors.onPrimary",
+                  "else": "@color"
+                 }
+                }
+               }
+              ]
+             }
+            },
+            "else": {
+             "text": {
+              "value": "@label",
+              "maxLines": 1,
+              "overflow": "ellipsis",
+              "fontSize": "@theme.text_md",
+              "color": {
+               "$if": "style == 'filled'",
+               "then": "@colors.onPrimary",
+               "else": "@color"
+              }
+             }
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     }
+    },
+    "else": {
+     "$if": "style == 'outlined'",
+     "then": {
+      "box": {
+       "modifiers": [
+        {
+         "$if": "fill",
+         "then": "fillMaxWidth"
+        },
+        {
+         "padding": [
+          0,
+          "@theme.space_1"
+         ]
+        },
+        {
+         "height": "@theme.control_height"
+        },
+        {
+         "clip": "@theme.radius_md"
+        },
+        {
+         "background": "@color"
+        },
+        {
+         "padding": 2.5
+        },
+        "ripple",
+        {
+         "semantics": {
+          "contentDescription": "@label",
+          "enabled": true,
+          "clickable": true
+         }
+        },
+        {
+         "onClick": "@onClick"
+        }
+       ],
+       "children": [
+        {
+         "box": {
+          "horizontalAlignment": "center",
+          "verticalAlignment": "center",
+          "modifiers": [
+           {
+            "$if": "fill",
+            "then": "fillMaxSize",
+            "else": "fillMaxHeight"
+           },
+           {
+            "clip": "max(0, @theme.radius_md - 2.5)"
+           },
+           {
+            "background": "@surface"
+           },
+           {
+            "padding": [
+             "@theme.space_4 - 2.5",
+             0
+            ]
+           }
+          ],
+          "children": [
+           {
+            "$if": "icon",
+            "then": {
+             "row": {
+              "verticalAlignment": "center",
+              "modifiers": [
+               {
+                "spacedBy": "@theme.space_2"
+               }
+              ],
+              "children": [
+               {
+                "$slot": "icon"
+               },
+               {
+                "text": {
+                 "value": "@label",
+                 "maxLines": 1,
+                 "overflow": "ellipsis",
+                 "fontSize": "@theme.text_md",
+                 "color": "@color"
+                }
+               }
+              ]
+             }
+            },
+            "else": {
+             "text": {
+              "value": "@label",
+              "maxLines": 1,
+              "overflow": "ellipsis",
+              "fontSize": "@theme.text_md",
+              "color": "@color"
+             }
+            }
+           }
+          ]
+         }
+        }
+       ]
+      }
+     },
+     "else": {
+      "box": {
+       "horizontalAlignment": "center",
+       "verticalAlignment": "center",
+       "modifiers": [
+        {
+         "$if": "fill",
+         "then": "fillMaxWidth"
+        },
+        {
+         "padding": [
+          0,
+          "@theme.space_1"
+         ]
+        },
+        {
+         "height": "@theme.control_height"
+        },
+        {
+         "clip": "@theme.radius_md"
+        },
+        {
+         "$if": "style == 'filled'",
+         "then": {
+          "background": "@color"
+         }
+        },
+        {
+         "padding": [
+          "@theme.space_4",
+          0
+         ]
+        },
+        "ripple",
+        {
+         "semantics": {
+          "contentDescription": "@label",
+          "enabled": true,
+          "clickable": true
+         }
+        },
+        {
+         "onClick": "@onClick"
+        }
+       ],
+       "children": [
+        {
+         "$if": "icon",
+         "then": {
+          "row": {
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "spacedBy": "@theme.space_2"
+            }
+           ],
+           "children": [
+            {
+             "$slot": "icon"
+            },
+            {
+             "text": {
+              "value": "@label",
+              "maxLines": 1,
+              "overflow": "ellipsis",
+              "fontSize": "@theme.text_md",
+              "color": {
+               "$if": "style == 'filled'",
+               "then": "@colors.onPrimary",
+               "else": "@color"
+              }
+             }
+            }
+           ]
+          }
+         },
+         "else": {
+          "text": {
+           "value": "@label",
+           "maxLines": 1,
+           "overflow": "ellipsis",
+           "fontSize": "@theme.text_md",
+           "color": {
+            "$if": "style == 'filled'",
+            "then": "@colors.onPrimary",
+            "else": "@color"
+           }
+          }
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   "else": {
+    "$if": "enabled == '1'",
+    "then": {
+     "$if": "theme.mono",
+     "then": {
+      "$if": "style == 'text'",
+      "then": {
+       "box": {
+        "horizontalAlignment": "center",
+        "verticalAlignment": "center",
+        "modifiers": [
+         {
+          "$if": "fill",
+          "then": "fillMaxWidth"
+         },
+         {
+          "padding": [
+           0,
+           "@theme.space_1"
+          ]
+         },
+         {
+          "height": "@theme.control_height"
+         },
+         {
+          "clip": "@theme.radius_md"
+         },
+         {
+          "$if": "style == 'filled'",
+          "then": {
+           "background": "@color"
+          }
+         },
+         {
+          "padding": [
+           "@theme.space_4",
+           0
+          ]
+         },
+         "ripple",
+         {
+          "semantics": {
+           "contentDescription": "@label",
+           "enabled": true,
+           "clickable": true
+          }
+         },
+         {
+          "onClick": "@onClick"
+         }
+        ],
+        "children": [
+         {
+          "$if": "icon",
+          "then": {
+           "row": {
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "spacedBy": "@theme.space_2"
+             }
+            ],
+            "children": [
+             {
+              "$slot": "icon"
+             },
+             {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": {
+                "$if": "style == 'filled'",
+                "then": "@colors.onPrimary",
+                "else": "@color"
+               }
+              }
+             }
+            ]
+           }
+          },
+          "else": {
+           "text": {
+            "value": "@label",
+            "maxLines": 1,
+            "overflow": "ellipsis",
+            "fontSize": "@theme.text_md",
+            "color": {
+             "$if": "style == 'filled'",
+             "then": "@colors.onPrimary",
+             "else": "@color"
+            }
+           }
+          }
+         }
+        ]
+       }
+      },
+      "else": {
+       "box": {
+        "modifiers": [
+         {
+          "$if": "fill",
+          "then": "fillMaxWidth"
+         },
+         {
+          "padding": [
+           0,
+           "@theme.space_1"
+          ]
+         },
+         {
+          "height": "@theme.control_height"
+         },
+         {
+          "clip": "@theme.radius_md"
+         },
+         {
+          "background": "@color"
+         },
+         {
+          "padding": 2.5
+         },
+         "ripple",
+         {
+          "semantics": {
+           "contentDescription": "@label",
+           "enabled": true,
+           "clickable": true
+          }
+         },
+         {
+          "onClick": "@onClick"
+         }
+        ],
+        "children": [
+         {
+          "box": {
+           "horizontalAlignment": "center",
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "$if": "fill",
+             "then": "fillMaxSize",
+             "else": "fillMaxHeight"
+            },
+            {
+             "clip": "max(0, @theme.radius_md - 2.5)"
+            },
+            {
+             "background": {
+              "$if": "style == 'filled'",
+              "then": "@color",
+              "else": "@surface"
+             }
+            },
+            {
+             "padding": [
+              "@theme.space_4 - 2.5",
+              0
+             ]
+            }
+           ],
+           "children": [
+            {
+             "$if": "icon",
+             "then": {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                {
+                 "spacedBy": "@theme.space_2"
+                }
+               ],
+               "children": [
+                {
+                 "$slot": "icon"
+                },
+                {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": {
+                   "$if": "style == 'filled'",
+                   "then": "@colors.onPrimary",
+                   "else": "@color"
+                  }
+                 }
+                }
+               ]
+              }
+             },
+             "else": {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": {
+                "$if": "style == 'filled'",
+                "then": "@colors.onPrimary",
+                "else": "@color"
+               }
+              }
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     },
+     "else": {
+      "$if": "style == 'outlined'",
+      "then": {
+       "box": {
+        "modifiers": [
+         {
+          "$if": "fill",
+          "then": "fillMaxWidth"
+         },
+         {
+          "padding": [
+           0,
+           "@theme.space_1"
+          ]
+         },
+         {
+          "height": "@theme.control_height"
+         },
+         {
+          "clip": "@theme.radius_md"
+         },
+         {
+          "background": "@color"
+         },
+         {
+          "padding": 2.5
+         },
+         "ripple",
+         {
+          "semantics": {
+           "contentDescription": "@label",
+           "enabled": true,
+           "clickable": true
+          }
+         },
+         {
+          "onClick": "@onClick"
+         }
+        ],
+        "children": [
+         {
+          "box": {
+           "horizontalAlignment": "center",
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "$if": "fill",
+             "then": "fillMaxSize",
+             "else": "fillMaxHeight"
+            },
+            {
+             "clip": "max(0, @theme.radius_md - 2.5)"
+            },
+            {
+             "background": "@surface"
+            },
+            {
+             "padding": [
+              "@theme.space_4 - 2.5",
+              0
+             ]
+            }
+           ],
+           "children": [
+            {
+             "$if": "icon",
+             "then": {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                {
+                 "spacedBy": "@theme.space_2"
+                }
+               ],
+               "children": [
+                {
+                 "$slot": "icon"
+                },
+                {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": "@color"
+                 }
+                }
+               ]
+              }
+             },
+             "else": {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": "@color"
+              }
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "else": {
+       "box": {
+        "horizontalAlignment": "center",
+        "verticalAlignment": "center",
+        "modifiers": [
+         {
+          "$if": "fill",
+          "then": "fillMaxWidth"
+         },
+         {
+          "padding": [
+           0,
+           "@theme.space_1"
+          ]
+         },
+         {
+          "height": "@theme.control_height"
+         },
+         {
+          "clip": "@theme.radius_md"
+         },
+         {
+          "$if": "style == 'filled'",
+          "then": {
+           "background": "@color"
+          }
+         },
+         {
+          "padding": [
+           "@theme.space_4",
+           0
+          ]
+         },
+         "ripple",
+         {
+          "semantics": {
+           "contentDescription": "@label",
+           "enabled": true,
+           "clickable": true
+          }
+         },
+         {
+          "onClick": "@onClick"
+         }
+        ],
+        "children": [
+         {
+          "$if": "icon",
+          "then": {
+           "row": {
+            "verticalAlignment": "center",
+            "modifiers": [
+             {
+              "spacedBy": "@theme.space_2"
+             }
+            ],
+            "children": [
+             {
+              "$slot": "icon"
+             },
+             {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": {
+                "$if": "style == 'filled'",
+                "then": "@colors.onPrimary",
+                "else": "@color"
+               }
+              }
+             }
+            ]
+           }
+          },
+          "else": {
+           "text": {
+            "value": "@label",
+            "maxLines": 1,
+            "overflow": "ellipsis",
+            "fontSize": "@theme.text_md",
+            "color": {
+             "$if": "style == 'filled'",
+             "then": "@colors.onPrimary",
+             "else": "@color"
+            }
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    "else": {
+     "box": {
+      "modifiers": [
+       {
+        "$if": "fill",
+        "then": "fillMaxWidth"
+       }
+      ],
+      "children": [
+       {
+        "$if": "theme.mono",
+        "then": {
+         "$if": "style == 'text'",
+         "then": {
+          "box": {
+           "horizontalAlignment": "center",
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "visibility": "@enOff"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "$if": "style == 'filled'",
+             "then": {
+              "background": "@colors.disabled"
+             }
+            },
+            {
+             "padding": [
+              "@theme.space_4",
+              0
+             ]
+            }
+           ],
+           "children": [
+            {
+             "$if": "icon",
+             "then": {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                {
+                 "spacedBy": "@theme.space_2"
+                }
+               ],
+               "children": [
+                {
+                 "$slot": "icon"
+                },
+                {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": "@colors.onDisabled",
+                  "modifiers": [
+                   {
+                    "semantics": {
+                     "enabled": false
+                    }
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             "else": {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": "@colors.onDisabled",
+               "modifiers": [
+                {
+                 "semantics": {
+                  "enabled": false
+                 }
+                }
+               ]
+              }
+             }
+            }
+           ]
+          }
+         },
+         "else": {
+          "box": {
+           "modifiers": [
+            {
+             "visibility": "@enOff"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "background": "@colors.disabled"
+            },
+            {
+             "padding": 2.5
+            }
+           ],
+           "children": [
+            {
+             "box": {
+              "horizontalAlignment": "center",
+              "verticalAlignment": "center",
+              "modifiers": [
+               {
+                "$if": "fill",
+                "then": "fillMaxSize",
+                "else": "fillMaxHeight"
+               },
+               {
+                "clip": "max(0, @theme.radius_md - 2.5)"
+               },
+               {
+                "background": "@surface"
+               },
+               {
+                "padding": [
+                 "@theme.space_4 - 2.5",
+                 0
+                ]
+               }
+              ],
+              "children": [
+               {
+                "$if": "icon",
+                "then": {
+                 "row": {
+                  "verticalAlignment": "center",
+                  "modifiers": [
+                   {
+                    "spacedBy": "@theme.space_2"
+                   }
+                  ],
+                  "children": [
+                   {
+                    "$slot": "icon"
+                   },
+                   {
+                    "text": {
+                     "value": "@label",
+                     "maxLines": 1,
+                     "overflow": "ellipsis",
+                     "fontSize": "@theme.text_md",
+                     "color": "@colors.onDisabled",
+                     "modifiers": [
+                      {
+                       "semantics": {
+                        "enabled": false
+                       }
+                      }
+                     ]
+                    }
+                   }
+                  ]
+                 }
+                },
+                "else": {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": "@colors.onDisabled",
+                  "modifiers": [
+                   {
+                    "semantics": {
+                     "enabled": false
+                    }
+                   }
+                  ]
+                 }
+                }
+               }
+              ]
+             }
+            }
+           ]
+          }
+         }
+        },
+        "else": {
+         "$if": "style == 'outlined'",
+         "then": {
+          "box": {
+           "modifiers": [
+            {
+             "visibility": "@enOff"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "background": "@colors.disabled"
+            },
+            {
+             "padding": 2.5
+            }
+           ],
+           "children": [
+            {
+             "box": {
+              "horizontalAlignment": "center",
+              "verticalAlignment": "center",
+              "modifiers": [
+               {
+                "$if": "fill",
+                "then": "fillMaxSize",
+                "else": "fillMaxHeight"
+               },
+               {
+                "clip": "max(0, @theme.radius_md - 2.5)"
+               },
+               {
+                "background": "@surface"
+               },
+               {
+                "padding": [
+                 "@theme.space_4 - 2.5",
+                 0
+                ]
+               }
+              ],
+              "children": [
+               {
+                "$if": "icon",
+                "then": {
+                 "row": {
+                  "verticalAlignment": "center",
+                  "modifiers": [
+                   {
+                    "spacedBy": "@theme.space_2"
+                   }
+                  ],
+                  "children": [
+                   {
+                    "$slot": "icon"
+                   },
+                   {
+                    "text": {
+                     "value": "@label",
+                     "maxLines": 1,
+                     "overflow": "ellipsis",
+                     "fontSize": "@theme.text_md",
+                     "color": "@colors.onDisabled",
+                     "modifiers": [
+                      {
+                       "semantics": {
+                        "enabled": false
+                       }
+                      }
+                     ]
+                    }
+                   }
+                  ]
+                 }
+                },
+                "else": {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": "@colors.onDisabled",
+                  "modifiers": [
+                   {
+                    "semantics": {
+                     "enabled": false
+                    }
+                   }
+                  ]
+                 }
+                }
+               }
+              ]
+             }
+            }
+           ]
+          }
+         },
+         "else": {
+          "box": {
+           "horizontalAlignment": "center",
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "visibility": "@enOff"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "$if": "style == 'filled'",
+             "then": {
+              "background": "@colors.disabled"
+             }
+            },
+            {
+             "padding": [
+              "@theme.space_4",
+              0
+             ]
+            }
+           ],
+           "children": [
+            {
+             "$if": "icon",
+             "then": {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                {
+                 "spacedBy": "@theme.space_2"
+                }
+               ],
+               "children": [
+                {
+                 "$slot": "icon"
+                },
+                {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": "@colors.onDisabled",
+                  "modifiers": [
+                   {
+                    "semantics": {
+                     "enabled": false
+                    }
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             },
+             "else": {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": "@colors.onDisabled",
+               "modifiers": [
+                {
+                 "semantics": {
+                  "enabled": false
+                 }
+                }
+               ]
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       },
+       {
+        "$if": "theme.mono",
+        "then": {
+         "$if": "style == 'text'",
+         "then": {
+          "box": {
+           "horizontalAlignment": "center",
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "visibility": "@enOn"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "$if": "style == 'filled'",
+             "then": {
+              "background": "@color"
+             }
+            },
+            {
+             "padding": [
+              "@theme.space_4",
+              0
+             ]
+            },
+            "ripple",
+            {
+             "semantics": {
+              "contentDescription": "@label",
+              "enabled": true,
+              "clickable": true
+             }
+            },
+            {
+             "onClick": "@onClick"
+            }
+           ],
+           "children": [
+            {
+             "$if": "icon",
+             "then": {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                {
+                 "spacedBy": "@theme.space_2"
+                }
+               ],
+               "children": [
+                {
+                 "$slot": "icon"
+                },
+                {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": {
+                   "$if": "style == 'filled'",
+                   "then": "@colors.onPrimary",
+                   "else": "@color"
+                  }
+                 }
+                }
+               ]
+              }
+             },
+             "else": {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": {
+                "$if": "style == 'filled'",
+                "then": "@colors.onPrimary",
+                "else": "@color"
+               }
+              }
+             }
+            }
+           ]
+          }
+         },
+         "else": {
+          "box": {
+           "modifiers": [
+            {
+             "visibility": "@enOn"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "background": "@color"
+            },
+            {
+             "padding": 2.5
+            },
+            "ripple",
+            {
+             "semantics": {
+              "contentDescription": "@label",
+              "enabled": true,
+              "clickable": true
+             }
+            },
+            {
+             "onClick": "@onClick"
+            }
+           ],
+           "children": [
+            {
+             "box": {
+              "horizontalAlignment": "center",
+              "verticalAlignment": "center",
+              "modifiers": [
+               {
+                "$if": "fill",
+                "then": "fillMaxSize",
+                "else": "fillMaxHeight"
+               },
+               {
+                "clip": "max(0, @theme.radius_md - 2.5)"
+               },
+               {
+                "background": {
+                 "$if": "style == 'filled'",
+                 "then": "@color",
+                 "else": "@surface"
+                }
+               },
+               {
+                "padding": [
+                 "@theme.space_4 - 2.5",
+                 0
+                ]
+               }
+              ],
+              "children": [
+               {
+                "$if": "icon",
+                "then": {
+                 "row": {
+                  "verticalAlignment": "center",
+                  "modifiers": [
+                   {
+                    "spacedBy": "@theme.space_2"
+                   }
+                  ],
+                  "children": [
+                   {
+                    "$slot": "icon"
+                   },
+                   {
+                    "text": {
+                     "value": "@label",
+                     "maxLines": 1,
+                     "overflow": "ellipsis",
+                     "fontSize": "@theme.text_md",
+                     "color": {
+                      "$if": "style == 'filled'",
+                      "then": "@colors.onPrimary",
+                      "else": "@color"
+                     }
+                    }
+                   }
+                  ]
+                 }
+                },
+                "else": {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": {
+                   "$if": "style == 'filled'",
+                   "then": "@colors.onPrimary",
+                   "else": "@color"
+                  }
+                 }
+                }
+               }
+              ]
+             }
+            }
+           ]
+          }
+         }
+        },
+        "else": {
+         "$if": "style == 'outlined'",
+         "then": {
+          "box": {
+           "modifiers": [
+            {
+             "visibility": "@enOn"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "background": "@color"
+            },
+            {
+             "padding": 2.5
+            },
+            "ripple",
+            {
+             "semantics": {
+              "contentDescription": "@label",
+              "enabled": true,
+              "clickable": true
+             }
+            },
+            {
+             "onClick": "@onClick"
+            }
+           ],
+           "children": [
+            {
+             "box": {
+              "horizontalAlignment": "center",
+              "verticalAlignment": "center",
+              "modifiers": [
+               {
+                "$if": "fill",
+                "then": "fillMaxSize",
+                "else": "fillMaxHeight"
+               },
+               {
+                "clip": "max(0, @theme.radius_md - 2.5)"
+               },
+               {
+                "background": "@surface"
+               },
+               {
+                "padding": [
+                 "@theme.space_4 - 2.5",
+                 0
+                ]
+               }
+              ],
+              "children": [
+               {
+                "$if": "icon",
+                "then": {
+                 "row": {
+                  "verticalAlignment": "center",
+                  "modifiers": [
+                   {
+                    "spacedBy": "@theme.space_2"
+                   }
+                  ],
+                  "children": [
+                   {
+                    "$slot": "icon"
+                   },
+                   {
+                    "text": {
+                     "value": "@label",
+                     "maxLines": 1,
+                     "overflow": "ellipsis",
+                     "fontSize": "@theme.text_md",
+                     "color": "@color"
+                    }
+                   }
+                  ]
+                 }
+                },
+                "else": {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": "@color"
+                 }
+                }
+               }
+              ]
+             }
+            }
+           ]
+          }
+         },
+         "else": {
+          "box": {
+           "horizontalAlignment": "center",
+           "verticalAlignment": "center",
+           "modifiers": [
+            {
+             "visibility": "@enOn"
+            },
+            {
+             "$if": "fill",
+             "then": "fillMaxWidth"
+            },
+            {
+             "padding": [
+              0,
+              "@theme.space_1"
+             ]
+            },
+            {
+             "height": "@theme.control_height"
+            },
+            {
+             "clip": "@theme.radius_md"
+            },
+            {
+             "$if": "style == 'filled'",
+             "then": {
+              "background": "@color"
+             }
+            },
+            {
+             "padding": [
+              "@theme.space_4",
+              0
+             ]
+            },
+            "ripple",
+            {
+             "semantics": {
+              "contentDescription": "@label",
+              "enabled": true,
+              "clickable": true
+             }
+            },
+            {
+             "onClick": "@onClick"
+            }
+           ],
+           "children": [
+            {
+             "$if": "icon",
+             "then": {
+              "row": {
+               "verticalAlignment": "center",
+               "modifiers": [
+                {
+                 "spacedBy": "@theme.space_2"
+                }
+               ],
+               "children": [
+                {
+                 "$slot": "icon"
+                },
+                {
+                 "text": {
+                  "value": "@label",
+                  "maxLines": 1,
+                  "overflow": "ellipsis",
+                  "fontSize": "@theme.text_md",
+                  "color": {
+                   "$if": "style == 'filled'",
+                   "then": "@colors.onPrimary",
+                   "else": "@color"
+                  }
+                 }
+                }
+               ]
+              }
+             },
+             "else": {
+              "text": {
+               "value": "@label",
+               "maxLines": 1,
+               "overflow": "ellipsis",
+               "fontSize": "@theme.text_md",
+               "color": {
+                "$if": "style == 'filled'",
+                "then": "@colors.onPrimary",
+                "else": "@color"
+               }
+              }
+             }
+            }
+           ]
+          }
+         }
+        }
+       }
+      ]
+     }
+    }
+   }
+  }
+ },
+ "locals": {
+  "enOn": "@enabled",
+  "enOff": "1 - @enOn"
+ }
+}

@@ -55,6 +55,36 @@ key is removed when the document is expanded.
 Also add the component to `docs/examples-vocabulary.json` → `components`, with the synonyms
 people would use ("toggle" for Switch, "kpi" for StatTile), so searches find it.
 
+**In a component set: another look for the library.** A set is a folder
+`examples/component-sets/<name>/` (lower case) holding only what it changes:
+
+| file | what it is |
+| :--- | :--- |
+| `<Name>/component.json` | its own version of a library component, called exactly as the library's (or a new component) |
+| `theme/default.json` | the tokens it changes (`colors`, `numbers`, `modes`), merged key by key over the library's theme |
+| `set.json` | optional: `{"summary": "..."}` |
+
+Everything a set does not define comes from the library, so a set can start with a theme alone
+(new radii, a new palette) and replace components one at a time. A document picks a set with
+`"componentSet": "<name>"` at the top, beside `componentTheme`; the call sites stay the same
+and every tool (convert, render, publish, check_component) expands them with the set.
+`examples/component-sets/square` is a small example: square corners from its theme, and a
+Button with a heavier ring.
+
+A set's version of a component must keep the library component's **interface**, or documents
+written for the library stop expanding with the set: every param (same type, the same enum
+values, not static where the library's is not, not required where the library's is optional),
+every slot, and no new required param. A new optional param is fine. The tools:
+
+- `find {"kind": "components", "interface": true}`: every component's params and slots, the
+  contract to implement; with no query it also lists the sets. `set: "<name>"` lists the
+  library as that set has it, each component marked `from: "set"` or `"library"`.
+- `check_component {"set": "<name>"}`: the whole set against the library's interface, plus the
+  usual lint of each definition. `{"set": "<name>", "name": "Button"}` renders the set's
+  Button (its demo expanded with the set's theme), with a `sweep` as for any component.
+- `get {"id": "Button", "set": "<name>"}`: the set's version, its params and definition.
+- Locally: `node examples/tools/component-sets.mjs list | interface [set] | check <set>`.
+
 ## The definition
 
 | key | what |
