@@ -44,7 +44,7 @@ import { compileComponents, jsonToRc } from "./json2rc.mjs";
 import { STRUCTURES } from "./structures.mjs";
 import { thumbnail } from "./thumbs.mjs";
 import { accountRoute } from "./account-web.mjs";
-import { featuredSection, STREAM_CSS, streamRoute } from "./stream-web.mjs";
+import { featuredSection, homeStreamStrip, STREAM_CSS, streamRoute } from "./stream-web.mjs";
 import { compileAppScript, scriptsOffered } from "./app-script.mjs";
 import { oauthRoute } from "./oauth.mjs";
 import { FOOTER_CSS, privacyPage, siteFooter } from "./privacy-web.mjs";
@@ -261,6 +261,7 @@ nav { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; font-size:
 nav a { color:var(--accent); text-decoration:none; display:inline-flex; align-items:center; height:24px; }
 nav a.brand { color:var(--ink); font-weight:700; gap:6px; }
 nav a.end { margin-left:auto; }
+nav a.stream { margin-left:auto; font-weight:700; }
 nav .mark { width:18px; height:18px; flex:none; }
 nav a[aria-current] { color:var(--ink); font-weight:600; }
 nav .subnav { flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px 18px; padding-top:6px; margin-top:2px; border-top:1px solid var(--line); font-size:13px; }
@@ -376,8 +377,7 @@ const FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com"><link 
 const NAV_GROUPS = {
     examples: { label: "Examples", pages: [
         ["showcases", "Showcases", "showcases/", "What the format can do: 3D, shaders, physics, live data"],
-        ["demos", "Demos", "demos/", "One technique or screen each, with its JSON"],
-        ["stream", "Stream", "stream/", "Pages people made and shared"]] },
+        ["demos", "Demos", "demos/", "One technique or screen each, with its JSON"]] },
     catalog: { label: "Catalog", pages: [
         ["components", "Components", "components/", "The basic parts: buttons, switches, sliders, tabs, cards"],
         ["advanced", "Advanced", "advanced/", "Charts, clocks, maps, 3D"],
@@ -386,7 +386,7 @@ const NAV_GROUPS = {
 };
 function siteNav(current) {
     const up = (href) => (current === "home" ? (href || "./") : "../" + (href || ""));
-    const pagesOf = (g) => NAV_GROUPS[g].pages.filter(([k]) => k !== "stream" || accountsEnabled());
+    const pagesOf = (g) => NAV_GROUPS[g].pages;
     const group = Object.keys(NAV_GROUPS).find((g) => pagesOf(g).some(([k]) => k === current));
     const a = (k, label, href, { title = "", cls = "", on = current === k } = {}) =>
         `<a href="${up(href)}"${on ? ' aria-current="page"' : ""}${cls ? ` class="${cls}"` : ""}${title ? ` title="${esc(title)}"` : ""}>${label}</a>`;
@@ -394,7 +394,9 @@ function siteNav(current) {
         a("home", `${MARK}Kobento`, "", { cls: "brand" }),
         ...Object.entries(NAV_GROUPS).map(([g, { label }]) => a(g, label, pagesOf(g)[0][2], { on: group === g, title: pagesOf(g).map(([, l]) => l).join(", ") })),
         a("tools", "Tools", "tools/"), a("status", "Status", "status/"), a("about", "About", "about/"),
-        ...(accountsEnabled() ? [a("account", "Account", "account/", { cls: "end" })] : []),
+        // The stream on its own, in bold, centred between About and Account (both push right).
+        ...(accountsEnabled() ? [a("stream", "Stream", "stream/", { cls: "stream", title: "Pages people made with Kobento and shared" }),
+            a("account", "Account", "account/", { cls: "end" })] : []),
     ];
     const sub = group ? `<span class="subnav">${pagesOf(group).map(([k, label, href, title]) => a(k, label, href, { title })).join("")}</span>` : "";
     return main.join("") + sub;
@@ -601,6 +603,8 @@ async function landingPage() {
 </script>`
         : `<div class="hero-logo static">${MARK}<span>Kobento</span></div>`;
     const link = (href, text) => `<a href="${href}" rel="noopener">${text}</a>`;
+    // The stream's top pages, right under the hero: what people make, before any explaining.
+    const stream = await homeStreamStrip("");
     // The smallest document, quoted under "Or write it by hand".
     const hello = (() => {
         const e = loadCatalog().byId.get(HELLO_DOC);
@@ -613,17 +617,18 @@ async function landingPage() {
     };
     const [light, arrival] = ex ? [shot("home-light"), shot("home-arrival")] : [];
     const kb = ex?.derived?.bytes ? `about ${Math.round(ex.derived.bytes / 1024)} KB` : "a few KB";
-    const example = light && arrival ? `<h3>For example</h3>
+    const example = light && arrival ? `<h3>Ask:</h3>
 <blockquote class="ask">${esc(ex.prompt)}</blockquote>
+<h3>Ship:</h3>
 <div class="shots">
-  <figure><img src="${light}" width="720" height="560" alt="A card titled JFK to LHR with a slider and 4 h 38 left beside it, over a map of the North Atlantic with the route arching from New York to London and the plane on it a little under halfway, in the light theme."><figcaption>What comes back: the route, the plane, the time left and the slider.</figcaption></figure>
+  <figure><img src="${light}" width="720" height="560" alt="A card titled JFK to LHR with a slider and 4 h 38 left beside it, over a map of the North Atlantic with the route arching from New York to London and the plane on it a little under halfway, in the light theme."><figcaption>What comes back: the route, the plane, the time left and the slider, in the light theme.</figcaption></figure>
   <figure><img src="${arrival}" width="720" height="560" alt="The same card in the dark theme, the slider near its end with 0 h 24 left, the plane almost at London."><figcaption>Drag the slider and the plane flies, the time left counting down. Or the app sends the progress. Here in dark mode, nearly landed.</figcaption></figure>
 </div>
-<p>The whole card is ${kb}. It follows the light or dark theme, and lays out again at any size. <a href="play/${ex.id}/">Play with it</a>.</p>` : "";
+<p>The whole card is ${kb}. It follows the light or dark theme, and lays out again at any size. <a href="play/${ex.id}/">Play with it</a> or <a href="rc/${ex.id}.rc" download="flight-tracker.rc">download the .rc</a>.</p>` : "";
     return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kobento</title><meta name="description" content="Kobento: components and AI tools for building RemoteCompose interfaces.">
-${FONTS}<style>${CSS}
+<title>Kobento</title><meta name="description" content="Ask for a screen, ship it to any device. Kobento is an open-source implementation of RemoteCompose: components, MCP tools for your assistant, and players for Android, iOS, the web, the desktop and ESP32 boards. Not from Google.">
+${FONTS}<style>${CSS}${STREAM_CSS}
 .landing { max-width:880px; margin:0 auto; padding:8px 16px 64px; }
 .hero-logo { margin:8px 0 8px; display:flex; justify-content:center; min-height:150px; }
 .hero-logo.static { align-items:center; gap:16px; font:800 56px Manrope,'DM Sans',sans-serif; letter-spacing:-2px; }
@@ -644,6 +649,12 @@ code { font:13px ui-monospace,Menlo,monospace; background:var(--chip); padding:2
 .shots figure { margin:0; }
 .shots img { width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--line); }
 .shots figcaption { color:var(--muted); font-size:14px; margin-top:6px; }
+.home-stream .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
+.home-stream .title { font-weight:700; }
+.home-stream .sitem > a { color:var(--ink); text-decoration:none; }
+.home-stream .by { font-size:13px; }
+.home-stream > p { color:var(--muted); font-size:15px; margin:0 0 12px; }
+.home-stream .body { display:flex; flex-direction:column; gap:2px; padding:10px 12px; }
 .landing pre { background:var(--chip); padding:12px 14px; border-radius:10px; overflow-x:auto; }
 .landing pre code { background:none; padding:0; font-size:13px; line-height:1.5; }
 </style></head>
@@ -651,13 +662,13 @@ code { font:13px ui-monospace,Menlo,monospace; background:var(--chip); padding:2
 <header><nav>${siteNav("home")}</nav></header>
 <main class="landing" style="display:block">
 ${hero}
-<h1>Interfaces for RemoteCompose, built with AI.</h1>
-<p class="lead">Kobento is an independent implementation of RemoteCompose. It gives you ready-made components and AI tools to build RemoteCompose screens, and players that show them beyond Android, down to microcontrollers.</p>
-<p class="sub">An independent project, not affiliated with Google.</p>
+<h1>Ask for a screen. Ship it to any device.</h1>
+<p class="lead">Kobento is an open-source implementation of RemoteCompose: components, MCP tools for your assistant, and players that draw the same document on Android, iOS, the web, the desktop and ESP32 boards. Not from Google.</p>
 <div class="go">
   <a class="primary" href="showcases/">Play with a showcase</a>
   <a href="components/">Browse the components</a>
 </div>
+${stream}
 
 <h2>What is RemoteCompose?</h2>
 <p>RemoteCompose is an Android format for user interfaces. A server sends a small document, and the device draws it: layout, text, animation, touch, light and dark themes. The screen can change without an app update. It runs in apps, widgets and watch faces.</p>
@@ -677,7 +688,7 @@ ${hero}
 <ol>
   <li><a href="account/">Create an account</a>. We email you a link to confirm your address, and you get access to the MCP server. Accounts are free and tool calls have no quota. The service is best-effort: it runs on one server, with no uptime guarantee, and can change before 1.0.</li>
   <li>Add Kobento to your assistant. In claude.ai or ChatGPT, add a custom connector with the URL <code>${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then sign in when asked. In Claude Code, run <code>claude mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>. In the Gemini CLI, run <code>gemini mcp add --transport http kobento ${esc(process.env.RC_MCP_URL || "https://mcp.kobento.dev/mcp")}</code>, then <code>/mcp auth kobento</code> to sign in.</li>
-  <li>Describe the screen you want. The assistant builds it from the components, checks it and shows you a picture of it.</li>
+  <li>Describe the screen you want. The assistant builds it from the components, checks it, shows you a picture, and publishes it as a page to share, or gives you the <code>.rc</code> for your app or player.</li>
 </ol>
 ${example}
 <div class="go"><a class="primary" href="showcases/">Play with a showcase</a><a href="account/">Create a free account</a></div>

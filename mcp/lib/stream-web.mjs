@@ -67,18 +67,37 @@ const STREAM_CSS = `
 .votes .admin button { width:auto; padding:0 8px; font-size:12px; color:#d0453a; }
 .votes .admin button.feature { color:var(--accent); }
 .sitem .star { align-self:flex-start; font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:#b26b00; background:color-mix(in srgb, #f6a525 22%, transparent); border-radius:6px; padding:1px 6px; }
-.lead { max-width:1280px; margin:0 auto; padding:4px 16px 8px; }
-.lead h2 { font-size:16px; margin:8px 0 2px; }
-.lead p { color:var(--muted); margin:0 0 10px; font-size:13px; }
-.lead p a { color:var(--accent); text-decoration:none; }
-.lead .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
-.lead + main h2.cat { grid-column:1/-1; font-size:16px; margin:12px 0 0; }
+.featured { max-width:1280px; margin:0 auto; padding:4px 16px 8px; }
+.featured h2 { font-size:16px; margin:8px 0 2px; }
+.featured p { color:var(--muted); margin:0 0 10px; font-size:13px; }
+.featured p a { color:var(--accent); text-decoration:none; }
+.featured .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
+.featured + main h2.cat { grid-column:1/-1; font-size:16px; margin:12px 0 0; }
 .tagbar { display:flex; gap:4px 10px; flex-wrap:wrap; align-items:baseline; margin:6px 0 2px; font-size:13px; }
 .tagbar .label { color:var(--muted); }
 .tagbar a, .sitem .tags a { color:var(--accent); text-decoration:none; }
 .tagbar a[aria-current] { font-weight:700; color:var(--ink); }
 .tagbar .n { color:var(--muted); font-size:11px; margin-left:2px; font-variant-numeric:tabular-nums; }
 .sitem .tags { display:flex; flex-wrap:wrap; gap:2px 8px; padding:0 12px 8px; font-size:12px; }
+.votes button.remix { width:auto; padding:0 10px; margin-left:auto; color:var(--accent); font-size:13px; font-weight:600; }
+.votes .admin { margin-left:8px; }
+.sortbar a.share { background:var(--ink); border-color:var(--ink); color:var(--bg); font-weight:600; }
+.remix-note { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); max-width:min(560px, calc(100% - 32px)); background:var(--ink); color:var(--bg); padding:10px 14px; border-radius:10px; font-size:13px; box-shadow:0 6px 24px rgba(0,0,0,.2); }
+`;
+
+/** The prompt a Remix button copies: the page's link, then the change, left for the reader. */
+const REMIX_SCRIPT = `
+for (const b of document.querySelectorAll("button.remix")) b.addEventListener("click", async (ev) => {
+  ev.preventDefault();
+  const prompt = "Get " + new URL(b.dataset.url, location.href).href + " from Kobento and make it ";
+  let ok = true;
+  try { await navigator.clipboard.writeText(prompt); } catch { ok = false; }
+  let note = document.querySelector(".remix-note");
+  if (!note) { note = document.createElement("div"); note.className = "remix-note"; note.setAttribute("role", "status"); document.body.append(note); }
+  note.textContent = ok ? "Copied: \u201c" + prompt + "\u2026\u201d Paste it into your assistant (with Kobento connected) and say what to change."
+                        : "Ask your assistant (with Kobento connected): \u201c" + prompt + "\u2026\u201d";
+  clearTimeout(note.timer); note.timer = setTimeout(() => note.remove(), 6000);
+});
 `;
 
 /** The stream's query string for a sort and a tag ("" for the newest, untagged). */
@@ -132,6 +151,7 @@ function itemCard(it, { csrf, signedIn, admin, sort, tag }) {
 <span class="meta">${[size, docSize, day(it.created)].filter(Boolean).map(esc).join(" · ")}</span></div></a>
 ${it.tags?.length ? `<div class="tags">${it.tags.map((t) => `<a href="./${query(sort, t)}">#${esc(t)}</a>`).join("")}</div>` : ""}
 <div class="votes">${vote}<span class="split">+${it.ups} / −${it.downs}</span>
+<button type="button" class="remix" data-url="${esc(it.url)}" title="Copy a prompt that asks your assistant to remix this page">Remix</button>
 ${admin ? `<div class="admin"><form method="post" action="${esc(it.page_id)}/feature${qs}">${csrf}<input type="hidden" name="value" value="${it.featured ? 0 : 1}"><button class="feature" type="submit" title="${it.featured ? "Take it off the Showcases page" : "Show it on the Showcases page"}">${it.featured ? "Unshowcase" : "Make showcase"}</button></form>
 <form method="post" action="${esc(it.page_id)}/remove">${csrf}<button type="submit">Remove</button></form></div>` : ""}</div>
 </article>`;
@@ -145,9 +165,10 @@ function streamPage({ site, items, sort, tag, tags, acct, sid, total }) {
     const tagBar = shown.length ? `<div class="tagbar"><span class="label">Tags:</span><a href="./${query(sort, null)}"${tag ? "" : ' aria-current="true"'}>all</a>${shown
         .map((t) => `<a href="./${query(sort, t.tag)}"${t.tag === tag ? ' aria-current="true"' : ""}>#${esc(t.tag)}<span class="n">${t.count || ""}</span></a>`).join("")}</div>` : "";
     const note = acct
-        ? (acct.name ? `You are <b>${esc(acct.name)}</b> (<a href="../account/#name">change</a>) · <a href="../account/#pages">Post your pages</a>`
-            : `<a href="../account/#name">Set your name</a> to post your pages`)
-        : `<a href="../account/">Sign in</a> to vote and to post your pages`;
+        ? (acct.name ? `You are <b>${esc(acct.name)}</b> (<a href="../account/#name">change</a>)` : `<a href="../account/#name">Set your name</a> to share your pages`)
+        : `<a href="../account/">Sign in</a> to vote`;
+    // Signed in: the account page's list of pages, each with its share button; otherwise sign in first.
+    const share = `<a class="share" href="../account/${acct ? "#pages" : ""}" title="Publish a page with your assistant, then share it here from your account page (or ask the assistant to share it)">Share yours</a>`;
     const cards = items.map((it) => itemCard(it, { csrf, signedIn: !!acct, admin: !!acct?.admin, sort, tag })).join("\n");
     return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -156,14 +177,14 @@ function streamPage({ site, items, sort, tag, tags, acct, sid, total }) {
 <header>
 <nav>${site.nav("stream")}</nav>
 <h1>Stream</h1>
-<p class="sub">Documents people made with Kobento and chose to share. Open one to play with it in the playground. To remix one, give its link to an agent connected to Kobento's MCP server: “Get &lt;link&gt; from Kobento and make it …”.${total ? ` ${total} item${total === 1 ? "" : "s"}${tag ? ` tagged #${esc(tag)}` : ""}.` : ""}</p>
-<div class="sortbar">${sortLink("new", "Newest")}${sortLink("top", "Top")}<span class="note">${note}</span></div>
+<p class="sub">Documents people made with Kobento and chose to share. Open one to play with it. <b>Remix</b> copies a prompt for your assistant (“Get &lt;link&gt; from Kobento and make it …”): say what to change, and it builds your version.${total ? ` ${total} item${total === 1 ? "" : "s"}${tag ? ` tagged #${esc(tag)}` : ""}.` : ""}</p>
+<div class="sortbar">${sortLink("new", "Newest")}${sortLink("top", "Top")}${share}<span class="note">${note}</span></div>
 ${tagBar}
 </header>
 <main>${cards || (tag ? `<p class="empty">Nothing tagged #${esc(tag)}. <a href="./${query(sort, null)}">Everything</a>.</p>`
     : `<p class="empty">Nothing in the stream yet. Publish a document with the publish tool, then post it from your account page.</p>`)}</main>
 ${siteFooter("../")}
-<script>${STREAM_SCRIPT}</script>
+<script>${STREAM_SCRIPT}${REMIX_SCRIPT}</script>
 </body></html>`;
 }
 
@@ -281,9 +302,32 @@ export async function featuredSection(base = "../") {
 <div class="body"><span class="title">${esc(it.title)}</span><span class="by">by ${esc(it.author)}</span>
 <span class="meta">${facts.map(esc).join(" · ")}</span></div></a></article>`;
     }).join("\n");
-    return `<section class="lead"><h2>Made with Kobento</h2>
+    return `<section class="featured"><h2>Made with Kobento</h2>
 <p>Pages built with Kobento's tools and picked for this page. More in the <a href="${base}stream/">stream</a>.</p>
 <div class="grid">${cards}</div></section>`;
+}
+
+/**
+ * The home page's strip: the stream's top pages, then links to the whole stream and to share
+ * one. Empty when accounts are off or nothing is shared. `base` is the way to the site's root ("").
+ */
+export async function homeStreamStrip(base = "", limit = 6) {
+    if (!accountsEnabled()) return "";
+    const store = await accounts();
+    const items = store.streamItems({ sort: "top", limit: limit * 2 }).map((it) => ({ ...it, meta: pageMeta(it.page_id) }))
+        .filter((it) => it.meta && it.url).slice(0, limit);
+    if (!items.length) return "";
+    const cards = items.map((it) => {
+        const preview = it.meta.preview ? `<img src="${esc(it.url)}preview.png" alt="" loading="lazy">` : "<span>no preview</span>";
+        return `<article class="sitem"><a href="${esc(it.url)}"><div class="thumb">${preview}</div>
+<div class="body"><span class="title">${esc(it.title)}</span><span class="by">by ${esc(it.author)} · ▲ ${it.score}</span></div></a>
+<div class="votes"><button type="button" class="remix" data-url="${esc(it.url)}" title="Copy a prompt that asks your assistant to remix this page">Remix</button></div></article>`;
+    }).join("\n");
+    return `<section class="home-stream"><h2>From the stream</h2>
+<p>What people build with Kobento. Play with any of them, or press <b>Remix</b> and tell your assistant what to change.</p>
+<div class="grid">${cards}</div>
+<div class="go"><a class="primary" href="${base}stream/">See the whole stream</a><a href="${base}account/#pages">Share yours</a></div></section>
+<script>${REMIX_SCRIPT}</script>`;
 }
 
 export { STREAM_CSS };
